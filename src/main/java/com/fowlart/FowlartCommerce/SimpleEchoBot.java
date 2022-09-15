@@ -18,21 +18,19 @@ public class SimpleEchoBot extends TelegramLongPollingBot implements Initializin
     private static final Logger log = LoggerFactory.getLogger(SimpleEchoBot.class);
 
     private static SimpleEchoBot instance;
+    @Value("${app.bot.userName}")
+    private String userName;
+    @Value("${app.bot.userName.token}")
+    private String token;
+
+    public static SimpleEchoBot getInstance() {
+        return instance;
+    }
 
     @Override
     public void afterPropertiesSet() {
         instance = this;
     }
-
-    public static SimpleEchoBot getInstance(){
-        return instance;
-    }
-
-    @Value("${app.bot.userName}")
-    private String userName;
-
-    @Value("${app.bot.userName.token}")
-    private String token;
 
     @Override
     public String getBotUsername() {
@@ -48,10 +46,15 @@ public class SimpleEchoBot extends TelegramLongPollingBot implements Initializin
     public void onRegister() {
     }
 
-    @Override
-    public void onUpdateReceived(Update update) {
+    private void handleInlineButtons(Update update) {
+        //Todo: add some simple handler
+        log.info("callback query: " + update.getCallbackQuery());
+        log.info(update.getCallbackQuery().getData());
+    }
 
+    private void handleInputMsgOrReplayKeyBoardMsg(Update update) {
         if (update.hasMessage() && update.getMessage().hasText()) {
+
             String textFromUser = update.getMessage().getText();
 
             Long userId = update.getMessage().getChatId();
@@ -59,10 +62,12 @@ public class SimpleEchoBot extends TelegramLongPollingBot implements Initializin
 
             log.info("[{}, {}] : {}", userId, userFirstName, textFromUser);
 
-            SendMessage sendMessage = SendMessage.builder()
-                    .chatId(userId.toString())
-                    .text("Hello, I've received your text: " + textFromUser)
-                    .build();
+            //Todo: add line interpolation
+            SendMessage sendMessage = SendMessage.builder().chatId(userId.toString()).text("Привіт, " + userFirstName + "! Вибери щось з наступних варіантів: \n" + "0 -> пункт 0\n" + "1 -> пункт 1\n")
+                    // add replay keyboard
+                    .replyMarkup(KeyboardHelper.buildMainMenu())
+                    // add inline keyboard
+                    .replyMarkup(KeyboardHelper.buildReplyInlineKeyboardMenu()).build();
             try {
                 this.sendApiMethod(sendMessage);
             } catch (TelegramApiException e) {
@@ -71,7 +76,17 @@ public class SimpleEchoBot extends TelegramLongPollingBot implements Initializin
         } else {
             log.warn("Unexpected update from user");
         }
+    }
 
+
+    @Override
+    public void onUpdateReceived(Update update) {
+
+        if (update.hasCallbackQuery()) {
+            handleInlineButtons(update);
+        } else {
+            handleInputMsgOrReplayKeyBoardMsg(update);
+        }
     }
 
     @Override
