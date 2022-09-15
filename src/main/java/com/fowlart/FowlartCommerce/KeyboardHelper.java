@@ -31,8 +31,8 @@ public class KeyboardHelper {
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
         List<InlineKeyboardButton> rowInline = new ArrayList<>();
 
-        for (int i = 0; i < 10; i++) {
-            rowInline.add(buildButton(String.valueOf(i), String.valueOf(i)));
+        for (int i = 1; i < 7; i++) {
+            rowInline.add(buildButton("▫️"+ i, "1_"+i));
         }
 
         rowsInline.add(rowInline);
