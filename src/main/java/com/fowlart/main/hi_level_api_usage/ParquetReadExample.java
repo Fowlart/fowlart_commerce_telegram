@@ -17,7 +17,6 @@ public class ParquetReadExample {
 
         // 1 - will return basically a container of values(rows).
         // Values should be retrieved by name,index position and type.
-        parquet.getSimpleGroups().get(0);
         String DT = parquet.getSimpleGroups().get(0).getString("TRANSACTION_TIME", 0);
         System.out.println("DT column in the very first row: " + DT);
 
