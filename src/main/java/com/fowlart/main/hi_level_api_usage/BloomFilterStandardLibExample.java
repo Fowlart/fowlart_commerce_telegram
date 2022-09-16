@@ -20,6 +20,5 @@ public class BloomFilterStandardLibExample {
         // Test the bloom filter
         System.out.println(names.mightContain("Artur"));
         System.out.println(names.mightContain("Zenoviy"));
-
     }
 }

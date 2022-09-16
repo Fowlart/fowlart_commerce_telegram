@@ -16,8 +16,7 @@ public class FowlartCommerceApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(FowlartCommerceApplication.class, args);
-
-        TelegramBotsApi telegramBotsApi = null;
+        TelegramBotsApi telegramBotsApi;
         log.info("Registering bot...");
         try {
             telegramBotsApi = new TelegramBotsApi(DefaultBotSession.class);
@@ -25,6 +24,6 @@ public class FowlartCommerceApplication {
         } catch (TelegramApiException e) {
             log.error("Failed to register bot(check internet connection / bot token or make sure only one instance of bot is running).", e);
         }
-        log.info("Telegram bot is ready to accept updates from user......");
+        log.info("Telegram bot is ready to accept updates from user!");
     }
 }

@@ -6,10 +6,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
-class FowlartCommerceApplicationTests {
+import java.util.Objects;
 
-	private static final Logger log = LoggerFactory.getLogger(FowlartCommerceApplicationTests.class);
+@SpringBootTest
+class SettingsInjectionTest {
+
+	private static final Logger log = LoggerFactory.getLogger(SettingsInjectionTest.class);
 
 	@Value("${app.bot.userName}")
 	private String userName;
@@ -18,8 +20,8 @@ class FowlartCommerceApplicationTests {
 	private String token;
 
 	@Test
-	void credsWillBeLoaded() {
-		System.out.println(userName);
-		System.out.println(token);
+	void credentialsDownloading() {
+		assert (Objects.nonNull(userName));
+		assert (Objects.nonNull(token));
 	}
 }

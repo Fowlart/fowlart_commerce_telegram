@@ -3,6 +3,7 @@ package com.fowlart.main;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -10,7 +11,6 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import java.util.LinkedList;
 import java.util.List;
 
 @Component
@@ -19,11 +19,14 @@ public class SimpleEchoBot extends TelegramLongPollingBot implements Initializin
     private static final Logger log = LoggerFactory.getLogger(SimpleEchoBot.class);
 
     private static SimpleEchoBot instance;
-    private final LinkedList<String> menuItems = new LinkedList<>();
+
     @Value("${app.bot.userName}")
     private String userName;
     @Value("${app.bot.userName.token}")
     private String token;
+    
+    @Autowired
+    private BotVisitors botVisitors;
 
     public static SimpleEchoBot getInstance() {
         return instance;
@@ -48,17 +51,6 @@ public class SimpleEchoBot extends TelegramLongPollingBot implements Initializin
     public void onRegister() {
     }
 
-    private String addMenuItem(String item) {
-        if (this.menuItems.isEmpty()) {
-            menuItems.add("\n" + "1/[" + item + "]");
-        } else {
-            int lastElementIndex = Integer.parseInt(menuItems.getLast().replaceAll("\n", "").split("/")[0]);
-            ++lastElementIndex;
-            menuItems.add("\n" + lastElementIndex + "/[" + item + "]");
-        }
-        return menuItems.stream().reduce("",(s1, s2) -> s1+s2);
-    }
-
     private void handleInlineButtons(Update update) {
         //Todo: add some simple handler
         log.info("callback query: " + update.getCallbackQuery());
@@ -75,11 +67,10 @@ public class SimpleEchoBot extends TelegramLongPollingBot implements Initializin
 
             log.info("[{}, {}] : {}", userId, userFirstName, textFromUser);
 
-            addMenuItem("замовлення");
-            addMenuItem("доставка");
+            ScalaTextHelper scalaTextHelper = new ScalaTextHelper();
 
-            SendMessage sendMessage = SendMessage.builder().chatId(userId.toString()).text("Привіт, " + userFirstName + "! "
-                            + "Вибери щось з наступних варіантів:" +addMenuItem("борг"))
+            SendMessage sendMessage = SendMessage.builder().chatId(userId.toString())
+                    .text(scalaTextHelper.getMainMenuText(userFirstName))
                     // add replay keyboard
                     .replyMarkup(KeyboardHelper.buildMainMenu())
                     // add inline keyboard
@@ -97,7 +88,10 @@ public class SimpleEchoBot extends TelegramLongPollingBot implements Initializin
 
     @Override
     public void onUpdateReceived(Update update) {
-
+        
+        // save user into session
+        botVisitors.getUserMap().put(update.getMessage().getFrom().getId(),update.getMessage().getFrom());
+     
         if (update.hasCallbackQuery()) {
             handleInlineButtons(update);
         } else {
