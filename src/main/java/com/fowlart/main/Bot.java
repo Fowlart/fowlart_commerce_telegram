@@ -1,7 +1,9 @@
 package com.fowlart.main;
 
+import com.fowlart.main.state.BotVisitor;
+import com.fowlart.main.state.State;
+import com.fowlart.main.state.rocks_db.RocksDBRepository;
 import com.fowlart.main.state.BotVisitors;
-import com.fowlart.main.state.ParquetWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -14,8 +16,8 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 public class Bot extends TelegramLongPollingBot implements InitializingBean {
@@ -34,7 +36,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     private BotVisitors botVisitors;
 
     @Autowired
-    private ParquetWriter parquetWriter;
+    private RocksDBRepository rocksDBRepository;
 
     public static Bot getInstance() {
         return instance;
@@ -90,23 +92,30 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         }
     }
 
-
     @Override
     public void onUpdateReceived(Update update) {
 
         Long userId = update.getMessage().getChatId();
         String userFirstName = update.getMessage().getFrom().getFirstName();
         User user = update.getMessage().getFrom();
+        BotVisitor botVisitor = new BotVisitor(user, State.MAIN_SCREEN);
 
-        // save user into session hash
-        botVisitors.getUserMap().put(userId,user);
+        //save user into session hash
+        botVisitors.getUserMap().put(userId, botVisitor);
 
-        //write to db
-        try {
-            parquetWriter.writeUser(userId, userFirstName, "IN_MAIN_SCREEN");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        //write parquet
+        // parquetWriter.writeUser(userId, userFirstName, "IN_MAIN_SCREEN");
+
+        //write to RocksDb
+        Optional<Object> userFromDb = rocksDBRepository.find(String.valueOf(userId));
+        if (userFromDb.isPresent()) {
+            // get from RocksDb
+            BotVisitor castedUserFromDb = (BotVisitor) userFromDb.get();
+            log.info("Retrieved visitor from db: "+castedUserFromDb);
+        } else {
+            rocksDBRepository.save(String.valueOf(userId), botVisitor);
         }
+
 
         if (update.hasCallbackQuery()) {
             handleInlineButtonClick(update);

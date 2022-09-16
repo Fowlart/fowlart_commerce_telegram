@@ -1,4 +1,4 @@
-package com.fowlart.main.hi_level_api_usage;
+package com.fowlart.main.hi_level_parquet_api_usage;
 
 import org.apache.parquet.example.data.simple.SimpleGroup;
 import org.apache.parquet.schema.Type;

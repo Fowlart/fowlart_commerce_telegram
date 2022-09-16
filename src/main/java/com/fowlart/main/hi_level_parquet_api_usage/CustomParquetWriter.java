@@ -1,8 +1,6 @@
-package com.fowlart.main.hi_level_api_usage;
+package com.fowlart.main.hi_level_parquet_api_usage;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.parquet.hadoop.ParquetFileWriter;
 import org.apache.parquet.hadoop.ParquetWriter;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import org.apache.parquet.schema.MessageType;

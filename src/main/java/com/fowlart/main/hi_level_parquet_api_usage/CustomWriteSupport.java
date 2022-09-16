@@ -1,4 +1,4 @@
-package com.fowlart.main.hi_level_api_usage;
+package com.fowlart.main.hi_level_parquet_api_usage;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.parquet.column.ColumnDescriptor;

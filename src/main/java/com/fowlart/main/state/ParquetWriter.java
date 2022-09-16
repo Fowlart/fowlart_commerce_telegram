@@ -1,6 +1,6 @@
 package com.fowlart.main.state;
 
-import com.fowlart.main.hi_level_api_usage.CustomParquetWriter;
+import com.fowlart.main.hi_level_parquet_api_usage.CustomParquetWriter;
 import org.apache.hadoop.fs.Path;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import org.apache.parquet.schema.MessageType;
