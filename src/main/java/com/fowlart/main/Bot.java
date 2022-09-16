@@ -103,9 +103,6 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         //save user into session hash
         botVisitors.getUserMap().put(userId, botVisitor);
 
-        //write parquet
-        // parquetWriter.writeUser(userId, userFirstName, "IN_MAIN_SCREEN");
-
         //write to RocksDb
         Optional<Object> userFromDb = rocksDBRepository.find(String.valueOf(userId));
         if (userFromDb.isPresent()) {
