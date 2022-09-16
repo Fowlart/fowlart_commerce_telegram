@@ -1,7 +1,6 @@
-package com.fowlart.main;
+package com.fowlart.main.state;
 
 import com.google.common.collect.Maps;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.User;
@@ -12,7 +11,7 @@ import java.util.Map;
 @Scope("singleton")
 public class BotVisitors {
 
-    private Map<Long,User> userMap = Maps.newHashMap();
+    private Map<Long, User> userMap = Maps.newHashMap();
 
     public Map<Long, User> getUserMap() {
         return userMap;

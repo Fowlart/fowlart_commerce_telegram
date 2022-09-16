@@ -1,4 +1,4 @@
-package com.fowlart.main.bloom_filter;
+package com.fowlart.main.hi_level_api_usage;
 
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;

@@ -20,7 +20,7 @@ public class FowlartCommerceApplication {
         log.info("Registering bot...");
         try {
             telegramBotsApi = new TelegramBotsApi(DefaultBotSession.class);
-            telegramBotsApi.registerBot(SimpleEchoBot.getInstance());
+            telegramBotsApi.registerBot(Bot.getInstance());
         } catch (TelegramApiException e) {
             log.error("Failed to register bot(check internet connection / bot token or make sure only one instance of bot is running).", e);
         }
