@@ -1,9 +1,9 @@
 package com.fowlart.main;
 
 import com.fowlart.main.state.BotVisitor;
+import com.fowlart.main.state.BotVisitors;
 import com.fowlart.main.state.State;
 import com.fowlart.main.state.rocks_db.RocksDBRepository;
-import com.fowlart.main.state.BotVisitors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -61,10 +62,38 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     public void onRegister() {
     }
 
-    private void handleInlineButtonClick(Update update) {
-        //Todo: add some simple handler
-        log.info("callback query: " + update.getCallbackQuery());
-        log.info(update.getCallbackQuery().getData());
+    private void handleInlineButtonClick(CallbackQuery callbackQuery) {
+        Long userId = callbackQuery.getFrom().getId();
+        BotVisitor visitor = this.botVisitors.getUserMap().get(userId);
+        log.info(visitor.toString());
+        String callBackButton = callbackQuery.getData();
+
+        var msg = switch (callBackButton) {
+            case "1_1" -> {
+                visitor.setState(State.CATALOG);
+                yield SendMessage.builder().chatId(userId).text("Тут буде каталог товарів!").replyMarkup(KeyboardHelper.buildReplyMainMenuKeyboardMenu()).build();
+            }
+
+            case "1_2" -> {
+                visitor.setState(State.DELIVERY);
+                yield SendMessage.builder().chatId(userId).text("Тут буде інфо про доставку!").replyMarkup(KeyboardHelper.buildReplyMainMenuKeyboardMenu()).build();
+            }
+
+            case "1_3" -> {
+                visitor.setState(State.DEBT);
+                yield SendMessage.builder().chatId(userId).text("Тут буде інфо про борг!").replyMarkup(KeyboardHelper.buildReplyMainMenuKeyboardMenu()).build();
+            }
+            default -> null;
+        };
+
+        this.botVisitors.getUserMap().put(userId,visitor);
+        this.rocksDBRepository.save(String.valueOf(userId),visitor);
+
+        try {
+            this.sendApiMethod(msg);
+        } catch (TelegramApiException e) {
+            log.error("Exception when sending message: ", e);
+        }
     }
 
     private void handleInputMsg(Update update) {
@@ -78,10 +107,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
 
             ScalaTextHelper scalaTextHelper = new ScalaTextHelper();
 
-            SendMessage sendMessage = SendMessage.builder()
-                    .chatId(userId.toString())
-                    .text(scalaTextHelper.getMainMenuText(userFirstName))
-                    .replyMarkup(KeyboardHelper.buildReplyInlineKeyboardMenu()).build();
+            SendMessage sendMessage = SendMessage.builder().chatId(userId.toString()).text(scalaTextHelper.getMainMenuText(userFirstName)).replyMarkup(KeyboardHelper.buildReplyMainMenuKeyboardMenu()).build();
             try {
                 this.sendApiMethod(sendMessage);
             } catch (TelegramApiException e) {
@@ -92,31 +118,36 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         }
     }
 
-    @Override
-    public void onUpdateReceived(Update update) {
-
-        Long userId = update.getMessage().getChatId();
-        String userFirstName = update.getMessage().getFrom().getFirstName();
-        User user = update.getMessage().getFrom();
-        BotVisitor botVisitor = new BotVisitor(user, State.MAIN_SCREEN);
-
-        //save user into session hash
-        botVisitors.getUserMap().put(userId, botVisitor);
-
-        //write to RocksDb
-        Optional<Object> userFromDb = rocksDBRepository.find(String.valueOf(userId));
+    private BotVisitor getVisitorFromDb(User user) {
+        BotVisitor botVisitor;
+        Optional<Object> userFromDb = rocksDBRepository.find(String.valueOf(user.getId()));
         if (userFromDb.isPresent()) {
             // get from RocksDb
-            BotVisitor castedUserFromDb = (BotVisitor) userFromDb.get();
-            log.info("Retrieved visitor from db: "+castedUserFromDb);
+            botVisitor = (BotVisitor) userFromDb.get();
         } else {
-            rocksDBRepository.save(String.valueOf(userId), botVisitor);
+            //write to RocksDb
+            botVisitor = new BotVisitor(user, State.MAIN_SCREEN);
+            rocksDBRepository.save(String.valueOf(user.getId()), botVisitor);
         }
 
+        //save user into session hash
+        botVisitors.getUserMap().put(user.getId(), botVisitor);
+        return botVisitor;
+    }
 
+    /**
+     * Main method for handling input messages
+     */
+    @Override
+    public void onUpdateReceived(Update update) {
         if (update.hasCallbackQuery()) {
-            handleInlineButtonClick(update);
+            CallbackQuery callbackQuery = update.getCallbackQuery();
+            User user = callbackQuery.getFrom();
+            getVisitorFromDb(user);
+            handleInlineButtonClick(callbackQuery);
         } else {
+            User user = update.getMessage().getFrom();
+            getVisitorFromDb(user);
             handleInputMsg(update);
         }
     }

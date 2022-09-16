@@ -26,13 +26,13 @@ public class KeyboardHelper {
         return button;
     }
 
-    public static InlineKeyboardMarkup buildReplyInlineKeyboardMenu() {
+    public static InlineKeyboardMarkup buildReplyMainMenuKeyboardMenu() {
         InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
         List<InlineKeyboardButton> rowInline = new ArrayList<>();
 
-        for (int i = 1; i < 7; i++) {
-            rowInline.add(buildButton("▫️"+ i, "1_"+i));
+        for (int i = 1; i <=3; i++) {
+            rowInline.add(buildButton("❗️"+ i, "1_"+i));
         }
 
         rowsInline.add(rowInline);
