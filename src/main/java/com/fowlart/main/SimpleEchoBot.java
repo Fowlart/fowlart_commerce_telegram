@@ -1,11 +1,10 @@
-package com.fowlart.FowlartCommerce;
+package com.fowlart.main;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -51,11 +50,11 @@ public class SimpleEchoBot extends TelegramLongPollingBot implements Initializin
 
     private String addMenuItem(String item) {
         if (this.menuItems.isEmpty()) {
-            menuItems.add("\n" + "1-[" + item + "]");
+            menuItems.add("\n" + "1/[" + item + "]");
         } else {
-            int lastElementIndex = Integer.parseInt(menuItems.getLast().replaceAll("\n", "").split("-")[0]);
+            int lastElementIndex = Integer.parseInt(menuItems.getLast().replaceAll("\n", "").split("/")[0]);
             ++lastElementIndex;
-            menuItems.add("\n" + lastElementIndex + "-[" + item + "]");
+            menuItems.add("\n" + lastElementIndex + "/[" + item + "]");
         }
         return menuItems.stream().reduce("",(s1, s2) -> s1+s2);
     }

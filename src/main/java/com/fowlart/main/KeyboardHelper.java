@@ -1,4 +1,4 @@
-package com.fowlart.FowlartCommerce;
+package com.fowlart.main;
 
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;

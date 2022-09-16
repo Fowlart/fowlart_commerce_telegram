@@ -1,4 +1,4 @@
-package com.fowlart.FowlartCommerce;
+package com.fowlart.main;
 
 
 import org.slf4j.Logger;
