@@ -22,8 +22,8 @@ enum ScStateWithBit(bit: Int) {
   def getBit: Int = bit
 
 }
-
 object ScStateEx extends App {
   val stateWithBit = ScStateWithBit.DEBT
-  print(stateWithBit.getBit)
+  println(stateWithBit.getBit) // get additional info
+  println(stateWithBit.ordinal) // get index which is mean order of declaration
 }

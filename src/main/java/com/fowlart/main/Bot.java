@@ -12,14 +12,18 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.io.File;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Component
 public class Bot extends TelegramLongPollingBot implements InitializingBean {
@@ -63,39 +67,58 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     public void onRegister() {
     }
 
-    private void handleInlineButtonClick(CallbackQuery callbackQuery) {
+    private List<SendPhoto> getGoodsFromContentFolder(long chatId) {
+        File contentFolder = new File("src/main/resources/goods/");
+
+        return Arrays.stream(contentFolder.listFiles())
+                .map(file -> SendPhoto.builder().caption(file.getName().split("\\.")[0]).chatId(chatId).photo(new InputFile(file))
+                        .build()).collect(Collectors.toList());
+    }
+
+
+    private void handleInlineButtonClick(CallbackQuery callbackQuery) throws TelegramApiException {
 
         Long chatId = callbackQuery.getFrom().getId();
         BotVisitor visitor = this.botVisitors.getUserMap().get(chatId);
         log.info(visitor.toString());
 
         String callBackButton = callbackQuery.getData();
+        State receivedState = State.valueOf(callBackButton);
 
         SendMessage answer = null;
 
-        if (Objects.equals(callBackButton, State.CATALOG.textCode)) {
-            answer = SendMessage.builder().chatId(chatId).text("Тут буде каталог товарів!").replyMarkup(KeyboardHelper.buildReplyMainMenuKeyboardMenu()).build();
-            visitor.setState(State.CATALOG);
-        }
+        answer = switch (receivedState) {
+            case CATALOG -> {
+                visitor.setState(State.CATALOG);
 
-        if (Objects.equals(callBackButton, State.DELIVERY.textCode)) {
-            answer = SendMessage.builder().chatId(chatId).text("Тут буде інфо про доставку!").replyMarkup(KeyboardHelper.buildReplyMainMenuKeyboardMenu()).build();
-            visitor.setState(State.DELIVERY);
-        }
+                getGoodsFromContentFolder(chatId).forEach(msg -> {
+                    try {
+                        execute(msg);
+                    } catch (TelegramApiException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
 
-        if (Objects.equals(callBackButton, State.DEBT.textCode)) {
-            answer = SendMessage.builder().chatId(chatId).text("Тут буде інфо про борг!").replyMarkup(KeyboardHelper.buildReplyMainMenuKeyboardMenu()).build();
-            visitor.setState(State.DEBT);
-        }
+                yield SendMessage.builder().chatId(chatId).text("Дивись вище список доступних товарів!").replyMarkup(KeyboardHelper.buildReplyMainMenuKeyboardMenu()).build();
+            }
+            case DELIVERY -> {
+                visitor.setState(State.DELIVERY);
+                yield SendMessage.builder().chatId(chatId).text("Тут буде інфо про доставку!").replyMarkup(KeyboardHelper.buildReplyMainMenuKeyboardMenu()).build();
+            }
+            case DEBT -> {
+                visitor.setState(State.DEBT);
+                yield SendMessage.builder().chatId(chatId).text("Тут буде інфо про борг!").replyMarkup(KeyboardHelper.buildReplyMainMenuKeyboardMenu()).build();
+            }
+            // Todo
+            case MAIN_SCREEN -> {
+                visitor.setState(State.MAIN_SCREEN);
+                yield SendMessage.builder().chatId(chatId).text("Тут буде інфо про борг!").replyMarkup(KeyboardHelper.buildReplyMainMenuKeyboardMenu()).build();
+            }
+        };
 
         this.botVisitors.getUserMap().put(chatId, visitor);
         this.rocksDBRepository.save(String.valueOf(chatId), visitor);
-
-        try {
-            this.sendApiMethod(answer);
-        } catch (TelegramApiException e) {
-            log.error("Exception when sending message: ", e);
-        }
+        this.sendApiMethod(answer);
     }
 
     private void handleInputMsg(Update update) {
@@ -146,7 +169,11 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             CallbackQuery callbackQuery = update.getCallbackQuery();
             User user = callbackQuery.getFrom();
             getVisitorFromDb(user);
-            handleInlineButtonClick(callbackQuery);
+            try {
+                handleInlineButtonClick(callbackQuery);
+            } catch (TelegramApiException e) {
+                throw new RuntimeException(e);
+            }
         } else {
             User user = update.getMessage().getFrom();
             getVisitorFromDb(user);

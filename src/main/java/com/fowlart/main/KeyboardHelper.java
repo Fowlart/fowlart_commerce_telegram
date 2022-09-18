@@ -31,9 +31,9 @@ public class KeyboardHelper {
         InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
         List<InlineKeyboardButton> rowInline = new ArrayList<>();
-        rowInline.add(buildButton("1", State.CATALOG.getTextCode()));
-        rowInline.add(buildButton("2", State.DELIVERY.getTextCode()));
-        rowInline.add(buildButton("3", State.DEBT.getTextCode()));
+        rowInline.add(buildButton("1", State.CATALOG.name()));
+        rowInline.add(buildButton("2", State.DELIVERY.name()));
+        rowInline.add(buildButton("3", State.DEBT.name()));
 
         rowsInline.add(rowInline);
         // Add it to the message
