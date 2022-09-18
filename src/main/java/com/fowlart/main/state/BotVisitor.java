@@ -3,26 +3,37 @@ package com.fowlart.main.state;
 import org.telegram.telegrambots.meta.api.objects.User;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 public class BotVisitor implements Serializable {
 
     private User user;
 
-    private State state;
+    private Buttons buttons;
     
     private long userId;
 
-    public long getUserId() {
-        return userId;
+    private ArrayList<Item> bucket = new ArrayList<>();
+
+    public ArrayList<Item> getBucket() {
+        return bucket;
+    }
+    
+    
+
+
+    public String getUserId() {
+        return String.valueOf(userId);
     }
 
     public void setUserId(long userId) {
         this.userId = userId;
     }
 
-    public BotVisitor(User user, State state) {
+    public BotVisitor(User user, Buttons buttons, long userId) {
         this.user = user;
-        this.state = state;
+        this.buttons = buttons;
+        this.userId = userId;
     }
 
     public User getUser() {
@@ -33,19 +44,19 @@ public class BotVisitor implements Serializable {
         this.user = user;
     }
 
-    public State getState() {
-        return state;
+    public Buttons getState() {
+        return buttons;
     }
 
-    public void setState(State state) {
-        this.state = state;
+    public void setState(Buttons buttons) {
+        this.buttons = buttons;
     }
 
     @Override
     public String toString() {
         return "BotVisitor{" +
                 "user_id=" + user.getId() +
-                ", state=" + state +
+                ", state=" + buttons +
                 '}';
     }
 }
