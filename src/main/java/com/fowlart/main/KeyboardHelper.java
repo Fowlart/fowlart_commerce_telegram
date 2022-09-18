@@ -1,5 +1,6 @@
 package com.fowlart.main;
 
+import com.fowlart.main.state.State;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -30,10 +31,9 @@ public class KeyboardHelper {
         InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
         List<InlineKeyboardButton> rowInline = new ArrayList<>();
-
-        for (int i = 1; i <=3; i++) {
-            rowInline.add(buildButton("❗️"+ i, "1_"+i));
-        }
+        rowInline.add(buildButton("1", State.CATALOG.getTextCode()));
+        rowInline.add(buildButton("2", State.DELIVERY.getTextCode()));
+        rowInline.add(buildButton("3", State.DEBT.getTextCode()));
 
         rowsInline.add(rowInline);
         // Add it to the message

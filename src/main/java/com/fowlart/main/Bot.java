@@ -18,6 +18,7 @@ import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Component
@@ -63,34 +64,35 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     }
 
     private void handleInlineButtonClick(CallbackQuery callbackQuery) {
-        Long userId = callbackQuery.getFrom().getId();
-        BotVisitor visitor = this.botVisitors.getUserMap().get(userId);
+
+        Long chatId = callbackQuery.getFrom().getId();
+        BotVisitor visitor = this.botVisitors.getUserMap().get(chatId);
         log.info(visitor.toString());
+
         String callBackButton = callbackQuery.getData();
 
-        var msg = switch (callBackButton) {
-            case "1_1" -> {
-                visitor.setState(State.CATALOG);
-                yield SendMessage.builder().chatId(userId).text("Тут буде каталог товарів!").replyMarkup(KeyboardHelper.buildReplyMainMenuKeyboardMenu()).build();
-            }
+        SendMessage answer = null;
 
-            case "1_2" -> {
-                visitor.setState(State.DELIVERY);
-                yield SendMessage.builder().chatId(userId).text("Тут буде інфо про доставку!").replyMarkup(KeyboardHelper.buildReplyMainMenuKeyboardMenu()).build();
-            }
+        if (Objects.equals(callBackButton, State.CATALOG.textCode)) {
+            answer = SendMessage.builder().chatId(chatId).text("Тут буде каталог товарів!").replyMarkup(KeyboardHelper.buildReplyMainMenuKeyboardMenu()).build();
+            visitor.setState(State.CATALOG);
+        }
 
-            case "1_3" -> {
-                visitor.setState(State.DEBT);
-                yield SendMessage.builder().chatId(userId).text("Тут буде інфо про борг!").replyMarkup(KeyboardHelper.buildReplyMainMenuKeyboardMenu()).build();
-            }
-            default -> null;
-        };
+        if (Objects.equals(callBackButton, State.DELIVERY.textCode)) {
+            answer = SendMessage.builder().chatId(chatId).text("Тут буде інфо про доставку!").replyMarkup(KeyboardHelper.buildReplyMainMenuKeyboardMenu()).build();
+            visitor.setState(State.DELIVERY);
+        }
 
-        this.botVisitors.getUserMap().put(userId,visitor);
-        this.rocksDBRepository.save(String.valueOf(userId),visitor);
+        if (Objects.equals(callBackButton, State.DEBT.textCode)) {
+            answer = SendMessage.builder().chatId(chatId).text("Тут буде інфо про борг!").replyMarkup(KeyboardHelper.buildReplyMainMenuKeyboardMenu()).build();
+            visitor.setState(State.DEBT);
+        }
+
+        this.botVisitors.getUserMap().put(chatId, visitor);
+        this.rocksDBRepository.save(String.valueOf(chatId), visitor);
 
         try {
-            this.sendApiMethod(msg);
+            this.sendApiMethod(answer);
         } catch (TelegramApiException e) {
             log.error("Exception when sending message: ", e);
         }
