@@ -1,17 +1,23 @@
 package com.fowlart.main;
 
+import com.fowlart.main.catalog_fetching.ExcelFetcher;
 import com.fowlart.main.state.Buttons;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 @Component
 public class KeyboardHelper {
+
+    @Autowired
+    private ExcelFetcher excelFetcher;
 
     public static ReplyKeyboardMarkup buildMainMenu() {
         KeyboardRow keyboardRow = new KeyboardRow();
@@ -53,7 +59,7 @@ public class KeyboardHelper {
         return markupInline;
     }
 
-    public InlineKeyboardMarkup buildReplyMainMenuKeyboardMenu() {
+    public InlineKeyboardMarkup buildMainMenuReply() {
         InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
         List<InlineKeyboardButton> rowInline = new ArrayList<>();
@@ -65,6 +71,34 @@ public class KeyboardHelper {
         // Add it to the message
         markupInline.setKeyboard(rowsInline);
         return markupInline;
+    }
+
+    public InlineKeyboardMarkup buildCatalogItemsMenu(){
+
+        List<String> items;
+        try {
+            items = this.excelFetcher.getProductGroupsFromSheet();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
+        List<InlineKeyboardButton> rowInline = new ArrayList<>();
+        int countOfButtonsInRow = 0;
+        for (String item: items){
+            if (countOfButtonsInRow<=1) {
+                countOfButtonsInRow++;
+                rowInline.add(buildButton(item, item));
+            }
+            else {
+                countOfButtonsInRow=0;
+                rowsInline.add(rowInline);
+                rowInline = new ArrayList<>();
+            }
+        }
+        markupInline.setKeyboard(rowsInline);
+        return markupInline;
+
     }
 
     public InlineKeyboardMarkup buildBucketKeyboardMenu() {

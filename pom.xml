@@ -46,6 +46,18 @@
 			<artifactId>rocksdbjni</artifactId>
 			<version>7.5.3</version>
 		</dependency>
+
+		<!-- excel file read -->
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi</artifactId>
+			<version>5.2.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml</artifactId>
+			<version>5.2.2</version>
+		</dependency>
 	</dependencies>
 
 	<build>

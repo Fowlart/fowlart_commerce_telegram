@@ -19,6 +19,8 @@ public class RocksDBRepository implements KVRepository<String, Object> {
 
     private static final Logger log = LoggerFactory.getLogger(RocksDBRepository.class);
     private final static String FILE_NAME = "rocks-db";
+
+
     File baseDir;
     RocksDB db;
 
