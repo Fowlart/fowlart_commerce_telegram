@@ -20,21 +20,33 @@ public class ExcelFetcher {
     private static final String START_PARSING_PHRASE = "Продукция";
     private static final String PATH_TO_CATALOG = "src/main/resources/catalog/catalog.xls";
 
-    public List<String> getGoodsFromProductGroup(String productGroup) throws IOException {
-
+    private Sheet getSheet() throws IOException {
         FileInputStream file = new FileInputStream(PATH_TO_CATALOG);
         Workbook workbook = new HSSFWorkbook(file);
-        Sheet sheet = workbook.getSheetAt(0);
+        return workbook.getSheetAt(0);
+    }
+
+    public List<String> getGoodsFromProductGroup(String productGroup) throws IOException {
+
+        Sheet sheet = getSheet();
         List<String> items = new ArrayList<>();
         List<String> groupItems = this.getProductGroupsFromSheet();
         int indexOfCurrentGroupItem = groupItems.indexOf(productGroup);
-        //todo: indexOutOfBound
-        String nextGroup = groupItems.get(indexOfCurrentGroupItem + 1);
+
+        String nextGroup;
+        int nextElementIndex = indexOfCurrentGroupItem + 1;
+        if (nextElementIndex <= groupItems.size() - 1) {
+            nextGroup = groupItems.get(nextElementIndex);
+        } else {
+            nextGroup = "EOF";
+        }
         boolean shouldCollect = false;
         List<String> itemWithPrice = new ArrayList<>();
+        int rowCount = 0;
 
         for (Row row : sheet) {
             for (Cell cell : row) {
+                rowCount++;
                 // do nothing
                 if (cell.getCellType() == CellType.STRING || cell.getCellType() == CellType.NUMERIC) {
 
@@ -42,18 +54,19 @@ public class ExcelFetcher {
                     double price = 0d;
 
                     if (cell.getCellType() == CellType.STRING) {
-                         currentCellVal = cell.getRichStringCellValue().toString().trim();
+                        currentCellVal = cell.getRichStringCellValue().toString().trim();
                     } else {
                         price = cell.getNumericCellValue();
                     }
 
                     if (shouldCollect) {
                         if (itemWithPrice.size() == 2) {
-                            items.add(itemWithPrice.stream().reduce((itemName, p) -> itemName + "[\uD83D\uDCB0"+p+"]").orElse(""));
+                            items.add(itemWithPrice.stream().reduce((itemName, p) -> itemName + "|" + p).orElse(""));
                             itemWithPrice = new ArrayList<>();
                         } else {
-                            if (!currentCellVal.equals("шт") && !currentCellVal.equals("уп.") && !currentCellVal.equals("")) itemWithPrice.add(currentCellVal);
-                            if (price!=0d) itemWithPrice.add(Double.toString(price));
+                            if (!currentCellVal.equals("шт") && !currentCellVal.equals("уп.") && !currentCellVal.equals(""))
+                                itemWithPrice.add(currentCellVal);
+                            if (price != 0d) itemWithPrice.add(Double.toString(price));
                         }
                     }
 
@@ -61,7 +74,7 @@ public class ExcelFetcher {
                         shouldCollect = true;
                     }
 
-                    if (currentCellVal.equals(nextGroup)) {
+                    if (currentCellVal.equals(nextGroup) || rowCount==sheet.getLastRowNum()) {
                         log.info(Arrays.toString(items.toArray()));
                         return items;
                     }
@@ -76,10 +89,7 @@ public class ExcelFetcher {
     }
 
     public List<String> getProductGroupsFromSheet() throws IOException {
-
-        FileInputStream file = new FileInputStream(PATH_TO_CATALOG);
-        Workbook workbook = new HSSFWorkbook(file);
-        Sheet sheet = workbook.getSheetAt(0);
+        Sheet sheet = getSheet();
         List<String> groups = new ArrayList<>();
 
         for (Row row : sheet) {
@@ -87,9 +97,9 @@ public class ExcelFetcher {
             int resetIndex = 0;
             for (Cell cell : row) {
                 switch (cell.getCellType()) {
-                    case STRING -> {
-                        mayBeGroup = cell.getRichStringCellValue().toString().trim();
-                    }
+
+                    case STRING -> mayBeGroup = cell.getRichStringCellValue().toString().trim();
+
                     case BLANK -> {
                         resetIndex++;
                         if (resetIndex == 3) {

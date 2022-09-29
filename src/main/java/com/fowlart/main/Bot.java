@@ -1,10 +1,11 @@
 package com.fowlart.main;
 
 import com.fowlart.main.catalog_fetching.ExcelFetcher;
+import com.fowlart.main.in_mem_catalog.Catalog;
+import com.fowlart.main.in_mem_catalog.Item;
 import com.fowlart.main.state.BotVisitor;
 import com.fowlart.main.state.BotVisitorService;
 import com.fowlart.main.state.Buttons;
-import com.fowlart.main.state.Item;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -22,14 +23,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Component
 public class Bot extends TelegramLongPollingBot implements InitializingBean {
-
     private static final Logger log = LoggerFactory.getLogger(Bot.class);
-
     private static Bot instance;
     private final BotVisitorService botVisitorService;
     private final ExcelFetcher excelFetcher;
@@ -37,16 +37,20 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     private String userName;
     private String token;
 
+    private final Catalog catalog;
+
     public Bot(@Autowired BotVisitorService botVisitorService,
                @Autowired ExcelFetcher excelFetcher,
                @Autowired KeyboardHelper keyboardHelper,
                @Value("${app.bot.userName}")String userName,
-               @Value("${app.bot.userName.token}")String token) {
+               @Value("${app.bot.userName.token}")String token,
+               @Autowired Catalog catalog) {
         this.botVisitorService = botVisitorService;
         this.excelFetcher = excelFetcher;
         this.keyboardHelper = keyboardHelper;
         this.userName = userName;
         this.token = token;
+        this.catalog = catalog;
     }
 
     public static Bot getInstance() {
@@ -70,6 +74,27 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
 
     @Override
     public void onRegister() {
+
+        List<Item> catalogItems = new ArrayList<>();
+        int id = 0;
+
+        try {
+            List<String> groups = excelFetcher.getProductGroupsFromSheet();
+            this.catalog.setGroupList(groups);
+            for (String group : groups) {
+                List<String> items = excelFetcher.getGoodsFromProductGroup(group);
+                for (String item : items) {
+                    id++;
+                    var itemName = item.split("\\|")[0];
+                    var itemPrice = Double.parseDouble(item.split("\\|")[1]);
+                    var itemToAdd = new Item(id,itemName,itemPrice,group);
+                    catalogItems.add(itemToAdd);
+                }
+            }
+            this.catalog.setItemList(catalogItems);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private SendPhoto getGoodsContainerSendPhotoMsg(long chatId) {
@@ -91,16 +116,17 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             receivedButton = Buttons.valueOf(callBackButton);
         } catch (java.lang.IllegalArgumentException exception) {
             // case of selecting catalog menu
+
             var subCatalogAnswer = SendMessage
                     .builder()
                     .allowSendingWithoutReply(true)
 
-                    .text("Обирай товар:" + "\n" + excelFetcher.getGoodsFromProductGroup(callBackButton)
+                    .text("Обирай товар! Введи ID товару для замовлення! " + "\n" + catalog.
+                            getItemList()
                             .stream()
-                            .map(String::trim)
-                            .map(String::toLowerCase)
-                            .map(str->"\uD83D\uDCCC️"+str + "\n")
-                            .reduce((a, b) -> a+b)
+                            .filter(item -> item.group().equals(callBackButton))
+                            .map(item -> item.id() +"\uD83D\uDCCC "+item.name()+" \uD83D\uDCB0"+item.price())
+                            .reduce((a, b) -> a+"\n"+b)
                             .orElse("немає товару у группі"))
 
                     .chatId(userId)
@@ -181,11 +207,10 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             Integer qty = findFirstInteger(textFromUser);
             String userId = update.getMessage().getFrom().getId().toString();
 
-            // case replying to the message
+            // todo: case replying to the message
             if (Objects.nonNull(replyMessage)) {
                 // add item to the bucket
                 BotVisitor botVisitor = this.botVisitorService.getBotVisitorByUserId(userId);
-                botVisitor.getBucket().add(new Item(replyMessage.getCaption(), qty));
                 this.botVisitorService.saveBotVisitor(botVisitor);
             }
 

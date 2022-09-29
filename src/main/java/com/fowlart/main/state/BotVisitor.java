@@ -1,5 +1,6 @@
 package com.fowlart.main.state;
 
+import com.fowlart.main.in_mem_catalog.Item;
 import org.telegram.telegrambots.meta.api.objects.User;
 
 import java.io.Serializable;
