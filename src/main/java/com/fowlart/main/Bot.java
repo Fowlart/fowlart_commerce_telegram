@@ -31,20 +31,22 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     private static final Logger log = LoggerFactory.getLogger(Bot.class);
 
     private static Bot instance;
-
     private final BotVisitorService botVisitorService;
-
     private final ExcelFetcher excelFetcher;
     private final KeyboardHelper keyboardHelper;
-    @Value("${app.bot.userName}")
     private String userName;
-    @Value("${app.bot.userName.token}")
     private String token;
 
-    public Bot(@Autowired BotVisitorService botVisitorService, @Autowired ExcelFetcher excelFetcher, @Autowired KeyboardHelper keyboardHelper) {
+    public Bot(@Autowired BotVisitorService botVisitorService,
+               @Autowired ExcelFetcher excelFetcher,
+               @Autowired KeyboardHelper keyboardHelper,
+               @Value("${app.bot.userName}")String userName,
+               @Value("${app.bot.userName.token}")String token) {
         this.botVisitorService = botVisitorService;
         this.excelFetcher = excelFetcher;
         this.keyboardHelper = keyboardHelper;
+        this.userName = userName;
+        this.token = token;
     }
 
     public static Bot getInstance() {
@@ -96,7 +98,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                     .text("Обирай товар:" + "\n" + excelFetcher.getGoodsFromProductGroup(callBackButton)
                             .stream()
                             .map(String::trim)
-                            .map(str->"❗"+str + "\n")
+                            .map(str->"▫️"+str + "\n")
                             .reduce((a, b) -> a+b)
                             .orElse("немає товару у группі"))
 
