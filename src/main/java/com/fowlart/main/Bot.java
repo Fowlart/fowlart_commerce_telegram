@@ -17,10 +17,13 @@ import org.telegram.telegrambots.meta.api.objects.*;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.io.File;
-import java.util.*;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @Component
 public class Bot extends TelegramLongPollingBot implements InitializingBean {
@@ -64,33 +67,61 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     public void onRegister() {
     }
 
-    private List<SendPhoto> getGoodsFromContentFolderAndFormMessage(long chatId) {
-        File contentFolder = new File("src/main/resources/goods/");
+    private SendPhoto getGoodsContainerSendPhotoMsg(long chatId) {
 
-        return Arrays.stream(contentFolder.listFiles()).map(file -> SendPhoto.builder().caption("⚡️"+"Каталог"+"⚡️").chatId(chatId).photo(new InputFile(file)).build()).collect(Collectors.toList());
+        File goodsContainerImg = new File("src/main/resources/goods/goods_box.webp");
+
+        return SendPhoto.builder()
+                .caption("⚡️" + "Каталог" + "⚡️")
+                .chatId(chatId)
+                .photo(new InputFile(goodsContainerImg))
+                .build();
     }
 
-    private void handleInlineButtonClicks(CallbackQuery callbackQuery) throws TelegramApiException {
+    private void handleInlineButtonClicks(CallbackQuery callbackQuery) throws TelegramApiException, IOException {
         Long userId = callbackQuery.getFrom().getId();
         BotVisitor visitor = this.botVisitorService.getBotVisitorByUserId(userId.toString());
         log.info(visitor.toString());
         String callBackButton = callbackQuery.getData();
-        Buttons receivedButton = Buttons.valueOf(callBackButton);
+        Buttons receivedButton;
+
+        // todo: refactor control flow
+        try {
+            receivedButton = Buttons.valueOf(callBackButton);
+        }
+        catch (java.lang.IllegalArgumentException exception) {
+            // case of selecting catalog menu
+            var subCatalogAnswer = SendMessage
+                    .builder()
+                    .allowSendingWithoutReply(true)
+                    .text("Обирай товар:")
+                    .chatId(userId)
+                    .replyMarkup(this.keyboardHelper.buildReplySubCatalogMenuKeyboardMenu(callBackButton))
+                    .build();
+
+            this.botVisitorService.saveBotVisitor(visitor);
+            this.sendApiMethod(subCatalogAnswer);
+            return;
+        }
+
         ScalaTextHelper scalaTextHelper = new ScalaTextHelper();
         String name = callbackQuery.getFrom().getFirstName();
 
         var answer = switch (receivedButton) {
             case CATALOG -> {
                 visitor.setState(Buttons.CATALOG);
-
-                getGoodsFromContentFolderAndFormMessage(userId).forEach(msg -> {
-                    try {
-                        execute(msg);
-                    } catch (TelegramApiException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
-                yield SendMessage.builder().allowSendingWithoutReply(true).text("Обирай з груп:").chatId(userId).replyMarkup(this.keyboardHelper.buildCatalogItemsMenu()).build();
+                try {
+                    execute(getGoodsContainerSendPhotoMsg(userId));
+                } catch (TelegramApiException e) {
+                    throw new RuntimeException(e);
+                }
+                yield SendMessage
+                        .builder()
+                        .allowSendingWithoutReply(true)
+                        .text("Обирай з груп:")
+                        .chatId(userId)
+                        .replyMarkup(this.keyboardHelper.buildCatalogItemsMenu())
+                        .build();
             }
             case BUCKET -> {
                 visitor = this.botVisitorService.getOrCreateVisitor(visitor.getUser());
@@ -187,7 +218,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             this.botVisitorService.getOrCreateVisitor(user);
             try {
                 handleInlineButtonClicks(callbackQuery);
-            } catch (TelegramApiException e) {
+            } catch (TelegramApiException | IOException e) {
                 throw new RuntimeException(e);
             }
         } else {

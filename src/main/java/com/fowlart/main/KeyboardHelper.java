@@ -16,8 +16,11 @@ import java.util.List;
 @Component
 public class KeyboardHelper {
 
-    @Autowired
-    private ExcelFetcher excelFetcher;
+    private final ExcelFetcher excelFetcher;
+
+    public KeyboardHelper(@Autowired ExcelFetcher excelFetcher) {
+        this.excelFetcher = excelFetcher;
+    }
 
     public static ReplyKeyboardMarkup buildMainMenu() {
         KeyboardRow keyboardRow = new KeyboardRow();
@@ -35,25 +38,19 @@ public class KeyboardHelper {
         return button;
     }
 
-    public InlineKeyboardMarkup buildReplyCatalogMenuKeyboardMenu() {
+    public InlineKeyboardMarkup buildReplySubCatalogMenuKeyboardMenu(String topLevelItem) throws IOException {
         InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
-        List<InlineKeyboardButton> line1 = new ArrayList<>();
-        List<InlineKeyboardButton> line2 = new ArrayList<>();
-        line1.add(buildButton("1", Buttons.CATALOG.name()));
-        line1.add(buildButton("2", Buttons.CATALOG.name()));
-        line1.add(buildButton("3", Buttons.CATALOG.name()));
-        line1.add(buildButton("4", Buttons.CATALOG.name()));
-        line1.add(buildButton("5", Buttons.CATALOG.name()));
+        List<InlineKeyboardButton> rowInline = new ArrayList<>();
 
-        line2.add(buildButton("6", Buttons.CATALOG.name()));
-        line2.add(buildButton("7", Buttons.CATALOG.name()));
-        line2.add(buildButton("8", Buttons.CATALOG.name()));
-        line2.add(buildButton("9", Buttons.CATALOG.name()));
-        line2.add(buildButton("10", Buttons.CATALOG.name()));
+        for (String item: excelFetcher.getGoodsFromProductGroup(topLevelItem)) {
+            rowInline.add(buildButton(item, item));
 
-        rowsInline.add(line1);
-        rowsInline.add(line2);
+            if (rowInline.size()>=3) {
+                rowsInline.add(rowInline);
+                rowInline = new ArrayList<>();
+            }
+        }
 
         markupInline.setKeyboard(rowsInline);
         return markupInline;
@@ -74,7 +71,6 @@ public class KeyboardHelper {
     }
 
     public InlineKeyboardMarkup buildCatalogItemsMenu(){
-
         List<String> items;
         try {
             items = this.excelFetcher.getProductGroupsFromSheet();
@@ -84,21 +80,14 @@ public class KeyboardHelper {
         InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
         List<InlineKeyboardButton> rowInline = new ArrayList<>();
-        int countOfButtonsInRow = 0;
-        for (String item: items){
-            if (countOfButtonsInRow<=1) {
-                countOfButtonsInRow++;
-                rowInline.add(buildButton(item, item));
-            }
-            else {
-                countOfButtonsInRow=0;
-                rowsInline.add(rowInline);
-                rowInline = new ArrayList<>();
-            }
+
+        for (String item : items) {
+            rowInline.add(buildButton(item, item));
+            rowsInline.add(rowInline);
+            rowInline = new ArrayList<>();
         }
         markupInline.setKeyboard(rowsInline);
         return markupInline;
-
     }
 
     public InlineKeyboardMarkup buildBucketKeyboardMenu() {
