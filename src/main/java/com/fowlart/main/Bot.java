@@ -99,7 +99,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                             .stream()
                             .map(String::trim)
                             .map(String::toLowerCase)
-                            .map(str->"▫️"+str + "\n")
+                            .map(str->"\uD83D\uDCCC️"+str + "\n")
                             .reduce((a, b) -> a+b)
                             .orElse("немає товару у группі"))
 

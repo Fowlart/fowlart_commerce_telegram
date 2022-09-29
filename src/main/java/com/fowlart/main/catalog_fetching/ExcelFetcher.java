@@ -36,16 +36,24 @@ public class ExcelFetcher {
         for (Row row : sheet) {
             for (Cell cell : row) {
                 // do nothing
-                if (cell.getCellType() == CellType.STRING) {
+                if (cell.getCellType() == CellType.STRING || cell.getCellType() == CellType.NUMERIC) {
 
-                    String currentCellVal = cell.getRichStringCellValue().toString().trim();
+                    String currentCellVal = "";
+                    double price = 0d;
+
+                    if (cell.getCellType() == CellType.STRING) {
+                         currentCellVal = cell.getRichStringCellValue().toString().trim();
+                    } else {
+                        price = cell.getNumericCellValue();
+                    }
 
                     if (shouldCollect) {
-                        if (itemWithPrice.size() == 1) {
-                            items.add(itemWithPrice.stream().reduce((itemName, price) -> itemName + price).get());
+                        if (itemWithPrice.size() == 2) {
+                            items.add(itemWithPrice.stream().reduce((itemName, p) -> itemName + " \uD83D\uDCB0 ["+p+"]").orElse(""));
                             itemWithPrice = new ArrayList<>();
                         } else {
-                            if (!currentCellVal.equals("шт") && !currentCellVal.equals("уп.")) itemWithPrice.add(currentCellVal);
+                            if (!currentCellVal.equals("шт") && !currentCellVal.equals("уп.") && !currentCellVal.equals("")) itemWithPrice.add(currentCellVal);
+                            if (price!=0d) itemWithPrice.add(Double.toString(price));
                         }
                     }
 
@@ -54,7 +62,7 @@ public class ExcelFetcher {
                     }
 
                     if (currentCellVal.equals(nextGroup)) {
-                        System.out.println(Arrays.toString(items.toArray()));
+                        log.info(Arrays.toString(items.toArray()));
                         return items;
                     }
                 }
@@ -63,7 +71,7 @@ public class ExcelFetcher {
 
         items.remove(null);
         items.remove(START_PARSING_PHRASE);
-        System.out.println(Arrays.toString(items.toArray()));
+        log.info(Arrays.toString(items.toArray()));
         return items;
     }
 
@@ -96,7 +104,6 @@ public class ExcelFetcher {
         }
         groups.remove(null);
         groups.remove(START_PARSING_PHRASE);
-        System.out.println(Arrays.toString(groups.toArray()));
         return groups;
     }
 }

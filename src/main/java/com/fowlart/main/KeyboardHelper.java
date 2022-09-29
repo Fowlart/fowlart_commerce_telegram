@@ -31,7 +31,7 @@ public class KeyboardHelper {
         return ReplyKeyboardMarkup.builder().keyboard(List.of(keyboardRow)).selective(true).resizeKeyboard(true).oneTimeKeyboard(false).build();
     }
 
-    private InlineKeyboardButton buildButton(String text,String callBackText) {
+    private InlineKeyboardButton buildButton(String text, String callBackText) {
         InlineKeyboardButton button = new InlineKeyboardButton();
         button.setText(text);
         button.setCallbackData(callBackText);
@@ -43,10 +43,10 @@ public class KeyboardHelper {
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
         List<InlineKeyboardButton> rowInline = new ArrayList<>();
 
-        for (String item: excelFetcher.getGoodsFromProductGroup(topLevelItem)) {
+        for (String item : excelFetcher.getGoodsFromProductGroup(topLevelItem)) {
             rowInline.add(buildButton(item, item));
 
-            if (rowInline.size()>=3) {
+            if (rowInline.size() >= 3) {
                 rowsInline.add(rowInline);
                 rowInline = new ArrayList<>();
             }
@@ -70,7 +70,7 @@ public class KeyboardHelper {
         return markupInline;
     }
 
-    public InlineKeyboardMarkup buildCatalogItemsMenu(){
+    public InlineKeyboardMarkup buildCatalogItemsMenu() {
         List<String> items;
         try {
             items = this.excelFetcher.getProductGroupsFromSheet();
