@@ -98,6 +98,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                     .text("Обирай товар:" + "\n" + excelFetcher.getGoodsFromProductGroup(callBackButton)
                             .stream()
                             .map(String::trim)
+                            .map(String::toLowerCase)
                             .map(str->"▫️"+str + "\n")
                             .reduce((a, b) -> a+b)
                             .orElse("немає товару у группі"))
