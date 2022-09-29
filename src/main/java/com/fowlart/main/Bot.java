@@ -87,7 +87,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                     id++;
                     var itemName = item.split("\\|")[0];
                     var itemPrice = Double.parseDouble(item.split("\\|")[1]);
-                    var itemToAdd = new Item(id,itemName,itemPrice,group);
+                    var itemToAdd = new Item("ID"+id,itemName,itemPrice,group);
                     catalogItems.add(itemToAdd);
                 }
             }
@@ -121,12 +121,12 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                     .builder()
                     .allowSendingWithoutReply(true)
 
-                    .text("Обирай товар! Введи ID товару для замовлення! " + "\n" + catalog.
+                    .text("Обирай товар! Введи ID товару для замовлення! " + "\n\n" + catalog.
                             getItemList()
                             .stream()
                             .filter(item -> item.group().equals(callBackButton))
-                            .map(item -> item.id() +"\uD83D\uDCCC "+item.name()+" \uD83D\uDCB0"+item.price())
-                            .reduce((a, b) -> a+"\n"+b)
+                            .map(item ->"\uD83D\uDCCC"+"  "+item.id() +"  "+item.name()+"  \uD83D\uDCB0  "+item.price())
+                            .reduce((a, b) -> a+"\n\n"+b)
                             .orElse("немає товару у группі"))
 
                     .chatId(userId)
@@ -155,7 +155,10 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                 visitor = this.botVisitorService.getOrCreateVisitor(visitor.getUser());
                 visitor.setState(Buttons.BUCKET);
                 List<String> itemList = visitor.getBucket().stream().map(Item::toString).toList();
-                yield SendMessage.builder().chatId(userId).text("ЗАМОВЛЕНІ ТОВАРИ: \n" + String.join("\n", itemList)).replyMarkup(keyboardHelper.buildBucketKeyboardMenu()).build();
+
+                yield SendMessage.builder().chatId(userId)
+                        .text("ЗАМОВЛЕНІ ТОВАРИ: \n\n\n" + String.join("\n\n", itemList))
+                        .replyMarkup(keyboardHelper.buildBucketKeyboardMenu()).build();
             }
             case DEBT -> {
                 visitor.setState(Buttons.DEBT);
@@ -183,37 +186,24 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         this.sendApiMethod(answer);
     }
 
-    private int findFirstInteger(String stringToSearch) {
-        Pattern integerPattern = Pattern.compile("-?\\d+");
-        Matcher matcher = integerPattern.matcher(stringToSearch);
-
-        List<String> integerList = new ArrayList<>();
-        while (matcher.find()) {
-            integerList.add(matcher.group());
-        }
-
-        if (integerList.isEmpty()) {
-            return 0;
-        }
-
-        return Integer.parseInt(integerList.get(0));
-    }
 
     private void handleInputMsg(Update update) {
+
         if (update.hasMessage() && update.getMessage().hasText()) {
 
             String textFromUser = update.getMessage().getText();
             Message replyMessage = update.getMessage().getReplyToMessage();
-            Integer qty = findFirstInteger(textFromUser);
             String userId = update.getMessage().getFrom().getId().toString();
-
-            // todo: case replying to the message
-            if (Objects.nonNull(replyMessage)) {
+            if (textFromUser.contains("ID")){
                 // add item to the bucket
                 BotVisitor botVisitor = this.botVisitorService.getBotVisitorByUserId(userId);
+
+                botVisitor.getBucket().add(this.catalog.getItemList()
+                        .stream()
+                        .filter(item -> item.id().equals(textFromUser)).findFirst().orElse(null));
+
                 this.botVisitorService.saveBotVisitor(botVisitor);
             }
-
             Long chatId = update.getMessage().getChatId();
             String userFirstName = update.getMessage().getFrom().getFirstName();
 
