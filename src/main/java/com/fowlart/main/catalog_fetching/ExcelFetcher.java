@@ -49,7 +49,7 @@ public class ExcelFetcher {
 
                     if (shouldCollect) {
                         if (itemWithPrice.size() == 2) {
-                            items.add(itemWithPrice.stream().reduce((itemName, p) -> itemName + " \uD83D\uDCB0["+p+"]").orElse(""));
+                            items.add(itemWithPrice.stream().reduce((itemName, p) -> itemName + "[\uD83D\uDCB0"+p+"]").orElse(""));
                             itemWithPrice = new ArrayList<>();
                         } else {
                             if (!currentCellVal.equals("шт") && !currentCellVal.equals("уп.") && !currentCellVal.equals("")) itemWithPrice.add(currentCellVal);
