@@ -1,5 +1,6 @@
 package com.fowlart.main;
 
+import com.fowlart.main.catalog_fetching.ExcelFetcher;
 import com.fowlart.main.state.BotVisitor;
 import com.fowlart.main.state.BotVisitorService;
 import com.fowlart.main.state.Buttons;
@@ -19,7 +20,6 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.Matcher;
@@ -32,17 +32,20 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
 
     private static Bot instance;
 
-    @Autowired
-    private BotVisitorService botVisitorService;
+    private final BotVisitorService botVisitorService;
 
+    private final ExcelFetcher excelFetcher;
+    private final KeyboardHelper keyboardHelper;
     @Value("${app.bot.userName}")
     private String userName;
-
     @Value("${app.bot.userName.token}")
     private String token;
 
-    @Autowired
-    private KeyboardHelper keyboardHelper;
+    public Bot(@Autowired BotVisitorService botVisitorService, @Autowired ExcelFetcher excelFetcher, @Autowired KeyboardHelper keyboardHelper) {
+        this.botVisitorService = botVisitorService;
+        this.excelFetcher = excelFetcher;
+        this.keyboardHelper = keyboardHelper;
+    }
 
     public static Bot getInstance() {
         return instance;
@@ -71,11 +74,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
 
         File goodsContainerImg = new File("src/main/resources/goods/goods_box.webp");
 
-        return SendPhoto.builder()
-                .caption("⚡️" + "Каталог" + "⚡️")
-                .chatId(chatId)
-                .photo(new InputFile(goodsContainerImg))
-                .build();
+        return SendPhoto.builder().caption("⚡️" + "Каталог" + "⚡️").chatId(chatId).photo(new InputFile(goodsContainerImg)).build();
     }
 
     private void handleInlineButtonClicks(CallbackQuery callbackQuery) throws TelegramApiException, IOException {
@@ -88,15 +87,21 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         // todo: refactor control flow
         try {
             receivedButton = Buttons.valueOf(callBackButton);
-        }
-        catch (java.lang.IllegalArgumentException exception) {
+        } catch (java.lang.IllegalArgumentException exception) {
             // case of selecting catalog menu
             var subCatalogAnswer = SendMessage
                     .builder()
                     .allowSendingWithoutReply(true)
-                    .text("Обирай товар:")
+
+                    .text("Обирай товар:" + "\n" + excelFetcher.getGoodsFromProductGroup(callBackButton)
+                            .stream()
+                            .map(String::trim)
+                            .map(str->"❗"+str + "\n")
+                            .reduce((a, b) -> a+b)
+                            .orElse("немає товару у группі"))
+
                     .chatId(userId)
-                    .replyMarkup(this.keyboardHelper.buildReplySubCatalogMenuKeyboardMenu(callBackButton))
+                    .replyMarkup(this.keyboardHelper.buildMainMenuReply())
                     .build();
 
             this.botVisitorService.saveBotVisitor(visitor);
@@ -115,13 +120,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                 } catch (TelegramApiException e) {
                     throw new RuntimeException(e);
                 }
-                yield SendMessage
-                        .builder()
-                        .allowSendingWithoutReply(true)
-                        .text("Обирай з груп:")
-                        .chatId(userId)
-                        .replyMarkup(this.keyboardHelper.buildCatalogItemsMenu())
-                        .build();
+                yield SendMessage.builder().allowSendingWithoutReply(true).text("Обирай з груп:").chatId(userId).replyMarkup(this.keyboardHelper.buildCatalogItemsMenu()).build();
             }
             case BUCKET -> {
                 visitor = this.botVisitorService.getOrCreateVisitor(visitor.getUser());
