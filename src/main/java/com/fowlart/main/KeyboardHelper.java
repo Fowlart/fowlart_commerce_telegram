@@ -1,6 +1,5 @@
 package com.fowlart.main;
 
-import com.fowlart.main.catalog_fetching.ExcelFetcher;
 import com.fowlart.main.in_mem_catalog.Catalog;
 import com.fowlart.main.state.Buttons;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,7 +9,6 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMar
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 

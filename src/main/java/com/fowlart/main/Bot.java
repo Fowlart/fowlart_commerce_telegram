@@ -23,9 +23,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Component
 public class Bot extends TelegramLongPollingBot implements InitializingBean {
@@ -34,16 +31,15 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     private final BotVisitorService botVisitorService;
     private final ExcelFetcher excelFetcher;
     private final KeyboardHelper keyboardHelper;
-    private String userName;
-    private String token;
-
     private final Catalog catalog;
+    private final String userName;
+    private final String token;
 
     public Bot(@Autowired BotVisitorService botVisitorService,
                @Autowired ExcelFetcher excelFetcher,
                @Autowired KeyboardHelper keyboardHelper,
-               @Value("${app.bot.userName}")String userName,
-               @Value("${app.bot.userName.token}")String token,
+               @Value("${app.bot.userName}") String userName,
+               @Value("${app.bot.userName.token}") String token,
                @Autowired Catalog catalog) {
         this.botVisitorService = botVisitorService;
         this.excelFetcher = excelFetcher;
@@ -87,7 +83,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                     id++;
                     var itemName = item.split("\\|")[0];
                     var itemPrice = Double.parseDouble(item.split("\\|")[1]);
-                    var itemToAdd = new Item("ID"+id,itemName,itemPrice,group);
+                    var itemToAdd = new Item("ID" + id, itemName, itemPrice, group);
                     catalogItems.add(itemToAdd);
                 }
             }
@@ -125,8 +121,12 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                             getItemList()
                             .stream()
                             .filter(item -> item.group().equals(callBackButton))
-                            .map(item ->"\uD83D\uDCCC"+"  "+item.id() +"  "+item.name()+"  \uD83D\uDCB0  "+item.price())
-                            .reduce((a, b) -> a+"\n\n"+b)
+
+                            .map(item -> "\uD83D\uDCCC" + "  " + item.id() +
+                                    "\n" + item.name() +
+                                    "\n" +  "\uD83D\uDCB0" + item.price())
+
+                            .reduce((a, b) -> a + "\n\n" + b)
                             .orElse("немає товару у группі"))
 
                     .chatId(userId)
@@ -149,31 +149,50 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                 } catch (TelegramApiException e) {
                     throw new RuntimeException(e);
                 }
-                yield SendMessage.builder().allowSendingWithoutReply(true).text("Обирай з груп:").chatId(userId).replyMarkup(this.keyboardHelper.buildCatalogItemsMenu()).build();
+
+                yield SendMessage.builder()
+                        .allowSendingWithoutReply(true)
+                        .text("Обирай з товарних груп:")
+                        .chatId(userId)
+                        .replyMarkup(this.keyboardHelper.buildCatalogItemsMenu())
+                        .build();
             }
+
             case BUCKET -> {
                 visitor = this.botVisitorService.getOrCreateVisitor(visitor.getUser());
                 visitor.setState(Buttons.BUCKET);
-                List<String> itemList = visitor.getBucket().stream().map(Item::toString).toList();
+
+                List<String> itemList = visitor.getBucket()
+                        .stream()
+                        .filter(Objects::nonNull)
+                        .map(Item::toString)
+                        .toList();
 
                 yield SendMessage.builder().chatId(userId)
-                        .text("ЗАМОВЛЕНІ ТОВАРИ: \n\n\n" + String.join("\n\n", itemList))
+                        .text("ЗАМОВЛЕНІ ТОВАРИ." +
+                                "\n Тут, напевно, буде функціонал для редагування кількості." +
+                                "\n Можливо, картинки." +
+                                "\n\n\n" + String.join("\n\n", itemList))
                         .replyMarkup(keyboardHelper.buildBucketKeyboardMenu()).build();
             }
+
             case DEBT -> {
                 visitor.setState(Buttons.DEBT);
                 yield SendMessage.builder().chatId(userId).text("Тут буде інфо про борг!").replyMarkup(keyboardHelper.buildMainMenuReply()).build();
             }
+
             case MAIN_SCREEN -> {
                 visitor.setState(Buttons.MAIN_SCREEN);
                 yield SendMessage.builder().chatId(userId).text(scalaTextHelper.getMainMenuText(name)).replyMarkup(keyboardHelper.buildMainMenuReply()).build();
             }
+
             case SUBMIT -> {
                 visitor.setState(Buttons.MAIN_SCREEN);
                 visitor.getBucket().clear();
                 this.botVisitorService.saveBotVisitor(visitor);
                 yield SendMessage.builder().chatId(userId).text("Замовлення прийнято!").replyMarkup(keyboardHelper.buildMainMenuReply()).build();
             }
+
             case DISCARD -> {
                 visitor.setState(Buttons.MAIN_SCREEN);
                 visitor.getBucket().clear();
@@ -194,7 +213,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             String textFromUser = update.getMessage().getText();
             Message replyMessage = update.getMessage().getReplyToMessage();
             String userId = update.getMessage().getFrom().getId().toString();
-            if (textFromUser.contains("ID")){
+            if (textFromUser.contains("ID")) {
                 // add item to the bucket
                 BotVisitor botVisitor = this.botVisitorService.getBotVisitorByUserId(userId);
 
