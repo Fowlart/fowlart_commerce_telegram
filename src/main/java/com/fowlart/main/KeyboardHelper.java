@@ -25,7 +25,7 @@ public class KeyboardHelper {
     public static ReplyKeyboardMarkup buildMainMenu() {
         KeyboardRow keyboardRow = new KeyboardRow();
         keyboardRow.add("❗️Товари");
-        keyboardRow.add("❗Корзинв");
+        keyboardRow.add("❗Корзина");
         keyboardRow.add("❗Борг");
 
         return ReplyKeyboardMarkup.builder().keyboard(List.of(keyboardRow)).selective(true).resizeKeyboard(true).oneTimeKeyboard(false).build();
@@ -42,9 +42,9 @@ public class KeyboardHelper {
         InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
         List<InlineKeyboardButton> rowInline = new ArrayList<>();
-        rowInline.add(buildButton("Каталог", Buttons.CATALOG.name()));
-        rowInline.add(buildButton("Корзина", Buttons.BUCKET.name()));
-        rowInline.add(buildButton("Борг", Buttons.DEBT.name()));
+        rowInline.add(buildButton("\uD83D\uDCD7 Каталог", Buttons.CATALOG.name()));
+        rowInline.add(buildButton("\uD83D\uDCDD Корзина", Buttons.BUCKET.name()));
+        rowInline.add(buildButton("\uD83D\uDCB3 Борг", Buttons.DEBT.name()));
 
         rowsInline.add(rowInline);
         // Add it to the message

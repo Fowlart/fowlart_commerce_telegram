@@ -101,6 +101,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     }
 
     private void handleInlineButtonClicks(CallbackQuery callbackQuery) throws TelegramApiException, IOException {
+        ScalaTextHelper scalaTextHelper = new ScalaTextHelper();
         Long userId = callbackQuery.getFrom().getId();
         BotVisitor visitor = this.botVisitorService.getBotVisitorByUserId(userId.toString());
         log.info(visitor.toString());
@@ -122,7 +123,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                             .stream()
                             .filter(item -> item.group().equals(callBackButton))
 
-                            .map(item -> "\uD83D\uDCCC" + "  " + item.id() +
+                            .map(item -> item.id() +
                                     "\n" + item.name() +
                                     "\n" +  "\uD83D\uDCB0" + item.price())
 
@@ -138,7 +139,6 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             return;
         }
 
-        ScalaTextHelper scalaTextHelper = new ScalaTextHelper();
         String name = callbackQuery.getFrom().getFirstName();
 
         var answer = switch (receivedButton) {
