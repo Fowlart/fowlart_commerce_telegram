@@ -8,6 +8,8 @@ import java.util.ArrayList;
 
 public class BotVisitor implements Serializable {
 
+    private Item itemToEditQty;
+
     private User user;
 
     private Buttons buttons;
@@ -19,9 +21,14 @@ public class BotVisitor implements Serializable {
     public ArrayList<Item> getBucket() {
         return bucket;
     }
-    
-    
 
+    public Item getItemToEditQty() {
+        return itemToEditQty;
+    }
+
+    public void setItemToEditQty(Item itemToEditQty) {
+        this.itemToEditQty = itemToEditQty;
+    }
 
     public String getUserId() {
         return String.valueOf(userId);

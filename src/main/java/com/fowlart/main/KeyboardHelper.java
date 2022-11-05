@@ -1,6 +1,7 @@
 package com.fowlart.main;
 
 import com.fowlart.main.in_mem_catalog.Catalog;
+import com.fowlart.main.in_mem_catalog.Item;
 import com.fowlart.main.state.Buttons;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -22,20 +23,23 @@ public class KeyboardHelper {
         this.catalog = catalog;
     }
 
-    public static ReplyKeyboardMarkup buildMainMenu() {
-        KeyboardRow keyboardRow = new KeyboardRow();
-        keyboardRow.add("❗️Товари");
-        keyboardRow.add("❗Корзина");
-        keyboardRow.add("❗Борг");
-
-        return ReplyKeyboardMarkup.builder().keyboard(List.of(keyboardRow)).selective(true).resizeKeyboard(true).oneTimeKeyboard(false).build();
-    }
-
     private InlineKeyboardButton buildButton(String text, String callBackText) {
         InlineKeyboardButton button = new InlineKeyboardButton();
         button.setText(text);
         button.setCallbackData(callBackText);
         return button;
+    }
+
+    public InlineKeyboardMarkup buildEditQtyItemMenu(List<Item> items) {
+        var markupInline = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
+        items.forEach(item -> {
+            var rowInline = new ArrayList<InlineKeyboardButton>();
+            rowInline.add(buildButton(item.id(), "QTY_" + item.id()));
+            rowsInline.add(rowInline);
+        });
+        markupInline.setKeyboard(rowsInline);
+        return markupInline;
     }
 
     public InlineKeyboardMarkup buildMainMenuReply() {
