@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Component
 public class Bot extends TelegramLongPollingBot implements InitializingBean {
@@ -142,6 +143,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         String name = callbackQuery.getFrom().getFirstName();
 
         var answer = switch (receivedButton) {
+            case GOODS_QTY_EDIT -> null; //todo
             case CATALOG -> {
                 visitor.setState(Buttons.CATALOG);
                 try {
@@ -213,24 +215,39 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             String textFromUser = update.getMessage().getText();
             Message replyMessage = update.getMessage().getReplyToMessage();
             String userId = update.getMessage().getFrom().getId().toString();
+            Long chatId = update.getMessage().getChatId();
+            String userFirstName = update.getMessage().getFrom().getFirstName();
+            ScalaTextHelper scalaTextHelper = new ScalaTextHelper();
+
+            SendMessage sendMessage = SendMessage
+                    .builder()
+                    .chatId(chatId.toString())
+                    .text(scalaTextHelper.getMainMenuText(userFirstName))
+                    .replyMarkup(keyboardHelper.buildMainMenuReply())
+                    .build();
+
             if (textFromUser.contains("ID")) {
+
                 // add item to the bucket
                 BotVisitor botVisitor = this.botVisitorService.getBotVisitorByUserId(userId);
 
-                botVisitor.getBucket().add(this.catalog.getItemList()
+                Optional<Item> maybeItem = this.catalog.getItemList()
                         .stream()
-                        .filter(item -> item.id().equals(textFromUser)).findFirst().orElse(null));
+                        .filter(item -> item.id().equals(textFromUser)).findFirst();
+
+                maybeItem.ifPresent(item -> {
+                    botVisitor.getBucket().add(item);
+                    sendMessage.setText(scalaTextHelper.getItemAcceptedText(item));
+                });
+
 
                 this.botVisitorService.saveBotVisitor(botVisitor);
             }
-            Long chatId = update.getMessage().getChatId();
-            String userFirstName = update.getMessage().getFrom().getFirstName();
+
 
             log.info("[chatID:{}, userFirstName:{}] : {}", chatId, userFirstName, textFromUser);
 
-            ScalaTextHelper scalaTextHelper = new ScalaTextHelper();
 
-            SendMessage sendMessage = SendMessage.builder().chatId(chatId.toString()).text(scalaTextHelper.getMainMenuText(userFirstName)).replyMarkup(keyboardHelper.buildMainMenuReply()).build();
 
             try {
                 this.sendApiMethod(sendMessage);

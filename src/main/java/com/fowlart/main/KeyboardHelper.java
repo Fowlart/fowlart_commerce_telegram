@@ -71,7 +71,8 @@ public class KeyboardHelper {
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
         List<InlineKeyboardButton> rowInline = new ArrayList<>();
         rowInline.add(buildButton("Очистити", Buttons.DISCARD.name()));
-        rowInline.add(buildButton("Підтвердити", Buttons.SUBMIT.name()));
+        rowInline.add(buildButton("OK", Buttons.SUBMIT.name()));
+        rowInline.add(buildButton("Кількість", Buttons.GOODS_QTY_EDIT.name()));
 
         rowsInline.add(rowInline);
         // Add it to the message
