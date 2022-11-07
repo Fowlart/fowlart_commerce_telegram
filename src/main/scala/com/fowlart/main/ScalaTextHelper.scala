@@ -1,8 +1,21 @@
 package com.fowlart.main
 
 import com.fowlart.main.in_mem_catalog.Item
+import scala.collection.JavaConverters._
 
 class ScalaTextHelper {
+
+  def getSubMenuText(itemList: java.util.List[Item], group: String): String = {
+    itemList.asScala
+      .filter(item => group.equals(item.group()))
+      .map(item=>
+        s"""
+          |[${item.name()}]
+          |${item.price()} грн
+          |    /${item.id()}
+          |""".stripMargin)
+      .reduce(_+_)
+  }
 
   def getMainMenuText(name: String): String ={
     s"""|Привіт!

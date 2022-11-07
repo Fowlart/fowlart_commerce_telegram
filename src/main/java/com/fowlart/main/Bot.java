@@ -29,6 +29,8 @@ import java.util.regex.Pattern;
 @Component
 public class Bot extends TelegramLongPollingBot implements InitializingBean {
     private static final Logger log = LoggerFactory.getLogger(Bot.class);
+    private static final String GOOD_ADD_COMMAND = "/ID";
+    private static final String REMOVE_COMMAND = "/remove";
     private static Bot instance;
     private final BotVisitorService botVisitorService;
     private final ExcelFetcher excelFetcher;
@@ -67,36 +69,26 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
 
     @Override
     public void onRegister() {
-
-        List<Item> catalogItems = new ArrayList<>();
-        int id = 0;
-
-        try {
-            List<String> groups = excelFetcher.getProductGroupsFromSheet();
-            this.catalog.setGroupList(groups);
-            for (String group : groups) {
-                List<String> items = excelFetcher.getGoodsFromProductGroup(group);
-                for (String item : items) {
-                    id++;
-                    var itemName = item.split("\\|")[0];
-                    var itemPrice = Double.parseDouble(item.split("\\|")[1]);
-                    var itemToAdd = new Item("ID" + id, itemName, itemPrice, group,null);
-                    catalogItems.add(itemToAdd);
-                }
-            }
-            this.catalog.setItemList(catalogItems);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        this.catalog.setGroupList(this.excelFetcher.getProductGroupsFromSheet());
+        this.catalog.setItemList(this.excelFetcher.getCatalogItems());
     }
-
     private SendPhoto getGoodsContainerSendPhotoMsg(long chatId) {
-
         File goodsContainerImg = new File("src/main/resources/goods/goods_box.webp");
-
         return SendPhoto.builder().caption("⚡️" + "Каталог" + "⚡️").chatId(chatId).photo(new InputFile(goodsContainerImg)).build();
     }
-
+    private SendMessage getBucketMessage(BotVisitor visitor, String userId){
+        var itemList = visitor.getBucket().stream().filter(Objects::nonNull).map(item->" ⏺ "+item).toList();
+        var textInBucket =  String.join("\n\n", itemList);
+        if (itemList.isEmpty()) {
+            textInBucket = "[Корзина порожня]";
+        }
+       return SendMessage
+               .builder()
+               .chatId(userId)
+               .text("=КОРЗИНА=" + "\n\n" +textInBucket)
+               .replyMarkup(keyboardHelper.buildBucketKeyboardMenu())
+               .build();
+    }
     private void handleInlineButtonClicks(CallbackQuery callbackQuery) throws TelegramApiException, IOException {
         ScalaTextHelper scalaTextHelper = new ScalaTextHelper();
         Long userId = callbackQuery.getFrom().getId();
@@ -109,22 +101,19 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         try {
             receivedButton = Buttons.valueOf(callBackButton);
         } catch (java.lang.IllegalArgumentException exception) {
-
-            // case of selecting catalog menu
             // todo: refactor control flow
             if (callBackButton.startsWith("QTY_")){
                 getEditItemQtyMenu(scalaTextHelper, visitor, callBackButton);
                 return;
             }
 
-            var subCatalogAnswer = SendMessage.builder().allowSendingWithoutReply(true)
-
-                    .text("Обирай товар! Натисни ID товару для замовлення! " + "\n\n" + catalog.getItemList().stream().filter(item -> item.group().equals(callBackButton))
-                            .map(item -> "/"+item.id() + " \n" + item.name() + "\n" + item.price() +"₴")
-                            .reduce((a, b) -> a + "\n\n" + b)
-                            .orElse("немає товару у группі"))
-
-                    .chatId(userId).replyMarkup(this.keyboardHelper.buildMainMenuReply()).build();
+            var subCatalogAnswer = SendMessage
+                    .builder()
+                    .allowSendingWithoutReply(true)
+                    .text(scalaTextHelper.getSubMenuText(this.catalog.getItemList(),callBackButton))
+                    .chatId(userId)
+                    .replyMarkup(this.keyboardHelper.buildMainMenuReply())
+                    .build();
 
             this.botVisitorService.saveBotVisitor(visitor);
 
@@ -135,9 +124,15 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         String name = callbackQuery.getFrom().getFirstName();
 
         var answer = switch (receivedButton) {
-            case GOODS_QTY_EDIT -> {
-                yield SendMessage.builder().allowSendingWithoutReply(true).text("Обирай товар у корзині для редагування кількості:").chatId(userId).replyMarkup(this.keyboardHelper.buildEditQtyItemMenu(visitor.getBucket())).build();
-            }
+            case GOODS_QTY_EDIT ->
+                 SendMessage
+                         .builder()
+                         .allowSendingWithoutReply(true)
+                         .text("Обирай товар у корзині для редагування кількості:")
+                         .chatId(userId)
+                         .replyMarkup(this.keyboardHelper.buildEditQtyItemMenu(visitor.getBucket()))
+                         .build();
+
 
             case CATALOG -> {
                 visitor.setState(Buttons.CATALOG);
@@ -148,15 +143,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             case BUCKET -> {
                 visitor = this.botVisitorService.getOrCreateVisitor(visitor.getUser());
                 visitor.setState(Buttons.BUCKET);
-                var itemList = visitor.getBucket().stream().filter(Objects::nonNull).map(item->" ⏺ "+item).toList();
-
-                var textInBucket =  String.join("\n\n", itemList);
-
-                if (itemList.isEmpty()) {
-                    textInBucket = "[Корзина порожня]";
-                }
-
-                yield SendMessage.builder().chatId(userId).text("=КОРЗИНА=" + "\n\n" +textInBucket).replyMarkup(keyboardHelper.buildBucketKeyboardMenu()).build();
+                yield getBucketMessage(visitor,visitor.getUserId());
             }
 
             case CONTACTS -> {
@@ -230,6 +217,8 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             ScalaTextHelper scalaTextHelper = new ScalaTextHelper();
             BotVisitor botVisitor = this.botVisitorService.getBotVisitorByUserId(userId);
 
+            log.info("[chatID:{}, userFirstName:{}] : {}", chatId, userFirstName, textFromUser);
+
             // main menu by default
             SendMessage sendMessage = SendMessage
                     .builder()
@@ -237,7 +226,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                     .text(scalaTextHelper.getMainMenuText(userFirstName))
                     .replyMarkup(keyboardHelper.buildMainMenuReply()).build();
 
-            if (textFromUser.startsWith("/remove")) {
+            if (textFromUser.startsWith(REMOVE_COMMAND)) {
                 Item toRemove = botVisitor.getItemToEditQty();
                 botVisitor.getBucket().remove(toRemove);
                 botVisitor.setItemToEditQty(null);
@@ -254,28 +243,27 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                     botVisitor.getBucket().add(toAdd);
                     botVisitor.setState(Buttons.BUCKET);
                     this.botVisitorService.saveBotVisitor(botVisitor);
+                    sendMessage = getBucketMessage(botVisitor,botVisitor.getUserId());
                 }else {
                     getEditItemQtyMenu(scalaTextHelper,botVisitor,null);
                     return;
                 }
             }
 
-
             //add item to the bucket handler
-            if (textFromUser.startsWith("/ID")) {
-
-                var textFromUserCleaned = textFromUser.replaceAll("/","");
+            if (textFromUser.startsWith(GOOD_ADD_COMMAND)) {
+                var textFromUserCleaned = textFromUser.replaceAll("/", "");
                 Optional<Item> maybeItem = this.catalog.getItemList().stream().filter(item -> item.id().equalsIgnoreCase(textFromUserCleaned)).findFirst();
-
-                maybeItem.ifPresentOrElse(item -> {
+                if (maybeItem.isPresent()) {
+                    Item item = maybeItem.get();
                     botVisitor.getBucket().add(item);
+                    this.botVisitorService.saveBotVisitor(botVisitor);
                     sendMessage.setText(scalaTextHelper.getItemAcceptedText(item));
-                }, () -> sendMessage.setText(scalaTextHelper.getItemNotAcceptedText()));
-
-                this.botVisitorService.saveBotVisitor(botVisitor);
+                } else {
+                    sendMessage.setText(scalaTextHelper.getItemNotAcceptedText());
+                    this.botVisitorService.saveBotVisitor(botVisitor);
+                }
             }
-
-            log.info("[chatID:{}, userFirstName:{}] : {}", chatId, userFirstName, textFromUser);
 
             try {
                 this.sendApiMethod(sendMessage);

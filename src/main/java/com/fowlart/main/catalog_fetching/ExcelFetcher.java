@@ -1,5 +1,6 @@
 package com.fowlart.main.catalog_fetching;
 
+import com.fowlart.main.in_mem_catalog.Item;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.slf4j.Logger;
@@ -24,6 +25,30 @@ public class ExcelFetcher {
         FileInputStream file = new FileInputStream(PATH_TO_CATALOG);
         Workbook workbook = new HSSFWorkbook(file);
         return workbook.getSheetAt(0);
+    }
+
+    public List<Item> getCatalogItems() {
+        List<Item> catalogItems = new ArrayList<>();
+        int id = 0;
+
+        try {
+            List<String> groups = getProductGroupsFromSheet();
+            for (String group : groups) {
+                List<String> items = getGoodsFromProductGroup(group);
+                for (String item : items) {
+                    id++;
+                    var itemName = item.split("\\|")[0];
+                    var itemPrice = Double.parseDouble(item.split("\\|")[1]);
+                    var itemToAdd = new Item("ID" + id, itemName, itemPrice, group,null);
+                    catalogItems.add(itemToAdd);
+                }
+            }
+
+           return catalogItems;
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public List<String> getGoodsFromProductGroup(String productGroup) throws IOException {
@@ -88,8 +113,13 @@ public class ExcelFetcher {
         return items;
     }
 
-    public List<String> getProductGroupsFromSheet() throws IOException {
-        Sheet sheet = getSheet();
+    public List<String> getProductGroupsFromSheet(){
+        Sheet sheet;
+        try {
+            sheet = getSheet();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         List<String> groups = new ArrayList<>();
 
         for (Row row : sheet) {
