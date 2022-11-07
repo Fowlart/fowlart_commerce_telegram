@@ -6,9 +6,7 @@ import com.fowlart.main.state.Buttons;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,7 +46,7 @@ public class KeyboardHelper {
         List<InlineKeyboardButton> rowInline = new ArrayList<>();
         rowInline.add(buildButton("\uD83D\uDCD7 Каталог", Buttons.CATALOG.name()));
         rowInline.add(buildButton("\uD83D\uDCDD Корзина", Buttons.BUCKET.name()));
-        rowInline.add(buildButton("\uD83D\uDCB3 Борг", Buttons.DEBT.name()));
+        rowInline.add(buildButton("\uD83D\uDCB3 Контакти", Buttons.CONTACTS.name()));
 
         rowsInline.add(rowInline);
         // Add it to the message

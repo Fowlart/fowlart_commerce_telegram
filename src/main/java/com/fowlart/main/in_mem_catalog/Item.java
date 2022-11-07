@@ -23,8 +23,9 @@ public final class Item implements Serializable {
 
     @Override
     public String toString() {
-        var str = id + "|" + name + "|" + price + "₴";
-        if (Objects.nonNull(qty)) str = str + "|" + qty;
+        var str = id + "\n" + name + "\n" + price + "₴";
+        if (Objects.nonNull(qty)) str = str + "\n" + qty + "шт";
+        else str = str + "\n" + "[кільк. не вибрана]";
         return str;
     }
 

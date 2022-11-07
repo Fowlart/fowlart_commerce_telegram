@@ -120,14 +120,14 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             var subCatalogAnswer = SendMessage.builder().allowSendingWithoutReply(true)
 
                     .text("Обирай товар! Натисни ID товару для замовлення! " + "\n\n" + catalog.getItemList().stream().filter(item -> item.group().equals(callBackButton))
-
-                            .map(item -> "/"+item.id() + " \n" + item.name() + "\n" + "\uD83D\uDCB0" + item.price())
-
-                            .reduce((a, b) -> a + "\n\n" + b).orElse("немає товару у группі"))
+                            .map(item -> "/"+item.id() + " \n" + item.name() + "\n" + item.price() +"₴")
+                            .reduce((a, b) -> a + "\n\n" + b)
+                            .orElse("немає товару у группі"))
 
                     .chatId(userId).replyMarkup(this.keyboardHelper.buildMainMenuReply()).build();
 
             this.botVisitorService.saveBotVisitor(visitor);
+
             this.sendApiMethod(subCatalogAnswer);
             return;
         }
@@ -136,31 +136,32 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
 
         var answer = switch (receivedButton) {
             case GOODS_QTY_EDIT -> {
-
                 yield SendMessage.builder().allowSendingWithoutReply(true).text("Обирай товар у корзині для редагування кількості:").chatId(userId).replyMarkup(this.keyboardHelper.buildEditQtyItemMenu(visitor.getBucket())).build();
             }
 
             case CATALOG -> {
                 visitor.setState(Buttons.CATALOG);
-                try {
-                    execute(getGoodsContainerSendPhotoMsg(userId));
-                } catch (TelegramApiException e) {
-                    throw new RuntimeException(e);
-                }
-
+                execute(getGoodsContainerSendPhotoMsg(userId));
                 yield SendMessage.builder().allowSendingWithoutReply(true).text("Обирай з товарних груп:").chatId(userId).replyMarkup(this.keyboardHelper.buildCatalogItemsMenu()).build();
             }
 
             case BUCKET -> {
                 visitor = this.botVisitorService.getOrCreateVisitor(visitor.getUser());
                 visitor.setState(Buttons.BUCKET);
-                var itemList = visitor.getBucket().stream().filter(Objects::nonNull).map(Item::toString).toList();
-                yield SendMessage.builder().chatId(userId).text("ЗАМОВЛЕНІ ТОВАРИ." + "\n\n" + String.join("\n\n", itemList)).replyMarkup(keyboardHelper.buildBucketKeyboardMenu()).build();
+                var itemList = visitor.getBucket().stream().filter(Objects::nonNull).map(item->" ⏺ "+item).toList();
+
+                var textInBucket =  String.join("\n\n", itemList);
+
+                if (itemList.isEmpty()) {
+                    textInBucket = "[Корзина порожня]";
+                }
+
+                yield SendMessage.builder().chatId(userId).text("=КОРЗИНА=" + "\n\n" +textInBucket).replyMarkup(keyboardHelper.buildBucketKeyboardMenu()).build();
             }
 
-            case DEBT -> {
-                visitor.setState(Buttons.DEBT);
-                yield SendMessage.builder().chatId(userId).text("Тут буде інфо про борг!").replyMarkup(keyboardHelper.buildMainMenuReply()).build();
+            case CONTACTS -> {
+                visitor.setState(Buttons.CONTACTS);
+                yield SendMessage.builder().chatId(userId).text(scalaTextHelper.getContactsMsg()).replyMarkup(keyboardHelper.buildMainMenuReply()).build();
             }
 
             case MAIN_SCREEN -> {
@@ -189,7 +190,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
 
     private void getEditItemQtyMenu(ScalaTextHelper scalaTextHelper, BotVisitor visitor, String callBackButton) throws TelegramApiException {
 
-        String itemId = null;
+        String itemId;
 
         if (Objects.nonNull(callBackButton)) {
             itemId  =  callBackButton.replaceAll("QTY_", "");
@@ -203,7 +204,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         var item = visitor
                 .getBucket()
                 .stream()
-                .filter(i -> i.id().equalsIgnoreCase(finalItemId))
+                .filter(i -> finalItemId.equals(i.id()))
                 .findFirst()
                 .get();
 
