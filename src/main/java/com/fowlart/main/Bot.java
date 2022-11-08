@@ -231,6 +231,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                 botVisitor.getBucket().remove(toRemove);
                 botVisitor.setItemToEditQty(null);
                 this.botVisitorService.saveBotVisitor(botVisitor);
+                sendMessage = getBucketMessage(botVisitor,botVisitor.getUserId());
             }
 
             if(Objects.nonNull(botVisitor.getItemToEditQty())) {
