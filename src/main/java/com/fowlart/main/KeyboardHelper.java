@@ -14,7 +14,6 @@ import java.util.List;
 @Component
 public class KeyboardHelper {
 
-
     private final Catalog catalog;
 
     public KeyboardHelper(@Autowired Catalog catalog) {
@@ -46,7 +45,7 @@ public class KeyboardHelper {
         List<InlineKeyboardButton> rowInline = new ArrayList<>();
         rowInline.add(buildButton("\uD83D\uDCD7 Каталог", Buttons.CATALOG.name()));
         rowInline.add(buildButton("\uD83D\uDCDD Корзина", Buttons.BUCKET.name()));
-        rowInline.add(buildButton("\uD83D\uDCB3 Контакти", Buttons.CONTACTS.name()));
+        rowInline.add(buildButton("☎️ Контакти", Buttons.CONTACTS.name()));
 
         rowsInline.add(rowInline);
         // Add it to the message
