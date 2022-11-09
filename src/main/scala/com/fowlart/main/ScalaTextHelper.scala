@@ -18,11 +18,13 @@ class ScalaTextHelper {
   }
 
   def getMainMenuText(name: String): String ={
-    s"""|      Привіт!
+    s"""|Привіт!
+        |
         |Це бот для замовлення товарів, натискай кнопки для навігації по меню.
         |Або продовжуйте навігацію по каталогу, чи замовляйте товари, натискаючи
         |їх ID номер.
-        |     Редагування кількостей відбувається в корзині.""".stripMargin}
+        |
+        |Редагування кількостей відбувається в корзині.""".stripMargin}
 
     def getItemAcceptedText(item: Item): String = {
       s"""
@@ -56,7 +58,7 @@ class ScalaTextHelper {
 
   def getContactsMsg(): String =
     s"""
-       |Андрій Скіра Володимирович,
+       |Власник: Андрій Скіра Володимирович
        |тел: 097-257-0077
        |""".stripMargin
 
