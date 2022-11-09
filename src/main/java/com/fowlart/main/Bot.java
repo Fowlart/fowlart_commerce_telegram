@@ -81,7 +81,13 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     }
 
     private SendMessage getBucketMessage(BotVisitor visitor, String userId) {
-        var itemList = visitor.getBucket().stream().filter(Objects::nonNull).map(item -> " ⏺ " + item).toList();
+        var itemList = visitor
+                .getBucket()
+                .stream()
+                .filter(Objects::nonNull)
+                .map(item -> " ⏺ " + item)
+                .toList();
+
         var textInBucket = String.join("\n\n", itemList);
         if (itemList.isEmpty()) {
             textInBucket = "[Корзина порожня]";

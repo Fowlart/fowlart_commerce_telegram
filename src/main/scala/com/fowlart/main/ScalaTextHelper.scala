@@ -10,7 +10,7 @@ class ScalaTextHelper {
       .filter(item => group.equals(item.group()))
       .map(item=>
         s"""
-          |[${item.name()}]
+          | ⏺ ${item.name()}
           |${item.price()} грн
           |    /${item.id()}
           |""".stripMargin)

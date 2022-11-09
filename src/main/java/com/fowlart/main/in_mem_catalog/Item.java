@@ -23,8 +23,8 @@ public final class Item implements Serializable {
 
     @Override
     public String toString() {
-        var str = id + "\n" + name + "\n" + price + "₴";
-        if (Objects.nonNull(qty)) str = str + "\n" + qty + "шт";
+        var str = id + "\n" + "\uD83D\uDCCC"+name + "\n" + "\uD83D\uDCB3" + price + "₴";
+        if (Objects.nonNull(qty)) str = str + "\n[" + qty + "шт]";
         else str = str + "\n" + "[кільк. не вибрана]";
         return str;
     }
@@ -57,13 +57,12 @@ public final class Item implements Serializable {
         return Objects.equals(this.id, that.id) &&
                 Objects.equals(this.name, that.name) &&
                 Objects.equals(this.price, that.price) &&
-                Objects.equals(this.group, that.group) &&
-                Objects.equals(this.qty, that.qty);
+                Objects.equals(this.group, that.group);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, price, group, qty);
+        return Objects.hash(id, name, price, group);
     }
 
 }

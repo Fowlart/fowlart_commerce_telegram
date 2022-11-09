@@ -5,6 +5,8 @@ import org.telegram.telegrambots.meta.api.objects.User;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 public class BotVisitor implements Serializable {
 
@@ -16,9 +18,13 @@ public class BotVisitor implements Serializable {
     
     private long userId;
 
-    private ArrayList<Item> bucket = new ArrayList<>();
+    private Set<Item> bucket = new HashSet<>();
 
-    public ArrayList<Item> getBucket() {
+    public void setBucket(Set<Item> bucket) {
+        this.bucket = bucket;
+    }
+
+    public Set<Item> getBucket() {
         return bucket;
     }
 

@@ -10,6 +10,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Component
 public class KeyboardHelper {
@@ -27,7 +28,7 @@ public class KeyboardHelper {
         return button;
     }
 
-    public InlineKeyboardMarkup buildEditQtyItemMenu(List<Item> items) {
+    public InlineKeyboardMarkup buildEditQtyItemMenu(Set<Item> items) {
         var markupInline = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
         items.forEach(item -> {
