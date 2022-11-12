@@ -6,17 +6,25 @@ import scala.collection.JavaConverters._
 class ScalaTextHelper {
 
   def getSubMenuText(itemList: java.util.List[Item], group: String): String = {
-    itemList.asScala
-      .filter(item => group.equals(item.group()))
+
+    val itemSeq = itemList.asScala
+
+    // ordering for pretty printing
+    implicit val orderingForItem: Ordering[Item] = (x: Item, y: Item) => {
+      x.name().trim.length.compareTo(y.name().trim.length)
+    }
+    val reOrderedList = itemSeq.sorted
+
+    reOrderedList
+      .filter(item => group.equals(item.group))
       .map(item=>
         s"""
-          | ⏺ ${item.name()}
-          |${item.price()} грн
-          |    /${item.id()}
+          | ⏺ ${item.name.trim.toLowerCase}
+          |${item.price} грн
+          |    /${item.id}
           |""".stripMargin)
       .reduce(_+_)
   }
-
   def getMainMenuText(name: String): String ={
     s"""|Привіт!
         |
