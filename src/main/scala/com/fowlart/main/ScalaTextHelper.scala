@@ -5,25 +5,23 @@ import scala.collection.JavaConverters._
 
 class ScalaTextHelper {
 
-  def getSubMenuText(itemList: java.util.List[Item], group: String): String = {
-
-    val itemSeq = itemList.asScala
-
+  def getSubMenuText(itemList: java.util.List[Item], group: String): Array[String] = {
+    val maxItemsPerReply = 15;
+    val itemSeq = itemList.asScala.filter(item=>group.equals(item.group()))
     // ordering for pretty printing
-    implicit val orderingForItem: Ordering[Item] = (x: Item, y: Item) => {
+    implicit val orderingForItem: Ordering[Item] = (x: Item, y: Item) =>
       x.name().trim.length.compareTo(y.name().trim.length)
-    }
     val reOrderedList = itemSeq.sorted
-
-    reOrderedList
-      .filter(item => group.equals(item.group))
-      .map(item=>
+    val grouped = reOrderedList.grouped(maxItemsPerReply)
+    val res = grouped.toList.filter(it => it.nonEmpty).map(it => {
+      it.map(item =>
         s"""
-          | ⏺ ${item.name.trim.toLowerCase}
-          |${item.price} грн
-          |    /${item.id}
-          |""".stripMargin)
-      .reduce(_+_)
+           | ⏺ ${item.name.trim.toLowerCase}
+           |${item.price} грн
+           |    /${item.id}
+           |""".stripMargin).reduce((v1, v2) => s"$v1$v2")
+    })
+    res.toArray
   }
   def getMainMenuText(name: String): String ={
     s"""|Привіт!

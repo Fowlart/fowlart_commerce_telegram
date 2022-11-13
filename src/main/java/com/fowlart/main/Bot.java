@@ -23,6 +23,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -118,17 +119,23 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                 return;
             }
 
-            var subCatalogAnswer = SendMessage
-                    .builder()
-                    .allowSendingWithoutReply(true)
-                    .text(scalaTextHelper.getSubMenuText(this.catalog.getItemList(), callBackButton))
-                    .chatId(userId)
-                    .replyMarkup(this.keyboardHelper.buildMainMenuReply())
-                    .build();
+            var subGroupItems = scalaTextHelper
+                    .getSubMenuText(this.catalog.getItemList(), callBackButton);
 
+            for (String str: subGroupItems) {
+                var lastMessage = subGroupItems[subGroupItems.length-1];
+                var subCatalogAnswer = SendMessage
+                        .builder()
+                        .allowSendingWithoutReply(true)
+                        .text(str)
+                        .chatId(userId)
+                        .build();
+                if (str.equals(lastMessage)) {
+                    subCatalogAnswer.setReplyMarkup(this.keyboardHelper.buildMainMenuReply());
+                }
+                this.sendApiMethod(subCatalogAnswer);
+            }
             this.botVisitorService.saveBotVisitor(visitor);
-
-            this.sendApiMethod(subCatalogAnswer);
             return;
         }
 
