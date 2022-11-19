@@ -16,15 +16,15 @@ class ScalaTextHelper {
     val res = grouped.toList.filter(it => it.nonEmpty).map(it => {
       it.map(item =>
         s"""
-           | ⏺ ${item.name.trim.toLowerCase}
-           |${item.price} грн
-           |    /${item.id}
+           |⏺ ${item.name.trim.toLowerCase}
+           |💳${item.price} грн
+           |⏩/${item.id}
            |""".stripMargin).reduce((v1, v2) => s"$v1$v2")
     })
     res.toArray
   }
   def getMainMenuText(name: String): String ={
-    s"""|Привіт!
+    s"""|Привіт, $name!
         |
         |Це бот для замовлення товарів, натискай кнопки для навігації по меню.
         |Або продовжуйте навігацію по каталогу, чи замовляйте товари, натискаючи
