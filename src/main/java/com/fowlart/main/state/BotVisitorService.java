@@ -30,7 +30,7 @@ public class BotVisitorService {
             botVisitor = (BotVisitor) userFromDb.get();
         } else {
             //write to RocksDb
-            botVisitor = new BotVisitor(user, Buttons.MAIN_SCREEN, user.getId());
+            botVisitor = new BotVisitor(user, user.getId());
             rocksDBRepository.save(String.valueOf(user.getId()), botVisitor);
         }
 

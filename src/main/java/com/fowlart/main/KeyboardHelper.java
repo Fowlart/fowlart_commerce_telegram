@@ -2,7 +2,6 @@ package com.fowlart.main;
 
 import com.fowlart.main.in_mem_catalog.Catalog;
 import com.fowlart.main.in_mem_catalog.Item;
-import com.fowlart.main.state.Buttons;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -44,9 +43,9 @@ public class KeyboardHelper {
         InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
         List<InlineKeyboardButton> rowInline = new ArrayList<>();
-        rowInline.add(buildButton("\uD83D\uDCD7 Каталог", Buttons.CATALOG.name()));
-        rowInline.add(buildButton("\uD83D\uDCDD Корзина", Buttons.BUCKET.name()));
-        rowInline.add(buildButton("☎️ Контакти", Buttons.CONTACTS.name()));
+        rowInline.add(buildButton("\uD83D\uDCD7 Каталог", "CATALOG"));
+        rowInline.add(buildButton("\uD83D\uDCDD Корзина", "BUCKET"));
+        rowInline.add(buildButton("☎️ Контакти", "CONTACTS"));
 
         rowsInline.add(rowInline);
         // Add it to the message
@@ -72,9 +71,9 @@ public class KeyboardHelper {
         InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
         List<InlineKeyboardButton> rowInline = new ArrayList<>();
-        rowInline.add(buildButton("Очистити", Buttons.DISCARD.name()));
-        rowInline.add(buildButton("OK", Buttons.SUBMIT.name()));
-        rowInline.add(buildButton("Кількість", Buttons.GOODS_QTY_EDIT.name()));
+        rowInline.add(buildButton("Очистити", "DISCARD"));
+        rowInline.add(buildButton("OK", "SUBMIT"));
+        rowInline.add(buildButton("Кількість", "GOODS_QTY_EDIT"));
 
         rowsInline.add(rowInline);
         // Add it to the message
