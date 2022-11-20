@@ -2,7 +2,10 @@ package com.fowlart.main;
 
 import com.fowlart.main.catalog_fetching.ExcelFetcher;
 import com.fowlart.main.in_mem_catalog.Catalog;
-import com.fowlart.main.in_mem_catalog.Item;
+import com.fowlart.main.messages.EditQtyForItemMessage;
+import com.fowlart.main.messages.ItemAddToBucketMessage;
+import com.fowlart.main.messages.RemoveItemFromBucketMessage;
+import com.fowlart.main.messages.ResponseWithSendMessage;
 import com.fowlart.main.state.BotVisitor;
 import com.fowlart.main.state.BotVisitorService;
 import org.slf4j.Logger;
@@ -24,7 +27,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 @Component
 public class Bot extends TelegramLongPollingBot implements InitializingBean {
@@ -78,16 +80,6 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         return SendPhoto.builder().caption("⚡️" + "Каталог" + "⚡️").chatId(chatId).photo(new InputFile(goodsContainerImg)).build();
     }
 
-    private SendMessage getBucketMessage(BotVisitor visitor, String userId) {
-        var itemList = visitor.getBucket().stream().filter(Objects::nonNull).map(item -> " ⏺ " + item).toList();
-
-        var textInBucket = String.join("\n\n", itemList);
-        if (itemList.isEmpty()) {
-            textInBucket = "[Корзина порожня]";
-        }
-        return SendMessage.builder().chatId(userId).text("=КОРЗИНА=" + "\n\n" + textInBucket).replyMarkup(keyboardHelper.buildBucketKeyboardMenu()).build();
-    }
-
     private void handleInlineButtonClicks(CallbackQuery callbackQuery) throws TelegramApiException, IOException {
         ScalaHelper scalaHelper = new ScalaHelper();
         Long userId = callbackQuery.getFrom().getId();
@@ -98,7 +90,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
 
 
         if (callBackButton.startsWith("QTY_")) {
-            getEditItemQtyMenu(scalaHelper, visitor, callBackButton);
+            displayEditItemQtyMenu(scalaHelper, visitor, callBackButton);
             return;
         }
 
@@ -114,7 +106,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
 
             case "BUCKET" -> {
                 visitor = this.botVisitorService.getOrCreateVisitor(visitor.getUser());
-                yield getBucketMessage(visitor, visitor.getUserId());
+                yield scalaHelper.getBucketMessage(visitor, visitor.getUserId(), keyboardHelper);
             }
 
             case "CONTACTS" ->
@@ -159,7 +151,9 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         }
     }
 
-    private void getEditItemQtyMenu(ScalaHelper scalaHelper, BotVisitor visitor, String callBackButton) throws TelegramApiException {
+    private void displayEditItemQtyMenu(ScalaHelper scalaHelper,
+                                        BotVisitor visitor,
+                                        String callBackButton) throws TelegramApiException {
         String itemId;
         if (Objects.nonNull(callBackButton)) {
             itemId = callBackButton.replaceAll("QTY_", "");
@@ -186,50 +180,32 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             BotVisitor botVisitor = this.botVisitorService.getBotVisitorByUserId(userId);
             log.info("[chatID:{}, userFirstName:{}] : {}", chatId, userFirstName, textFromUser);
 
-            //todo: REFACTOR to Scala pattern-matching
-            var inputUpdate = new InputBotUpdate(update, botVisitorService, keyboardHelper, catalog);
-            //var answer = MessageProcessor.processMessage(inputUpdate);
-
             // main menu by default
             SendMessage sendMessage = SendMessage.builder().chatId(chatId.toString()).text(scalaHelper.getMainMenuText(userFirstName)).replyMarkup(keyboardHelper.buildMainMenuReply()).build();
 
             if (textFromUser.startsWith(REMOVE_COMMAND)) {
-                Item toRemove = botVisitor.getItemToEditQty();
-                botVisitor.getBucket().remove(toRemove);
-                botVisitor.setItemToEditQty(null);
-                this.botVisitorService.saveBotVisitor(botVisitor);
-                sendMessage = getBucketMessage(botVisitor, botVisitor.getUserId());
+                var removeItemFromBucketMessage = new RemoveItemFromBucketMessage(botVisitor, botVisitorService, keyboardHelper);
+                ResponseWithSendMessage response = (ResponseWithSendMessage) BotMessageHandler.handleBotMessage(removeItemFromBucketMessage);
+                sendMessage = response.sendMessageResponse();
             }
 
             if (Objects.nonNull(botVisitor.getItemToEditQty())) {
                 if (scalaHelper.isNumeric(textFromUser)) {
-                    Item toRemove = botVisitor.getItemToEditQty();
                     Integer qty = Integer.parseInt(textFromUser);
-                    Item toAdd = new Item(toRemove.id(), toRemove.name(), toRemove.price(), toRemove.group(), qty);
-                    botVisitor.setItemToEditQty(null);
-                    botVisitor.getBucket().remove(toRemove);
-                    botVisitor.getBucket().add(toAdd);
-                    this.botVisitorService.saveBotVisitor(botVisitor);
-                    sendMessage = getBucketMessage(botVisitor, botVisitor.getUserId());
+                    var editQtyForItemMessage = new EditQtyForItemMessage(qty, botVisitor, botVisitorService, keyboardHelper);
+                    ResponseWithSendMessage response = (ResponseWithSendMessage) BotMessageHandler.handleBotMessage(editQtyForItemMessage);
+                    sendMessage = response.sendMessageResponse();
+
                 } else {
-                    getEditItemQtyMenu(scalaHelper, botVisitor, null);
+                    displayEditItemQtyMenu(scalaHelper, botVisitor, null);
                     return;
                 }
             }
 
-            //add item to the bucket handler
             if (textFromUser.startsWith(GOOD_ADD_COMMAND)) {
-                var textFromUserCleaned = textFromUser.replaceAll("/", "");
-                Optional<Item> maybeItem = this.catalog.getItemList().stream().filter(item -> item.id().equalsIgnoreCase(textFromUserCleaned)).findFirst();
-                if (maybeItem.isPresent()) {
-                    Item item = maybeItem.get();
-                    botVisitor.getBucket().add(item);
-                    this.botVisitorService.saveBotVisitor(botVisitor);
-                    sendMessage.setText(scalaHelper.getItemAcceptedText(item));
-                } else {
-                    sendMessage.setText(scalaHelper.getItemNotAcceptedText());
-                    this.botVisitorService.saveBotVisitor(botVisitor);
-                }
+                var itemAddToBucketMessage = new ItemAddToBucketMessage(textFromUser.replaceAll("/", ""), botVisitor, botVisitorService, catalog, sendMessage);
+                ResponseWithSendMessage response = (ResponseWithSendMessage) BotMessageHandler.handleBotMessage(itemAddToBucketMessage);
+                sendMessage = response.sendMessageResponse();
             }
 
             try {

@@ -1,11 +1,30 @@
 package com.fowlart.main
 
 import com.fowlart.main.in_mem_catalog.Item
+import com.fowlart.main.state.BotVisitor
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage
 
 import java.util.regex.Pattern
 import scala.collection.JavaConverters._
 
 class ScalaHelper {
+
+  def getBucketMessage(visitor: BotVisitor,
+                               userId: String,
+                               keyboardHelper: KeyboardHelper) = {
+
+    val itemList = visitor.getBucket.asScala.filter(it => it != null).map(item => s" ⏺ $item").toList
+    val textInBucket = if (itemList.isEmpty) "[Корзина порожня]" else itemList.reduce((i1, i2) => s"$i1\n\n$i2")
+
+    SendMessage.builder.chatId(userId)
+      .text(
+        s"""
+           |Корзина:
+           |
+           |$textInBucket
+           |""".stripMargin)
+      .replyMarkup(keyboardHelper.buildBucketKeyboardMenu).build
+  }
 
   def isNumeric(strNum: String): Boolean = {
     val pattern = Pattern.compile("-?\\d+")
@@ -68,7 +87,7 @@ class ScalaHelper {
        |
        |Введіть кількість товару цілим позитивним числом.
        |
-       |Або натисніть /remove - видалити.
+       |/remove - видалити з корзини.
        |""".stripMargin
 
   def getContactsMsg(): String =
