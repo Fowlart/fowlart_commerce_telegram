@@ -1,9 +1,18 @@
 package com.fowlart.main
 
 import com.fowlart.main.in_mem_catalog.Item
+
+import java.util.regex.Pattern
 import scala.collection.JavaConverters._
 
-class ScalaTextHelper {
+class ScalaHelper {
+
+  def isNumeric(strNum: String): Boolean = {
+    val pattern = Pattern.compile("-?\\d+")
+    if (strNum == null) return false
+    pattern.matcher(strNum).matches
+  }
+
 
   def getSubMenuText(itemList: java.util.List[Item], group: String): Array[String] = {
     val maxItemsPerReply = 15;

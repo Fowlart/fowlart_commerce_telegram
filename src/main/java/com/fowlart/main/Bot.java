@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.regex.Pattern;
 
 @Component
 public class Bot extends TelegramLongPollingBot implements InitializingBean {
@@ -90,7 +89,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     }
 
     private void handleInlineButtonClicks(CallbackQuery callbackQuery) throws TelegramApiException, IOException {
-        ScalaTextHelper scalaTextHelper = new ScalaTextHelper();
+        ScalaHelper scalaHelper = new ScalaHelper();
         Long userId = callbackQuery.getFrom().getId();
         BotVisitor visitor = this.botVisitorService.getBotVisitorByUserId(userId.toString());
         log.info(visitor.toString());
@@ -99,7 +98,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
 
 
         if (callBackButton.startsWith("QTY_")) {
-            getEditItemQtyMenu(scalaTextHelper, visitor, callBackButton);
+            getEditItemQtyMenu(scalaHelper, visitor, callBackButton);
             return;
         }
 
@@ -119,10 +118,10 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             }
 
             case "CONTACTS" ->
-                    SendMessage.builder().chatId(userId).text(scalaTextHelper.getContactsMsg()).replyMarkup(keyboardHelper.buildMainMenuReply()).build();
+                    SendMessage.builder().chatId(userId).text(scalaHelper.getContactsMsg()).replyMarkup(keyboardHelper.buildMainMenuReply()).build();
 
             case "MAIN_SCREEN" ->
-                    SendMessage.builder().chatId(userId).text(scalaTextHelper.getMainMenuText(firstName)).replyMarkup(keyboardHelper.buildMainMenuReply()).build();
+                    SendMessage.builder().chatId(userId).text(scalaHelper.getMainMenuText(firstName)).replyMarkup(keyboardHelper.buildMainMenuReply()).build();
 
             case "SUBMIT" -> {
                 visitor.getBucket().clear();
@@ -133,12 +132,12 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             case "DISCARD" -> {
                 visitor.getBucket().clear();
                 this.botVisitorService.saveBotVisitor(visitor);
-                yield SendMessage.builder().chatId(userId).text(scalaTextHelper.getMainMenuText(firstName)).replyMarkup(keyboardHelper.buildMainMenuReply()).build();
+                yield SendMessage.builder().chatId(userId).text(scalaHelper.getMainMenuText(firstName)).replyMarkup(keyboardHelper.buildMainMenuReply()).build();
             }
 
             // clicked some catalog group sub-menu
             default -> {
-                var subGroupItems = scalaTextHelper.getSubMenuText(this.catalog.getItemList(), callBackButton);
+                var subGroupItems = scalaHelper.getSubMenuText(this.catalog.getItemList(), callBackButton);
 
                 for (String str : subGroupItems) {
                     var lastMessage = subGroupItems[subGroupItems.length - 1];
@@ -160,48 +159,39 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         }
     }
 
-    private void getEditItemQtyMenu(ScalaTextHelper scalaTextHelper, BotVisitor visitor, String callBackButton) throws TelegramApiException {
-
+    private void getEditItemQtyMenu(ScalaHelper scalaHelper, BotVisitor visitor, String callBackButton) throws TelegramApiException {
         String itemId;
-
         if (Objects.nonNull(callBackButton)) {
             itemId = callBackButton.replaceAll("QTY_", "");
         } else {
             itemId = visitor.getItemToEditQty().id();
         }
-
         final String finalItemId = itemId;
-
         var item = visitor.getBucket().stream().filter(i -> finalItemId.equals(i.id())).findFirst().get();
-
         visitor.setItemToEditQty(item);
-
-        var editItemQtyAnswer = SendMessage.builder().allowSendingWithoutReply(true).text(scalaTextHelper.getEditItemQtyMsg(item)).chatId(visitor.getUserId()).build();
-
+        var editItemQtyAnswer = SendMessage.builder().allowSendingWithoutReply(true).text(scalaHelper.getEditItemQtyMsg(item)).chatId(visitor.getUserId()).build();
         this.botVisitorService.saveBotVisitor(visitor);
         this.sendApiMethod(editItemQtyAnswer);
     }
 
-    private void handleInputMsg(Update update) throws TelegramApiException {
+    private void handleInputMsgOrCommand(Update update) throws TelegramApiException {
 
         if (update.hasMessage() && update.getMessage().hasText()) {
 
             String textFromUser = update.getMessage().getText();
-
-            //todo: refactor #handleInputMsg to Scala pattern-matching
-            var inputUpdate = new InputBotUpdateWithText(textFromUser);
-            MessageProcessor.processMessage(inputUpdate);
-
             String userId = update.getMessage().getFrom().getId().toString();
             Long chatId = update.getMessage().getChatId();
             String userFirstName = update.getMessage().getFrom().getFirstName();
-            ScalaTextHelper scalaTextHelper = new ScalaTextHelper();
+            ScalaHelper scalaHelper = new ScalaHelper();
             BotVisitor botVisitor = this.botVisitorService.getBotVisitorByUserId(userId);
-
             log.info("[chatID:{}, userFirstName:{}] : {}", chatId, userFirstName, textFromUser);
 
+            //todo: REFACTOR to Scala pattern-matching
+            var inputUpdate = new InputBotUpdate(update, botVisitorService, keyboardHelper, catalog);
+            //var answer = MessageProcessor.processMessage(inputUpdate);
+
             // main menu by default
-            SendMessage sendMessage = SendMessage.builder().chatId(chatId.toString()).text(scalaTextHelper.getMainMenuText(userFirstName)).replyMarkup(keyboardHelper.buildMainMenuReply()).build();
+            SendMessage sendMessage = SendMessage.builder().chatId(chatId.toString()).text(scalaHelper.getMainMenuText(userFirstName)).replyMarkup(keyboardHelper.buildMainMenuReply()).build();
 
             if (textFromUser.startsWith(REMOVE_COMMAND)) {
                 Item toRemove = botVisitor.getItemToEditQty();
@@ -212,7 +202,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             }
 
             if (Objects.nonNull(botVisitor.getItemToEditQty())) {
-                if (isNumeric(textFromUser)) {
+                if (scalaHelper.isNumeric(textFromUser)) {
                     Item toRemove = botVisitor.getItemToEditQty();
                     Integer qty = Integer.parseInt(textFromUser);
                     Item toAdd = new Item(toRemove.id(), toRemove.name(), toRemove.price(), toRemove.group(), qty);
@@ -222,7 +212,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                     this.botVisitorService.saveBotVisitor(botVisitor);
                     sendMessage = getBucketMessage(botVisitor, botVisitor.getUserId());
                 } else {
-                    getEditItemQtyMenu(scalaTextHelper, botVisitor, null);
+                    getEditItemQtyMenu(scalaHelper, botVisitor, null);
                     return;
                 }
             }
@@ -235,9 +225,9 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                     Item item = maybeItem.get();
                     botVisitor.getBucket().add(item);
                     this.botVisitorService.saveBotVisitor(botVisitor);
-                    sendMessage.setText(scalaTextHelper.getItemAcceptedText(item));
+                    sendMessage.setText(scalaHelper.getItemAcceptedText(item));
                 } else {
-                    sendMessage.setText(scalaTextHelper.getItemNotAcceptedText());
+                    sendMessage.setText(scalaHelper.getItemNotAcceptedText());
                     this.botVisitorService.saveBotVisitor(botVisitor);
                 }
             }
@@ -251,16 +241,6 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             log.warn("Unexpected update from user");
         }
     }
-
-    // todo: extract to helper class
-    private boolean isNumeric(String strNum) {
-        Pattern pattern = Pattern.compile("-?\\d+");
-        if (strNum == null) {
-            return false;
-        }
-        return pattern.matcher(strNum).matches();
-    }
-
 
     /**
      * Main method for handling input messages
@@ -276,7 +256,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             } else {
                 User user = update.getMessage().getFrom();
                 this.botVisitorService.getOrCreateVisitor(user);
-                handleInputMsg(update);
+                handleInputMsgOrCommand(update);
             }
         } catch (TelegramApiException | IOException ex) {
             throw new RuntimeException(ex);
