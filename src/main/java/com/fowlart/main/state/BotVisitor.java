@@ -9,6 +9,9 @@ import java.util.Set;
 
 public class BotVisitor implements Serializable {
 
+    private String phoneNumber;
+    private boolean isPhoneNumberFillingMode;
+
     private Item itemToEditQty;
 
     private User user;
@@ -54,11 +57,26 @@ public class BotVisitor implements Serializable {
         this.user = user;
     }
 
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
+
+    public boolean isPhoneNumberFillingMode() {
+        return isPhoneNumberFillingMode;
+    }
+
+    public void setPhoneNumberFillingMode(boolean phoneNumberFillingMode) {
+        isPhoneNumberFillingMode = phoneNumberFillingMode;
+    }
+
     @Override
     public String toString() {
         return "BotVisitor{" +
-                "itemToEditQty=" + itemToEditQty +
-                ", user=" + user +
+                "user=" + user +
                 ", userId=" + userId +
                 '}';
     }

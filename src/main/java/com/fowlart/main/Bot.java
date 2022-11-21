@@ -31,8 +31,18 @@ import java.util.Objects;
 @Component
 public class Bot extends TelegramLongPollingBot implements InitializingBean {
     private static final Logger log = LoggerFactory.getLogger(Bot.class);
+    private static final String CATALOG = "CATALOG";
     private static final String GOOD_ADD_COMMAND = "/ID";
     private static final String REMOVE_COMMAND = "/remove";
+    private static final String MYDATA = "MYDATA";
+    private static final String GOODS_QTY_EDIT = "GOODS_QTY_EDIT";
+    private static final String BUCKET = "BUCKET";
+    private static final String CONTACTS = "CONTACTS";
+    private static final String MAIN_SCREEN = "MAIN_SCREEN";
+    private static final String SUBMIT = "SUBMIT";
+    private static final String DISCARD = "DISCARD";
+    public static final String EDIT_PHONE = "EDIT_PHONE";
+    public static final String EDIT_PHONE_EXIT = "EDIT_PHONE_EXIT";
     private static Bot instance;
     private final BotVisitorService botVisitorService;
     private final ExcelFetcher excelFetcher;
@@ -77,7 +87,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
 
     private SendPhoto getGoodsContainerSendPhotoMsg(long chatId) {
         File goodsContainerImg = new File("src/main/resources/goods/goods_box.webp");
-        return SendPhoto.builder().caption("⚡️" + "Каталог" + "⚡️").chatId(chatId).photo(new InputFile(goodsContainerImg)).build();
+        return SendPhoto.builder().caption("⚡️" + "Каталог ").chatId(chatId).photo(new InputFile(goodsContainerImg)).build();
     }
 
     private void handleInlineButtonClicks(CallbackQuery callbackQuery) throws TelegramApiException, IOException {
@@ -88,46 +98,75 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         String callBackButton = callbackQuery.getData();
         String firstName = callbackQuery.getFrom().getFirstName();
 
-
         if (callBackButton.startsWith("QTY_")) {
             displayEditItemQtyMenu(scalaHelper, visitor, callBackButton);
             return;
         }
 
         var answer = switch (callBackButton) {
+            // personal data editing BEGIN
+            case MYDATA ->
+                    scalaHelper.buildReplyMessage(userId,
+                            scalaHelper.getPersonalDataEditingSectionText(visitor),
+                            this.keyboardHelper.buildPersonalDataEditingMenu());
 
-            case "GOODS_QTY_EDIT" ->
-                    SendMessage.builder().allowSendingWithoutReply(true).text("Обирай товар у корзині для редагування кількості:").chatId(userId).replyMarkup(this.keyboardHelper.buildEditQtyItemMenu(visitor.getBucket())).build();
+            case EDIT_PHONE -> {
 
-            case "CATALOG" -> {
+                visitor.setPhoneNumberFillingMode(true);
+                this.botVisitorService.saveBotVisitor(visitor);
+
+                yield scalaHelper.buildReplyMessage(userId,
+                        scalaHelper.getPhoneEditingText(visitor),
+                        this.keyboardHelper.buildInPhoneEditingModeMenu());
+            }
+
+            case EDIT_PHONE_EXIT -> {
+                visitor.setPhoneNumberFillingMode(false);
+                this.botVisitorService.saveBotVisitor(visitor);
+
+                yield scalaHelper.buildReplyMessage(userId,
+                        scalaHelper.getPhoneEditingText(visitor),
+                        this.keyboardHelper.buildPersonalDataEditingMenu());
+            }
+
+            case GOODS_QTY_EDIT ->
+                    scalaHelper.buildReplyMessage(userId, "Обирай товар у корзині для редагування кількості:", this.keyboardHelper.buildEditQtyItemMenu(visitor.getBucket()));
+            // personal data editing END
+
+            case CATALOG -> {
                 execute(getGoodsContainerSendPhotoMsg(userId));
-                yield SendMessage.builder().allowSendingWithoutReply(true).text("Обирай з товарних груп:").chatId(userId).replyMarkup(this.keyboardHelper.buildCatalogItemsMenu()).build();
+                yield scalaHelper.buildReplyMessage(userId, "Обирай з товарних груп:",
+                        keyboardHelper.buildCatalogItemsMenu());
             }
 
-            case "BUCKET" -> {
+            case BUCKET -> {
                 visitor = this.botVisitorService.getOrCreateVisitor(visitor.getUser());
-                yield scalaHelper.getBucketMessage(visitor, visitor.getUserId(), keyboardHelper);
+                yield scalaHelper
+                        .getBucketMessage(visitor, visitor.getUserId(), keyboardHelper);
             }
 
-            case "CONTACTS" ->
-                    SendMessage.builder().chatId(userId).text(scalaHelper.getContactsMsg()).replyMarkup(keyboardHelper.buildMainMenuReply()).build();
+            case CONTACTS ->
+                    scalaHelper
+                            .buildReplyMessage(userId, scalaHelper.getContactsMsg(), keyboardHelper.buildMainMenuReply());
 
-            case "MAIN_SCREEN" ->
-                    SendMessage.builder().chatId(userId).text(scalaHelper.getMainMenuText(firstName)).replyMarkup(keyboardHelper.buildMainMenuReply()).build();
+            case MAIN_SCREEN ->
+                    scalaHelper
+                            .buildReplyMessage(userId, scalaHelper.getMainMenuText(firstName), keyboardHelper.buildMainMenuReply());
 
-            case "SUBMIT" -> {
+            case SUBMIT -> {
                 visitor.getBucket().clear();
                 this.botVisitorService.saveBotVisitor(visitor);
-                yield SendMessage.builder().chatId(userId).text("Замовлення прийнято!").replyMarkup(keyboardHelper.buildMainMenuReply()).build();
+                yield scalaHelper
+                        .buildReplyMessage(userId, "Замовлення прийнято!", keyboardHelper.buildMainMenuReply());
             }
 
-            case "DISCARD" -> {
+            case DISCARD -> {
                 visitor.getBucket().clear();
                 this.botVisitorService.saveBotVisitor(visitor);
-                yield SendMessage.builder().chatId(userId).text(scalaHelper.getMainMenuText(firstName)).replyMarkup(keyboardHelper.buildMainMenuReply()).build();
+                yield scalaHelper
+                        .buildReplyMessage(userId,scalaHelper.getMainMenuText(firstName),keyboardHelper.buildMainMenuReply());
             }
 
-            // clicked some catalog group sub-menu
             default -> {
                 var subGroupItems = scalaHelper.getSubMenuText(this.catalog.getItemList(), callBackButton);
 
@@ -191,7 +230,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
 
             if (Objects.nonNull(botVisitor.getItemToEditQty())) {
                 if (scalaHelper.isNumeric(textFromUser)) {
-                    Integer qty = Integer.parseInt(textFromUser);
+                    int qty = Integer.parseInt(textFromUser);
                     var editQtyForItemMessage = new EditQtyForItemMessage(qty, botVisitor, botVisitorService, keyboardHelper);
                     ResponseWithSendMessage response = (ResponseWithSendMessage) BotMessageHandler.handleBotMessage(editQtyForItemMessage);
                     sendMessage = response.sendMessageResponse();

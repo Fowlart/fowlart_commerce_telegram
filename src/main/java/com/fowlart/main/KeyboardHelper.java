@@ -27,6 +27,30 @@ public class KeyboardHelper {
         return button;
     }
 
+    public InlineKeyboardMarkup buildInPhoneEditingModeMenu() {
+        var markupInline = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
+        var rowInline = new ArrayList<InlineKeyboardButton>();
+        rowInline.add(buildButton("Вийти", "EDIT_PHONE_EXIT"));
+        rowsInline.add(rowInline);
+        markupInline.setKeyboard(rowsInline);
+        return markupInline;
+    }
+    public InlineKeyboardMarkup buildPersonalDataEditingMenu() {
+        var markupInline = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
+
+        var rowInline1 = new ArrayList<InlineKeyboardButton>();
+        var rowInline2 = new ArrayList<InlineKeyboardButton>();
+        var rowInline3 = new ArrayList<InlineKeyboardButton>();
+
+        rowInline1.add(buildButton("☎️ Змінити номер телефону", "EDIT_PHONE"));
+        rowInline2.add(buildButton("\uD83D\uDCCB Змінити ФІО", "EDIT_NAME"));
+        rowInline3.add(buildButton("\uD83C\uDF10 Змінити Email", "EDIT_EMAIL"));
+        rowsInline.addAll(List.of(rowInline1,rowInline2,rowInline3));
+        markupInline.setKeyboard(rowsInline);
+        return markupInline;
+    }
     public InlineKeyboardMarkup buildEditQtyItemMenu(Set<Item> items) {
         var markupInline = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
@@ -38,21 +62,21 @@ public class KeyboardHelper {
         markupInline.setKeyboard(rowsInline);
         return markupInline;
     }
-
     public InlineKeyboardMarkup buildMainMenuReply() {
         InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
-        List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
-        List<InlineKeyboardButton> rowInline = new ArrayList<>();
-        rowInline.add(buildButton("\uD83D\uDCD7 Каталог", "CATALOG"));
-        rowInline.add(buildButton("\uD83D\uDCDD Корзина", "BUCKET"));
-        rowInline.add(buildButton("☎️ Контакти", "CONTACTS"));
+        List<InlineKeyboardButton> rowInline1 = new ArrayList<>();
+        rowInline1.add(buildButton("\uD83D\uDCD7 Каталог", "CATALOG"));
+        rowInline1.add(buildButton("\uD83D\uDCDD Корзина", "BUCKET"));
+        rowInline1.add(buildButton("☎️ Контакти", "CONTACTS"));
 
-        rowsInline.add(rowInline);
+        List<InlineKeyboardButton> rowInline2 = new ArrayList<>();
+        rowInline2.add(buildButton("\uD83D\uDC64 Мої данні", "MYDATA"));
+
+        List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>(List.of(rowInline1, rowInline2));
         // Add it to the message
         markupInline.setKeyboard(rowsInline);
         return markupInline;
     }
-
     public InlineKeyboardMarkup buildCatalogItemsMenu() {
 
         InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
@@ -66,7 +90,6 @@ public class KeyboardHelper {
         markupInline.setKeyboard(rowsInline);
         return markupInline;
     }
-
     public InlineKeyboardMarkup buildBucketKeyboardMenu() {
         InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
