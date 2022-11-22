@@ -34,12 +34,13 @@ object BotMessageHandler {
       }
 
 
-      case ItemAddToBucketMessage(item,visitor,botVisitorService,catalog,sendMessage) => {
+      case ItemAddToBucketMessage(item,visitor,botVisitorService, keyboardHelper,catalog,sendMessage) => {
         val matchedItem = catalog.getItemList.asScala.find((it: Item) => it.id.equalsIgnoreCase(item))
         if (matchedItem.isDefined) {
           visitor.getBucket.add(matchedItem.get)
           botVisitorService.saveBotVisitor(visitor)
           sendMessage.setText(scalaHelper.getItemAcceptedText(matchedItem.get))
+          sendMessage.setReplyMarkup(keyboardHelper.buildMainMenuReply())
           ResponseWithSendMessage(sendMessage)
         }
         else {

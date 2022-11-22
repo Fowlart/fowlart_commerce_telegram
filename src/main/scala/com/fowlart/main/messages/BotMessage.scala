@@ -21,5 +21,6 @@ case class EditQtyForItemMessage(qty: Int,
 case class ItemAddToBucketMessage(item: String,
                                   visitor: BotVisitor,
                                   botVisitorService: BotVisitorService,
+                                  keyboardHelper: KeyboardHelper,
                                   catalog: Catalog,
                                   sendMessage: SendMessage) extends BotMessage

@@ -43,9 +43,14 @@ class ScalaHelper {
     pattern.matcher(strNum).matches
   }
 
+  def isPhoneNumber(strNum: String): Boolean = {
+    val pattern = Pattern.compile("^\\d{3}-\\d{3}-\\d{4}$")
+    if (strNum == null) return false
+    pattern.matcher(strNum).matches
+  }
 
   def getSubMenuText(itemList: java.util.List[Item], group: String): Array[String] = {
-    val maxItemsPerReply = 15;
+    val maxItemsPerReply = 15
     val itemSeq = itemList.asScala.filter(item=>group.equals(item.group()))
     // ordering for pretty printing
     implicit val orderingForItem: Ordering[Item] = (x: Item, y: Item) =>
@@ -66,18 +71,22 @@ class ScalaHelper {
   def getPhoneEditingText(botVisitor: BotVisitor): String = {
 
     s"""|😎Данні користувача ${botVisitor.getUserId}/телефон:
+        |
         | Введіть, будь ласка, номер телефону
-        | в наступному форматі: xxx(оператор)-xxxxxxx(номер)
+        | в наступному форматі:
+        | xxx-xxx-xxxx
         |""".stripMargin
   }
   def getPersonalDataEditingSectionText(botVisitor: BotVisitor): String = {
 
     val userLastName = if (botVisitor.getUser.getLastName==null) "" else botVisitor.getUser.getLastName
+    val phoneNumber = if (botVisitor.getPhoneNumber==null) "" else botVisitor.getPhoneNumber
 
-    s"""|😎Данні користувача ${botVisitor.getUserId}:
+    s"""|😎
+        | Данні користувача ${botVisitor.getUserId}:
         |
         | Ім'я/Прізвище: ${botVisitor.getUser.getFirstName} $userLastName
-        | Телфон:
+        | Телфон: $phoneNumber
         | Email:
         |""".stripMargin
   }
@@ -89,6 +98,7 @@ class ScalaHelper {
         |їх ID номер.
         |
         |Редагування кількостей відбувається в корзині.""".stripMargin}
+
 
     def getItemAcceptedText(item: Item): String = {
       s"""

@@ -220,7 +220,23 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             log.info("[chatID:{}, userFirstName:{}] : {}", chatId, userFirstName, textFromUser);
 
             // main menu by default
-            SendMessage sendMessage = SendMessage.builder().chatId(chatId.toString()).text(scalaHelper.getMainMenuText(userFirstName)).replyMarkup(keyboardHelper.buildMainMenuReply()).build();
+            SendMessage sendMessage = SendMessage
+                    .builder()
+                    .chatId(chatId.toString())
+                    .text(scalaHelper.getMainMenuText(userFirstName))
+                    .replyMarkup(keyboardHelper.buildMainMenuReply())
+                    .build();
+
+            if (botVisitor.isPhoneNumberFillingMode()) {
+                if (scalaHelper.isPhoneNumber(textFromUser)) {
+                    botVisitor.setPhoneNumber(textFromUser);
+                    botVisitor.setPhoneNumberFillingMode(false);
+                    botVisitorService.saveBotVisitor(botVisitor);
+                } else {
+                    sendMessage.setText(scalaHelper.getPhoneEditingText(botVisitor));
+                    sendMessage.setReplyMarkup(keyboardHelper.buildInPhoneEditingModeMenu());
+                }
+            }
 
             if (textFromUser.startsWith(REMOVE_COMMAND)) {
                 var removeItemFromBucketMessage = new RemoveItemFromBucketMessage(botVisitor, botVisitorService, keyboardHelper);
@@ -242,7 +258,15 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             }
 
             if (textFromUser.startsWith(GOOD_ADD_COMMAND)) {
-                var itemAddToBucketMessage = new ItemAddToBucketMessage(textFromUser.replaceAll("/", ""), botVisitor, botVisitorService, catalog, sendMessage);
+
+                var itemAddToBucketMessage = new ItemAddToBucketMessage(
+                        textFromUser.replaceAll("/", ""),
+                        botVisitor,
+                        botVisitorService,
+                        keyboardHelper,
+                        catalog,
+                        sendMessage);
+
                 ResponseWithSendMessage response = (ResponseWithSendMessage) BotMessageHandler.handleBotMessage(itemAddToBucketMessage);
                 sendMessage = response.sendMessageResponse();
             }
@@ -258,7 +282,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     }
 
     /**
-     * Main method for handling input messages
+     * <h2 style='color:red'>Main method for handling input messages</h2>
      */
     @Override
     public void onUpdateReceived(Update update) {
