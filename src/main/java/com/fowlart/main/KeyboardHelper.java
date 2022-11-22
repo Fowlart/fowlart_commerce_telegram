@@ -95,7 +95,7 @@ public class KeyboardHelper {
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
         List<InlineKeyboardButton> rowInline = new ArrayList<>();
         rowInline.add(buildButton("Очистити", "DISCARD"));
-        rowInline.add(buildButton("OK", "SUBMIT"));
+        rowInline.add(buildButton("OK \uD83C\uDF6B", "SUBMIT"));
         rowInline.add(buildButton("Кількість", "GOODS_QTY_EDIT"));
 
         rowsInline.add(rowInline);

@@ -70,7 +70,8 @@ class ScalaHelper {
 
   def getPhoneEditingText(botVisitor: BotVisitor): String = {
 
-    s"""|😎Данні користувача ${botVisitor.getUserId}/телефон:
+    s"""| 😎
+        | Данні користувача ${botVisitor.getUserId}/телефон:
         |
         | Введіть, будь ласка, номер телефону
         | в наступному форматі:
@@ -82,11 +83,16 @@ class ScalaHelper {
     val userLastName = if (botVisitor.getUser.getLastName==null) "" else botVisitor.getUser.getLastName
     val phoneNumber = if (botVisitor.getPhoneNumber==null) "" else botVisitor.getPhoneNumber
 
-    s"""|😎
-        | Данні користувача ${botVisitor.getUserId}:
+    s"""| 😎
+        | ID користувача:
+        | ${botVisitor.getUserId}
         |
-        | Ім'я/Прізвище: ${botVisitor.getUser.getFirstName} $userLastName
-        | Телфон: $phoneNumber
+        | Ім'я/Прізвище:
+        | ${botVisitor.getUser.getFirstName} $userLastName
+        |
+        | Телфон:
+        | $phoneNumber
+        |
         | Email:
         |""".stripMargin
   }
