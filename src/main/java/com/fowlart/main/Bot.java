@@ -2,10 +2,7 @@ package com.fowlart.main;
 
 import com.fowlart.main.catalog_fetching.ExcelFetcher;
 import com.fowlart.main.in_mem_catalog.Catalog;
-import com.fowlart.main.messages.EditQtyForItemMessage;
-import com.fowlart.main.messages.ItemAddToBucketMessage;
-import com.fowlart.main.messages.RemoveItemFromBucketMessage;
-import com.fowlart.main.messages.ResponseWithSendMessage;
+import com.fowlart.main.messages.*;
 import com.fowlart.main.state.BotVisitor;
 import com.fowlart.main.state.BotVisitorService;
 import org.slf4j.Logger;
@@ -25,6 +22,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 
@@ -122,7 +120,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                 visitor.setPhoneNumberFillingMode(true);
                 this.botVisitorService.saveBotVisitor(visitor);
                 yield scalaHelper.buildReplyMessage(userId,
-                        scalaHelper.getPhoneEditingText(visitor),
+                        scalaHelper.getPhoneEditingText(userId),
                         this.keyboardHelper.buildInPhoneEditingModeMenu());
             }
 
@@ -130,7 +128,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                 visitor.setPhoneNumberFillingMode(false);
                 this.botVisitorService.saveBotVisitor(visitor);
                 yield scalaHelper.buildReplyMessage(userId,
-                        scalaHelper.getPhoneEditingText(visitor),
+                        scalaHelper.getPhoneEditingText(userId),
                         this.keyboardHelper.buildPersonalDataEditingMenu());
             }
 
@@ -167,7 +165,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             }
 
             case DISCARD -> {
-                visitor.getBucket().clear();
+                visitor.setBucket(new HashSet<>());
                 this.botVisitorService.saveBotVisitor(visitor);
                 yield scalaHelper
                         .buildReplyMessage(userId,scalaHelper.getMainMenuText(firstName),keyboardHelper.buildMainMenuReply());
@@ -221,61 +219,15 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             String userId = update.getMessage().getFrom().getId().toString();
             Long chatId = update.getMessage().getChatId();
             String userFirstName = update.getMessage().getFrom().getFirstName();
-            ScalaHelper scalaHelper = new ScalaHelper();
             BotVisitor botVisitor = this.botVisitorService.getBotVisitorByUserId(userId);
             log.info("[chatID:{}, userFirstName:{}] : {}", chatId, userFirstName, textFromUser);
 
-            // main menu by default
-            SendMessage sendMessage = SendMessage
-                    .builder()
-                    .chatId(chatId.toString())
-                    .text(scalaHelper.getMainMenuText(userFirstName))
-                    .replyMarkup(keyboardHelper.buildMainMenuReply())
-                    .build();
+            var scalaBotVisitor = BotVisitorToScalaBotVisitorConverter.convertBotVisitorToScalaBotVisitor(botVisitor);
 
-            if (botVisitor.isPhoneNumberFillingMode()) {
-                if (scalaHelper.isPhoneNumber(textFromUser)) {
-                    botVisitor.setPhoneNumber(textFromUser);
-                    botVisitor.setPhoneNumberFillingMode(false);
-                    botVisitorService.saveBotVisitor(botVisitor);
-                } else {
-                    sendMessage.setText(scalaHelper.getPhoneEditingText(botVisitor));
-                    sendMessage.setReplyMarkup(keyboardHelper.buildInPhoneEditingModeMenu());
-                }
-            }
-
-            if (textFromUser.startsWith(REMOVE_COMMAND)) {
-                var removeItemFromBucketMessage = new RemoveItemFromBucketMessage(botVisitor, botVisitorService, keyboardHelper);
-                ResponseWithSendMessage response = (ResponseWithSendMessage) BotMessageHandler.handleBotMessage(removeItemFromBucketMessage);
-                sendMessage = response.sendMessageResponse();
-            }
-
-            if (Objects.nonNull(botVisitor.getItemToEditQty())) {
-                if (scalaHelper.isNumeric(textFromUser)) {
-                    int qty = Integer.parseInt(textFromUser);
-                    var editQtyForItemMessage = new EditQtyForItemMessage(qty, botVisitor, botVisitorService, keyboardHelper);
-                    ResponseWithSendMessage response = (ResponseWithSendMessage) BotMessageHandler.handleBotMessage(editQtyForItemMessage);
-                    sendMessage = response.sendMessageResponse();
-
-                } else {
-                    displayEditItemQtyMenu(scalaHelper, botVisitor, null);
-                    return;
-                }
-            }
-
-            if (textFromUser.startsWith(GOOD_ADD_COMMAND)) {
-
-                var itemAddToBucketMessage = new ItemAddToBucketMessage(
-                        textFromUser.replaceAll("/", ""),
-                        botVisitor,
-                        botVisitorService,
-                        keyboardHelper,
-                        catalog,
-                        sendMessage);
-
-                ResponseWithSendMessage response = (ResponseWithSendMessage) BotMessageHandler.handleBotMessage(itemAddToBucketMessage);
-                sendMessage = response.sendMessageResponse();
-            }
+            var response = (ResponseWithSendMessageAndScalaBotVisitor) BotMessageHandler.handleMessageOrCommand(scalaBotVisitor, textFromUser, keyboardHelper, chatId, catalog);
+            var sendMessage = response.sendMessageResponse();
+            var updatedBotVisitor = BotVisitorToScalaBotVisitorConverter.convertToJavaBotVisitor(response.scalaBotVisitor());
+            botVisitorService.saveBotVisitor(updatedBotVisitor);
 
             try {
                 this.sendApiMethod(sendMessage);

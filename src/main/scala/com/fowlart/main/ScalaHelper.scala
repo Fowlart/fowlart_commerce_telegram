@@ -20,6 +20,12 @@ class ScalaHelper {
       .build
   }
 
+  def getBucketMessageForScalaBotVisitor(visitor: ScalaBotVisitor,
+                                         userId: String,
+                                         keyboardHelper: KeyboardHelper): SendMessage = {
+
+    getBucketMessage(BotVisitorToScalaBotVisitorConverter.convertToJavaBotVisitor(visitor),userId,keyboardHelper)
+  }
   def getBucketMessage(visitor: BotVisitor,
                        userId: String,
                        keyboardHelper: KeyboardHelper): SendMessage = {
@@ -68,10 +74,10 @@ class ScalaHelper {
     res.toArray
   }
 
-  def getPhoneEditingText(botVisitor: BotVisitor): String = {
+  def getPhoneEditingText(userId: Long): String = {
 
     s"""| 😎
-        | Данні користувача ${botVisitor.getUserId}/телефон:
+        | Данні користувача $userId/телефон:
         |
         | Введіть, будь ласка, номер телефону
         | в наступному форматі:
@@ -104,6 +110,13 @@ class ScalaHelper {
         |їх ID номер.
         |
         |Редагування кількостей відбувається в корзині.""".stripMargin}
+
+  def getItemQtyWrongEnteredNumber(name: String): String = {
+    s"""|Слухай, $name, ти мабудь помилився і ввів некоректне число в
+        |режимі редагування кількості. Будь ласка, повернись в корзину
+        |і введи ціле позитивне число, якщо необхідно проставити кількість
+        |вибраного товару у замовленні.""".stripMargin
+  }
 
 
     def getItemAcceptedText(item: Item): String = {
