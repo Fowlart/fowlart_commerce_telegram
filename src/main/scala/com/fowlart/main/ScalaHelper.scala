@@ -60,7 +60,7 @@ class ScalaHelper {
     val res = grouped.toList.filter(it => it.nonEmpty).map(it => {
       it.map(item =>
         s"""
-           |⏺${item.name.trim.toLowerCase}
+           |⏺ ${item.name.trim.toLowerCase}
            |💳${item.price} грн
            |⏩/${item.id}
            |""".stripMargin).reduce((v1, v2) => s"$v1$v2")

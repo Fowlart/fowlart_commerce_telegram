@@ -34,7 +34,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     private static final String CATALOG = "CATALOG";
     private static final String GOOD_ADD_COMMAND = "/ID";
     private static final String REMOVE_COMMAND = "/remove";
-    private static final String MYDATA = "MYDATA";
+    private static final String MY_DATA = "MYDATA";
     private static final String GOODS_QTY_EDIT = "GOODS_QTY_EDIT";
     private static final String BUCKET = "BUCKET";
     private static final String CONTACTS = "CONTACTS";
@@ -50,14 +50,21 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     private final Catalog catalog;
     private final String userName;
     private final String token;
+    private ScalaHelper scalaHelper;
 
-    public Bot(@Autowired BotVisitorService botVisitorService, @Autowired ExcelFetcher excelFetcher, @Autowired KeyboardHelper keyboardHelper, @Value("${app.bot.userName}") String userName, @Value("${app.bot.userName.token}") String token, @Autowired Catalog catalog) {
+    public Bot(@Autowired BotVisitorService botVisitorService,
+               @Autowired ExcelFetcher excelFetcher,
+               @Autowired KeyboardHelper keyboardHelper,
+               @Autowired Catalog catalog,
+               @Value("${app.bot.userName}") String userName,
+               @Value("${app.bot.userName.token}") String token) {
         this.botVisitorService = botVisitorService;
         this.excelFetcher = excelFetcher;
         this.keyboardHelper = keyboardHelper;
         this.userName = userName;
         this.token = token;
         this.catalog = catalog;
+        this.scalaHelper = new ScalaHelper();
     }
 
     public static Bot getInstance() {
@@ -85,13 +92,13 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         this.catalog.setItemList(this.excelFetcher.getCatalogItems());
     }
 
-    private SendPhoto getGoodsContainerSendPhotoMsg(long chatId) {
+    private SendPhoto getGoodsContainerPhotoMsg(long chatId) {
         File goodsContainerImg = new File("src/main/resources/goods/goods_box.webp");
         return SendPhoto.builder().caption("⚡️" + "Каталог ").chatId(chatId).photo(new InputFile(goodsContainerImg)).build();
     }
 
     private void handleInlineButtonClicks(CallbackQuery callbackQuery) throws TelegramApiException, IOException {
-        ScalaHelper scalaHelper = new ScalaHelper();
+
         Long userId = callbackQuery.getFrom().getId();
         BotVisitor visitor = this.botVisitorService.getBotVisitorByUserId(userId.toString());
         log.info(visitor.toString());
@@ -105,7 +112,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
 
         var answer = switch (callBackButton) {
             // personal data editing BEGIN
-            case MYDATA ->
+            case MY_DATA ->
                     scalaHelper.buildReplyMessage(userId,
                             scalaHelper.getPersonalDataEditingSectionText(visitor),
                             this.keyboardHelper.buildPersonalDataEditingMenu());
@@ -114,7 +121,6 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
 
                 visitor.setPhoneNumberFillingMode(true);
                 this.botVisitorService.saveBotVisitor(visitor);
-
                 yield scalaHelper.buildReplyMessage(userId,
                         scalaHelper.getPhoneEditingText(visitor),
                         this.keyboardHelper.buildInPhoneEditingModeMenu());
@@ -123,7 +129,6 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             case EDIT_PHONE_EXIT -> {
                 visitor.setPhoneNumberFillingMode(false);
                 this.botVisitorService.saveBotVisitor(visitor);
-
                 yield scalaHelper.buildReplyMessage(userId,
                         scalaHelper.getPhoneEditingText(visitor),
                         this.keyboardHelper.buildPersonalDataEditingMenu());
@@ -134,7 +139,8 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             // personal data editing END
 
             case CATALOG -> {
-                execute(getGoodsContainerSendPhotoMsg(userId));
+                // todo: what we do with the photos?
+                //execute(getGoodsContainerPhotoMsg(userId));
                 yield scalaHelper.buildReplyMessage(userId, "Обирай з товарних груп:",
                         keyboardHelper.buildCatalogItemsMenu());
             }
@@ -291,10 +297,13 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                 CallbackQuery callbackQuery = update.getCallbackQuery();
                 User user = callbackQuery.getFrom();
                 this.botVisitorService.getOrCreateVisitor(user);
+
                 handleInlineButtonClicks(callbackQuery);
+
             } else {
                 User user = update.getMessage().getFrom();
                 this.botVisitorService.getOrCreateVisitor(user);
+
                 handleInputMsgOrCommand(update);
             }
         } catch (TelegramApiException | IOException ex) {
