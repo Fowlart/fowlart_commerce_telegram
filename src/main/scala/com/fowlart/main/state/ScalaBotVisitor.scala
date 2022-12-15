@@ -1,4 +1,4 @@
-package com.fowlart.main
+package com.fowlart.main.state
 
 import com.fowlart.main.in_mem_catalog.Item
 import org.telegram.telegrambots.meta.api.objects.User

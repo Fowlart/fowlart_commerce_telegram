@@ -1,13 +1,13 @@
 package com.fowlart.main
 
-import com.fowlart.main.state.BotVisitor
+import com.fowlart.main.state.{BotVisitor, ScalaBotVisitor}
+
 import scala.collection.JavaConverters._
-import com.fowlart.main.ScalaBotVisitor
 
 object BotVisitorToScalaBotVisitorConverter {
 
   def convertBotVisitorToScalaBotVisitor(botVisitor: BotVisitor): ScalaBotVisitor = {
-    ScalaBotVisitor(
+    state.ScalaBotVisitor(
       botVisitor.getName,
       botVisitor.isNameEditingMode,
       botVisitor.getPhoneNumber,

@@ -5,15 +5,16 @@ import org.telegram.telegrambots.meta.api.objects.User;
 
 import java.io.Serializable;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Set;
 
 public class BotVisitor implements Serializable {
 
     private String phoneNumber;
     private boolean isPhoneNumberFillingMode;
-    
+
     private String name;
-    
+
     private boolean isNameEditingMode;
 
     private Item itemToEditQty;
@@ -23,6 +24,8 @@ public class BotVisitor implements Serializable {
     private long userId;
 
     private Set<Item> bucket = new HashSet<>();
+
+    private LinkedList<String> orders;
 
     public BotVisitor(User user, long userId) {
         this.user = user;
@@ -91,6 +94,14 @@ public class BotVisitor implements Serializable {
 
     public void setNameEditingMode(boolean nameEditingMode) {
         isNameEditingMode = nameEditingMode;
+    }
+
+    public LinkedList<String> getOrders() {
+        return orders;
+    }
+
+    public void setOrders(LinkedList<String> orders) {
+        this.orders = orders;
     }
 
     @Override

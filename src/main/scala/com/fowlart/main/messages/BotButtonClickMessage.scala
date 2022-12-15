@@ -1,5 +1,6 @@
 package com.fowlart.main.messages
-import com.fowlart.main.ScalaBotVisitor
+
+import com.fowlart.main.state.ScalaBotVisitor
 
 trait BotButtonClickMessage
 

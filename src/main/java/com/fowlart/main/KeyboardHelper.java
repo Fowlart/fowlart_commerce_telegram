@@ -46,7 +46,6 @@ public class KeyboardHelper {
 
         rowInline1.add(buildButton("☎️ Змінити номер телефону", "EDIT_PHONE"));
         rowInline2.add(buildButton("\uD83D\uDCCB Змінити ФІО", "EDIT_NAME"));
-        rowInline3.add(buildButton("\uD83C\uDF10 Змінити Email", "EDIT_EMAIL"));
         rowsInline.addAll(List.of(rowInline1,rowInline2,rowInline3));
         markupInline.setKeyboard(rowsInline);
         return markupInline;

@@ -1,6 +1,7 @@
 package com.fowlart.main
 import com.fowlart.main.in_mem_catalog.{Catalog, Item}
 import com.fowlart.main.messages._
+import com.fowlart.main.state.ScalaBotVisitor
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage
 
 import scala.collection.JavaConverters._
@@ -43,7 +44,7 @@ object BotMessageHandler {
       // a user trying to remove an item from the basket
       case (ScalaBotVisitor(name,isNameEditingMode,phoneNumber, false, itemToEditQty, user, userId, bucket), message: String) if message.startsWith(REMOVE_COMMAND) => {
         val newBucket = bucket - itemToEditQty
-        val updateScalaBotVisitor = ScalaBotVisitor(name,isNameEditingMode,phoneNumber, false, null, user, userId, newBucket)
+        val updateScalaBotVisitor = state.ScalaBotVisitor(name,isNameEditingMode,phoneNumber, false, null, user, userId, newBucket)
         val message = scalaHelper.getBucketMessageForScalaBotVisitor(updateScalaBotVisitor, updateScalaBotVisitor.userId, keyboardHelper)
         ResponseWithSendMessageAndScalaBotVisitor(message, updateScalaBotVisitor)
       }
@@ -52,15 +53,16 @@ object BotMessageHandler {
       case (ScalaBotVisitor(name,isNameEditingMode,phoneNumber, false, itemToEditQty, user, userId, bucket), textFromUser: String) if itemToEditQty != null && scalaHelper.isNumeric(textFromUser) => {
         val qty = textFromUser.toInt
         val toAdd = new Item(itemToEditQty.id, itemToEditQty.name, itemToEditQty.price, itemToEditQty.group, qty)
-        val updateScalaBotVisitor = ScalaBotVisitor(name,isNameEditingMode,phoneNumber, false, null, user, userId, bucket - itemToEditQty + toAdd)
+        val updateScalaBotVisitor = state.ScalaBotVisitor(name,isNameEditingMode,phoneNumber, false, null, user, userId, bucket - itemToEditQty + toAdd)
         val message = scalaHelper.getBucketMessageForScalaBotVisitor(updateScalaBotVisitor, updateScalaBotVisitor.userId, keyboardHelper)
         ResponseWithSendMessageAndScalaBotVisitor(message, updateScalaBotVisitor)
       }
 
       // user in quantity-edit mode at the basket and entered text is NOT numeric
       case (ScalaBotVisitor(name,isNameEditingMode,phoneNumber, false, itemToEditQty, user, userId, bucket), textFromUser: String) if itemToEditQty != null => {
-        val sendMessage = SendMessage.builder.chatId(chatId).text(scalaHelper.getItemQtyWrongEnteredNumber(user.getFirstName)).replyMarkup(keyboardHelper.buildMainMenuReply).build
-        ResponseWithSendMessageAndScalaBotVisitor(sendMessage, ScalaBotVisitor(name,isNameEditingMode,phoneNumber, false, itemToEditQty, user, userId, bucket))
+        val visitor = state.ScalaBotVisitor(name,isNameEditingMode,phoneNumber, false, itemToEditQty, user, userId, bucket)
+        val sendMessage = SendMessage.builder.chatId(chatId).text(scalaHelper.getItemQtyWrongEnteredNumber(visitor)).replyMarkup(keyboardHelper.buildMainMenuReply).build
+        ResponseWithSendMessageAndScalaBotVisitor(sendMessage, visitor)
       }
 
       // user trying to add item from catalog to the basket
@@ -69,11 +71,11 @@ object BotMessageHandler {
         val matchedItem = catalog.getItemList.asScala.find((it: Item) => it.id.equalsIgnoreCase(itemId))
         val sendMessage = SendMessage.builder.chatId(chatId).text(scalaHelper.getItemAcceptedText(matchedItem.get)).replyMarkup(keyboardHelper.buildMainMenuReply).build
         if (matchedItem.isDefined) {
-          val updatedScalaVisitor = ScalaBotVisitor(name,isNameEditingMode,phoneNumber, false, null, user, userId, bucket + matchedItem.get)
+          val updatedScalaVisitor = state.ScalaBotVisitor(name,isNameEditingMode,phoneNumber, false, null, user, userId, bucket + matchedItem.get)
           ResponseWithSendMessageAndScalaBotVisitor(sendMessage, updatedScalaVisitor)
         } else {
           sendMessage.setText(scalaHelper.getItemNotAcceptedText())
-          ResponseWithSendMessageAndScalaBotVisitor(sendMessage, ScalaBotVisitor(name,isNameEditingMode,phoneNumber, false, null, user, userId, bucket))
+          ResponseWithSendMessageAndScalaBotVisitor(sendMessage, state.ScalaBotVisitor(name,isNameEditingMode,phoneNumber, false, null, user, userId, bucket))
         }
       }
 

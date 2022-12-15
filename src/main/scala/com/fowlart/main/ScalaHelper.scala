@@ -1,7 +1,7 @@
 package com.fowlart.main
 
 import com.fowlart.main.in_mem_catalog.Item
-import com.fowlart.main.state.BotVisitor
+import com.fowlart.main.state.{BotVisitor, ScalaBotVisitor}
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup
 
@@ -79,7 +79,7 @@ class ScalaHelper {
     s"""| 😎Данні користувача $userId/ПІБ:
         |
         |Будь ласка, назвіться. Краще дотримуватися формату:
-        |Прізвище Ім'я. 
+        |Прізвище Ім'я.
         |Увага, ми не будемо намагатися валідувати введений текст.
         |""".stripMargin
   }
@@ -106,8 +106,6 @@ class ScalaHelper {
         |
         | Телфон:
         | $phoneNumber
-        |
-        | Email:
         |""".stripMargin
   }
   def getMainMenuText(name: String): String ={
@@ -127,11 +125,14 @@ class ScalaHelper {
     s"""|Дякуємо. Ім'я збережено в особистий профіль.""".stripMargin
   }
 
-  def getItemQtyWrongEnteredNumber(name: String): String = {
-    s"""|Слухай, $name, ти мабудь помилився і ввів некоректне число в
-        |режимі редагування кількості. Будь ласка, повернись в корзину
-        |і введи ціле позитивне число, якщо необхідно проставити кількість
-        |вибраного товару у замовленні.""".stripMargin
+  def getItemQtyWrongEnteredNumber(botVisitor: ScalaBotVisitor): String = {
+    s"""|Введене некоректне число в
+        |режимі редагування кількості.
+        |Будь ласка, введи ціле позитивне число.
+        |
+        |ТОВАР, ЩО РЕДАГУЄТЬСЯ:
+        |${botVisitor.itemToEditQty}
+        |""".stripMargin
   }
 
 
@@ -156,7 +157,7 @@ class ScalaHelper {
 
   def getEditItemQtyMsg(item: Item): String =
     s"""
-       |Редагуємо товар:
+       |ТОВАР, ЩО РЕДАГУЄТЬСЯ::
        |
        |$item
        |

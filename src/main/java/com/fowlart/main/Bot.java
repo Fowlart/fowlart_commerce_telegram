@@ -5,6 +5,7 @@ import com.fowlart.main.in_mem_catalog.Catalog;
 import com.fowlart.main.messages.*;
 import com.fowlart.main.state.BotVisitor;
 import com.fowlart.main.state.BotVisitorService;
+import com.fowlart.main.state.OrderService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -23,6 +24,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
@@ -48,13 +50,16 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     private final String userName;
     private final String token;
     private ScalaHelper scalaHelper;
+    private OrderService orderService;
 
     public Bot(@Autowired BotVisitorService botVisitorService,
                @Autowired ExcelFetcher excelFetcher,
                @Autowired KeyboardHelper keyboardHelper,
                @Autowired Catalog catalog,
+               @Autowired OrderService orderService,
                @Value("${app.bot.userName}") String userName,
                @Value("${app.bot.userName.token}") String token) {
+        this.orderService = orderService;
         this.botVisitorService = botVisitorService;
         this.excelFetcher = excelFetcher;
         this.keyboardHelper = keyboardHelper;
@@ -109,14 +114,18 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
 
         var answer = switch (callBackButton) {
             // personal data editing BEGIN
-            case MY_DATA ->
-                    scalaHelper.buildReplyMessage(userId,
-                            scalaHelper.getPersonalDataEditingSectionText(visitor),
-                            this.keyboardHelper.buildPersonalDataEditingMenu());
+            case MY_DATA -> {
+                visitor.setNameEditingMode(false);
+                this.botVisitorService.saveBotVisitor(visitor);
+                yield scalaHelper.buildReplyMessage(
+                        userId,
+                        scalaHelper.getPersonalDataEditingSectionText(visitor),
+                        this.keyboardHelper.buildPersonalDataEditingMenu());
+            }
 
             case EDIT_PHONE -> {
-
                 visitor.setPhoneNumberFillingMode(true);
+                visitor.setNameEditingMode(false);
                 this.botVisitorService.saveBotVisitor(visitor);
                 yield scalaHelper.buildReplyMessage(userId,
                         scalaHelper.getPhoneEditingText(userId),
@@ -139,33 +148,59 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                         this.keyboardHelper.buildPersonalDataEditingMenu());
             }
             // personal data editing END
-
-            case GOODS_QTY_EDIT ->
-                    scalaHelper.buildReplyMessage(userId, "Обирай товар у корзині для редагування кількості:", this.keyboardHelper.buildEditQtyItemMenu(visitor.getBucket()));
+            case GOODS_QTY_EDIT -> {
+                visitor.setNameEditingMode(false);
+                this.botVisitorService.saveBotVisitor(visitor);
+                yield scalaHelper.buildReplyMessage(userId, "Обирай товар у корзині для редагування кількості:",
+                        this.keyboardHelper.buildEditQtyItemMenu(visitor.getBucket()));
+            }
 
             case CATALOG -> {
                 // todo: what we do with the photos?
                 //execute(getGoodsContainerPhotoMsg(userId));
+                visitor.setNameEditingMode(false);
+                this.botVisitorService.saveBotVisitor(visitor);
                 yield scalaHelper.buildReplyMessage(userId, "Обирай з товарних груп:",
                         keyboardHelper.buildCatalogItemsMenu());
             }
 
             case BUCKET -> {
                 visitor = this.botVisitorService.getOrCreateVisitor(visitor.getUser());
-                yield scalaHelper
-                        .getBucketMessage(visitor, visitor.getUserId(), keyboardHelper);
+                visitor.setNameEditingMode(false);
+                this.botVisitorService.saveBotVisitor(visitor);
+                yield scalaHelper.getBucketMessage(visitor, visitor.getUserId(), keyboardHelper);
             }
 
-            case CONTACTS ->
-                    scalaHelper
-                            .buildReplyMessage(userId, scalaHelper.getContactsMsg(), keyboardHelper.buildMainMenuReply());
+            case CONTACTS -> {
+                visitor = this.botVisitorService.getOrCreateVisitor(visitor.getUser());
+                visitor.setNameEditingMode(false);
+                this.botVisitorService.saveBotVisitor(visitor);
+                yield scalaHelper.buildReplyMessage(userId, scalaHelper.getContactsMsg(), keyboardHelper.buildMainMenuReply());
+            }
 
-            case MAIN_SCREEN ->
-                    scalaHelper
-                            .buildReplyMessage(userId, scalaHelper.getMainMenuText(firstName), keyboardHelper.buildMainMenuReply());
+            case MAIN_SCREEN -> {
+                visitor.setNameEditingMode(false);
+                this.botVisitorService.saveBotVisitor(visitor);
+                yield scalaHelper.buildReplyMessage(userId,
+                        scalaHelper.getMainMenuText(firstName), keyboardHelper.buildMainMenuReply());
+            }
 
             case SUBMIT -> {
-                visitor.getBucket().clear();
+
+                var order = OrderHandler.handleOrder(BotVisitorToScalaBotVisitorConverter
+                        .convertBotVisitorToScalaBotVisitor(visitor));
+                //
+                orderService.saveOrder(order);
+                var orderList = visitor.getOrders();
+                if (Objects.nonNull(orderList)) {
+                    orderList.addLast(order.orderId());
+                } else {
+                    visitor.setOrders(new LinkedList<>());
+                }
+                botVisitorService.saveBotVisitor(visitor);
+                log.info("saving order: "+order.orderId());
+                visitor.setBucket(new HashSet<>());
+                visitor.setNameEditingMode(false);
                 this.botVisitorService.saveBotVisitor(visitor);
                 yield scalaHelper
                         .buildReplyMessage(userId, "Замовлення прийнято!", keyboardHelper.buildMainMenuReply());
@@ -173,6 +208,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
 
             case DISCARD -> {
                 visitor.setBucket(new HashSet<>());
+                visitor.setNameEditingMode(false);
                 this.botVisitorService.saveBotVisitor(visitor);
                 yield scalaHelper
                         .buildReplyMessage(userId,scalaHelper.getMainMenuText(firstName),keyboardHelper.buildMainMenuReply());
