@@ -30,8 +30,6 @@ import java.util.Objects;
 public class Bot extends TelegramLongPollingBot implements InitializingBean {
     private static final Logger log = LoggerFactory.getLogger(Bot.class);
     private static final String CATALOG = "CATALOG";
-    private static final String GOOD_ADD_COMMAND = "/ID";
-    private static final String REMOVE_COMMAND = "/remove";
     private static final String MY_DATA = "MYDATA";
     private static final String GOODS_QTY_EDIT = "GOODS_QTY_EDIT";
     private static final String BUCKET = "BUCKET";
@@ -41,6 +39,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     private static final String DISCARD = "DISCARD";
     public static final String EDIT_PHONE = "EDIT_PHONE";
     public static final String EDIT_PHONE_EXIT = "EDIT_PHONE_EXIT";
+    public static final String EDIT_NAME = "EDIT_NAME";
     private static Bot instance;
     private final BotVisitorService botVisitorService;
     private final ExcelFetcher excelFetcher;
@@ -132,9 +131,17 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                         this.keyboardHelper.buildPersonalDataEditingMenu());
             }
 
+            case EDIT_NAME -> {
+                visitor.setNameEditingMode(true);
+                this.botVisitorService.saveBotVisitor(visitor);
+                yield scalaHelper.buildReplyMessage(userId,
+                        scalaHelper.getNameEditingText(userId),
+                        this.keyboardHelper.buildPersonalDataEditingMenu());
+            }
+            // personal data editing END
+
             case GOODS_QTY_EDIT ->
                     scalaHelper.buildReplyMessage(userId, "Обирай товар у корзині для редагування кількості:", this.keyboardHelper.buildEditQtyItemMenu(visitor.getBucket()));
-            // personal data editing END
 
             case CATALOG -> {
                 // todo: what we do with the photos?

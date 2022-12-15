@@ -74,10 +74,19 @@ class ScalaHelper {
     res.toArray
   }
 
+  def getNameEditingText(userId: Long): String = {
+
+    s"""| 😎Данні користувача $userId/ПІБ:
+        |
+        |Будь ласка, назвіться. Краще дотримуватися формату:
+        |Прізвище Ім'я. 
+        |Увага, ми не будемо намагатися валідувати введений текст.
+        |""".stripMargin
+  }
+
   def getPhoneEditingText(userId: Long): String = {
 
-    s"""| 😎
-        | Данні користувача $userId/телефон:
+    s"""| 😎Данні користувача $userId/телефон:
         |
         | Введіть, будь ласка, номер телефону
         | в наступному форматі:
@@ -86,7 +95,6 @@ class ScalaHelper {
   }
   def getPersonalDataEditingSectionText(botVisitor: BotVisitor): String = {
 
-    val userLastName = if (botVisitor.getUser.getLastName==null) "" else botVisitor.getUser.getLastName
     val phoneNumber = if (botVisitor.getPhoneNumber==null) "" else botVisitor.getPhoneNumber
 
     s"""| 😎
@@ -94,7 +102,7 @@ class ScalaHelper {
         | ${botVisitor.getUserId}
         |
         | Ім'я/Прізвище:
-        | ${botVisitor.getUser.getFirstName} $userLastName
+        | ${if (botVisitor.getName!=null) botVisitor.getName else botVisitor.getUser.getFirstName}
         |
         | Телфон:
         | $phoneNumber
@@ -110,6 +118,14 @@ class ScalaHelper {
         |їх ID номер.
         |
         |Редагування кількостей відбувається в корзині.""".stripMargin}
+
+  def getPhoneNumberReceivedText(name: String): String = {
+    s"""|Дякуємо. Номер збережено в особистий профіль.""".stripMargin
+  }
+
+  def getFullNameReceivedText(name: String): String = {
+    s"""|Дякуємо. Ім'я збережено в особистий профіль.""".stripMargin
+  }
 
   def getItemQtyWrongEnteredNumber(name: String): String = {
     s"""|Слухай, $name, ти мабудь помилився і ввів некоректне число в

@@ -7,7 +7,10 @@ import com.fowlart.main.ScalaBotVisitor
 object BotVisitorToScalaBotVisitorConverter {
 
   def convertBotVisitorToScalaBotVisitor(botVisitor: BotVisitor): ScalaBotVisitor = {
-    ScalaBotVisitor(botVisitor.getPhoneNumber,
+    ScalaBotVisitor(
+      botVisitor.getName,
+      botVisitor.isNameEditingMode,
+      botVisitor.getPhoneNumber,
       botVisitor.isPhoneNumberFillingMode,
       botVisitor.getItemToEditQty,
       botVisitor.getUser,
@@ -21,6 +24,8 @@ object BotVisitorToScalaBotVisitorConverter {
     botVisitor.setPhoneNumber(scalaBotVisitor.phoneNumber)
     botVisitor.setItemToEditQty(scalaBotVisitor.itemToEditQty)
     botVisitor.setPhoneNumberFillingMode(scalaBotVisitor.isPhoneNumberFillingMode)
+    botVisitor.setName(scalaBotVisitor.name)
+    botVisitor.setNameEditingMode(scalaBotVisitor.isNameEditingMode)
     botVisitor
   }
 

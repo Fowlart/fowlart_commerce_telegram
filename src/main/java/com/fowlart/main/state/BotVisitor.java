@@ -11,6 +11,10 @@ public class BotVisitor implements Serializable {
 
     private String phoneNumber;
     private boolean isPhoneNumberFillingMode;
+    
+    private String name;
+    
+    private boolean isNameEditingMode;
 
     private Item itemToEditQty;
 
@@ -71,6 +75,22 @@ public class BotVisitor implements Serializable {
 
     public void setPhoneNumberFillingMode(boolean phoneNumberFillingMode) {
         isPhoneNumberFillingMode = phoneNumberFillingMode;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public boolean isNameEditingMode() {
+        return isNameEditingMode;
+    }
+
+    public void setNameEditingMode(boolean nameEditingMode) {
+        isNameEditingMode = nameEditingMode;
     }
 
     @Override
