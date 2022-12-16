@@ -1,7 +1,7 @@
 package com.fowlart.main
 
 import com.fowlart.main.in_mem_catalog.Item
-import com.fowlart.main.state.{BotVisitor, ScalaBotVisitor}
+import com.fowlart.main.state.{BotVisitor, Order, ScalaBotVisitor}
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup
 
@@ -10,7 +10,7 @@ import scala.collection.JavaConverters._
 
 class ScalaHelper {
 
-  def buildReplyMessage(userId: Long, text: String, markUp: InlineKeyboardMarkup): SendMessage = {
+  def buildSimpleReplyMessage(userId: Long, text: String, markUp: InlineKeyboardMarkup): SendMessage = {
 
     SendMessage
       .builder
@@ -72,6 +72,24 @@ class ScalaHelper {
            |""".stripMargin).reduce((v1, v2) => s"$v1$v2")
     })
     res.toArray
+  }
+
+  def getEmailOrderText(order: Order): String = {
+    s"""
+       |<br/><b>Дата:</b> ${order.date}
+       |
+       |<br/><b>ID користувача:</b> ${order.userId}
+       |
+       |<br/><b>ID замовлення:</b> ${order.orderId}
+       |
+       |<br/><b>Ім'я:</b> ${order.userName}
+       |
+       |<br/><b>Номер телефону:</b> ${order.userPhoneNumber}
+       |
+       |<H3 style="color: green">Замовлення:</H3>
+       |   ${order.orderBucket.map(it=>s"""${it.toString}""").reduce((s1,s2)=>s"$s1<br/>$s2")}
+       |
+       |""".stripMargin
   }
 
   def getNameEditingText(userId: Long): String = {

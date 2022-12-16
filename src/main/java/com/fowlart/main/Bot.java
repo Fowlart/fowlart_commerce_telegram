@@ -108,7 +108,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         return SendPhoto.builder().caption("⚡️" + "Каталог ").chatId(chatId).photo(new InputFile(goodsContainerImg)).build();
     }
 
-    private void handleInlineButtonClicks(CallbackQuery callbackQuery) throws TelegramApiException, IOException {
+    private void handleInlineButtonClicks(CallbackQuery callbackQuery) throws TelegramApiException {
 
         Long userId = callbackQuery.getFrom().getId();
         BotVisitor visitor = this.botVisitorService.getBotVisitorByUserId(userId.toString());
@@ -126,7 +126,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             case MY_DATA -> {
                 visitor.setNameEditingMode(false);
                 this.botVisitorService.saveBotVisitor(visitor);
-                yield scalaHelper.buildReplyMessage(
+                yield scalaHelper.buildSimpleReplyMessage(
                         userId,
                         scalaHelper.getPersonalDataEditingSectionText(visitor),
                         this.keyboardHelper.buildPersonalDataEditingMenu());
@@ -136,7 +136,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                 visitor.setPhoneNumberFillingMode(true);
                 visitor.setNameEditingMode(false);
                 this.botVisitorService.saveBotVisitor(visitor);
-                yield scalaHelper.buildReplyMessage(userId,
+                yield scalaHelper.buildSimpleReplyMessage(userId,
                         scalaHelper.getPhoneEditingText(userId),
                         this.keyboardHelper.buildInPhoneEditingModeMenu());
             }
@@ -144,7 +144,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             case EDIT_PHONE_EXIT -> {
                 visitor.setPhoneNumberFillingMode(false);
                 this.botVisitorService.saveBotVisitor(visitor);
-                yield scalaHelper.buildReplyMessage(userId,
+                yield scalaHelper.buildSimpleReplyMessage(userId,
                         scalaHelper.getPhoneEditingText(userId),
                         this.keyboardHelper.buildPersonalDataEditingMenu());
             }
@@ -152,7 +152,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             case EDIT_NAME -> {
                 visitor.setNameEditingMode(true);
                 this.botVisitorService.saveBotVisitor(visitor);
-                yield scalaHelper.buildReplyMessage(userId,
+                yield scalaHelper.buildSimpleReplyMessage(userId,
                         scalaHelper.getNameEditingText(userId),
                         this.keyboardHelper.buildPersonalDataEditingMenu());
             }
@@ -160,7 +160,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             case GOODS_QTY_EDIT -> {
                 visitor.setNameEditingMode(false);
                 this.botVisitorService.saveBotVisitor(visitor);
-                yield scalaHelper.buildReplyMessage(userId, "Обирай товар у корзині для редагування кількості:",
+                yield scalaHelper.buildSimpleReplyMessage(userId, "Обирай товар у корзині для редагування кількості:",
                         this.keyboardHelper.buildEditQtyItemMenu(visitor.getBucket()));
             }
 
@@ -169,7 +169,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                 //execute(getGoodsContainerPhotoMsg(userId));
                 visitor.setNameEditingMode(false);
                 this.botVisitorService.saveBotVisitor(visitor);
-                yield scalaHelper.buildReplyMessage(userId, "Обирай з товарних груп:",
+                yield scalaHelper.buildSimpleReplyMessage(userId, "Обирай з товарних груп:",
                         keyboardHelper.buildCatalogItemsMenu());
             }
 
@@ -184,13 +184,13 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                 visitor = this.botVisitorService.getOrCreateVisitor(visitor.getUser());
                 visitor.setNameEditingMode(false);
                 this.botVisitorService.saveBotVisitor(visitor);
-                yield scalaHelper.buildReplyMessage(userId, scalaHelper.getContactsMsg(), keyboardHelper.buildMainMenuReply());
+                yield scalaHelper.buildSimpleReplyMessage(userId, scalaHelper.getContactsMsg(), keyboardHelper.buildMainMenuReply());
             }
 
             case MAIN_SCREEN -> {
                 visitor.setNameEditingMode(false);
                 this.botVisitorService.saveBotVisitor(visitor);
-                yield scalaHelper.buildReplyMessage(userId,
+                yield scalaHelper.buildSimpleReplyMessage(userId,
                         scalaHelper.getMainMenuText(firstName), keyboardHelper.buildMainMenuReply());
             }
 
@@ -199,6 +199,12 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                 var order = OrderHandler.handleOrder(BotVisitorToScalaBotVisitorConverter
                         .convertBotVisitorToScalaBotVisitor(visitor));
 
+                var orderSubmitReply = scalaHelper.buildSimpleReplyMessage(userId, "Замовлення прийнято!", keyboardHelper.buildMainMenuReply());
+
+                if (order.orderBucket().isEmpty()) {
+                     orderSubmitReply.setText("Ви намагаєтеся відправити в обробку порожню корзину! Будь ласка, замовте бодай щось!");
+                     yield orderSubmitReply;
+                }
                 // order handling:
                 orderService.saveOrder(order);
                 var orderList = visitor.getOrders();
@@ -208,22 +214,23 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                     visitor.setOrders(new LinkedList<>());
                 }
                 log.info("saving order: " + order.orderId());
-                var orderFileName = "/" + order.userName() + "_" + order.orderId() + "_" + order.date() + ".csv";
-                orderFileName = orderFileName.replaceAll(" ", "_").replaceAll("-", "_");
-                OrderHandler.saveOrderAsCsv(order, outputForOrderPath + orderFileName);
-
-                // send email
+                var orderFileName = ("/" + order.userName() + "_" + order.orderId() + "_" + order.date() + ".csv")
+                        .replaceAll(" ", "_")
+                        .replaceAll("-", "_");
+                // send email:
                 try {
-                    gmailSender.sendExampleMessage();
-                } catch (MessagingException e) {
+                    var savedCsv = OrderHandler.saveOrderAsCsv(order, outputForOrderPath + orderFileName);
+                    gmailSender.sendOrderMessage(scalaHelper.getEmailOrderText(order),savedCsv);
+                } catch (MessagingException | IOException e) {
                     log.error(e.getMessage());
+                    orderSubmitReply.setText("Якась бачіна з відправленням листа! Повторість, будь ласка, спробу!");
+                    yield orderSubmitReply;
                 }
-
                 botVisitorService.saveBotVisitor(visitor);
                 visitor.setBucket(new HashSet<>());
                 visitor.setNameEditingMode(false);
                 this.botVisitorService.saveBotVisitor(visitor);
-                yield scalaHelper.buildReplyMessage(userId, "Замовлення прийнято!", keyboardHelper.buildMainMenuReply());
+                yield orderSubmitReply;
             }
 
             case DISCARD -> {
@@ -231,7 +238,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                 visitor.setNameEditingMode(false);
                 this.botVisitorService.saveBotVisitor(visitor);
                 yield scalaHelper
-                        .buildReplyMessage(userId, scalaHelper.getMainMenuText(firstName), keyboardHelper.buildMainMenuReply());
+                        .buildSimpleReplyMessage(userId, scalaHelper.getMainMenuText(firstName), keyboardHelper.buildMainMenuReply());
             }
 
             default -> {
@@ -321,7 +328,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
 
                 handleInputMsgOrCommand(update);
             }
-        } catch (TelegramApiException | IOException ex) {
+        } catch (TelegramApiException ex) {
             throw new RuntimeException(ex);
         }
     }

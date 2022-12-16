@@ -5,6 +5,7 @@ import com.fowlart.main.state.Order
 import java.io.File
 import java.nio.file.{Files, Paths}
 import java.nio.charset.StandardCharsets
+import scala.collection.JavaConverters._
 
 object OrderHandler {
 
@@ -18,16 +19,17 @@ object OrderHandler {
     Order(orderId,orderDate,userId,name,phoneNumber,scalaBotVisitor.bucket,false)
   }
 
-  def saveOrderAsCsv(order: Order,path: String): Boolean = {
+  def saveOrderAsCsv(order: Order,path: String): File = {
 
     val header = s"userId,userName,userPhoneNumber,date,itemId,itemGroup,itemName,qty \n"
 
     val lines = order.orderBucket
+      .toList
       .map(item=>s"${order.userId},${order.userName},${order.userPhoneNumber},${order.date},${item.id()},${item.group()},${item.name()},${if (item.qty()==null) 0 else item.qty()}")
       .reduce((l1,l2)=>s"$l1\n$l2")
 
     // todo: smart exception handling
-    Files.write(Paths.get(path), s"$header$lines".getBytes(StandardCharsets.UTF_8))
-    true
+   val createdPath = Files.write(Paths.get(path), s"$header$lines".getBytes(StandardCharsets.UTF_8))
+   createdPath.toFile
   }
 }
