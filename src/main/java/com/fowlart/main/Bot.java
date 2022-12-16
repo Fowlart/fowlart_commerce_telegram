@@ -51,6 +51,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     private final String token;
     private ScalaHelper scalaHelper;
     private OrderService orderService;
+    private String outputForOrderPath;
 
     public Bot(@Autowired BotVisitorService botVisitorService,
                @Autowired ExcelFetcher excelFetcher,
@@ -58,7 +59,9 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                @Autowired Catalog catalog,
                @Autowired OrderService orderService,
                @Value("${app.bot.userName}") String userName,
-               @Value("${app.bot.userName.token}") String token) {
+               @Value("${app.bot.userName.token}") String token,
+               @Value("${app.bot.order.output.folder}")String outputForOrderPath) {
+        this.outputForOrderPath = outputForOrderPath;
         this.orderService = orderService;
         this.botVisitorService = botVisitorService;
         this.excelFetcher = excelFetcher;
@@ -189,7 +192,8 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
 
                 var order = OrderHandler.handleOrder(BotVisitorToScalaBotVisitorConverter
                         .convertBotVisitorToScalaBotVisitor(visitor));
-                //
+
+                // order handling:
                 orderService.saveOrder(order);
                 var orderList = visitor.getOrders();
                 if (Objects.nonNull(orderList)) {
@@ -197,13 +201,16 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                 } else {
                     visitor.setOrders(new LinkedList<>());
                 }
-                botVisitorService.saveBotVisitor(visitor);
                 log.info("saving order: "+order.orderId());
+                var orderFileName = "/"+order.userName()+"_"+order.orderId()+"_"+order.date()+".csv";
+                orderFileName = orderFileName.replaceAll(" ","_").replaceAll("-","_");
+                OrderHandler.saveOrderAsCsv(order,outputForOrderPath+orderFileName);
+
+                botVisitorService.saveBotVisitor(visitor);
                 visitor.setBucket(new HashSet<>());
                 visitor.setNameEditingMode(false);
                 this.botVisitorService.saveBotVisitor(visitor);
-                yield scalaHelper
-                        .buildReplyMessage(userId, "Замовлення прийнято!", keyboardHelper.buildMainMenuReply());
+                yield scalaHelper.buildReplyMessage(userId, "Замовлення прийнято!", keyboardHelper.buildMainMenuReply());
             }
 
             case DISCARD -> {
