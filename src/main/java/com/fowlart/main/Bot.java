@@ -1,8 +1,9 @@
 package com.fowlart.main;
 
 import com.fowlart.main.catalog_fetching.ExcelFetcher;
+import com.fowlart.main.email.GmailSender;
 import com.fowlart.main.in_mem_catalog.Catalog;
-import com.fowlart.main.messages.*;
+import com.fowlart.main.messages.ResponseWithSendMessageAndScalaBotVisitor;
 import com.fowlart.main.state.BotVisitor;
 import com.fowlart.main.state.BotVisitorService;
 import com.fowlart.main.state.OrderService;
@@ -21,6 +22,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import javax.mail.MessagingException;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
@@ -30,6 +32,9 @@ import java.util.Objects;
 
 @Component
 public class Bot extends TelegramLongPollingBot implements InitializingBean {
+    public static final String EDIT_PHONE = "EDIT_PHONE";
+    public static final String EDIT_PHONE_EXIT = "EDIT_PHONE_EXIT";
+    public static final String EDIT_NAME = "EDIT_NAME";
     private static final Logger log = LoggerFactory.getLogger(Bot.class);
     private static final String CATALOG = "CATALOG";
     private static final String MY_DATA = "MYDATA";
@@ -39,9 +44,6 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     private static final String MAIN_SCREEN = "MAIN_SCREEN";
     private static final String SUBMIT = "SUBMIT";
     private static final String DISCARD = "DISCARD";
-    public static final String EDIT_PHONE = "EDIT_PHONE";
-    public static final String EDIT_PHONE_EXIT = "EDIT_PHONE_EXIT";
-    public static final String EDIT_NAME = "EDIT_NAME";
     private static Bot instance;
     private final BotVisitorService botVisitorService;
     private final ExcelFetcher excelFetcher;
@@ -49,18 +51,22 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     private final Catalog catalog;
     private final String userName;
     private final String token;
-    private ScalaHelper scalaHelper;
-    private OrderService orderService;
-    private String outputForOrderPath;
+    private final ScalaHelper scalaHelper;
+    private final OrderService orderService;
+    private final String outputForOrderPath;
 
-    public Bot(@Autowired BotVisitorService botVisitorService,
+    private final GmailSender gmailSender;
+
+    public Bot(@Autowired GmailSender gmailSender,
+               @Autowired BotVisitorService botVisitorService,
                @Autowired ExcelFetcher excelFetcher,
                @Autowired KeyboardHelper keyboardHelper,
                @Autowired Catalog catalog,
                @Autowired OrderService orderService,
                @Value("${app.bot.userName}") String userName,
                @Value("${app.bot.userName.token}") String token,
-               @Value("${app.bot.order.output.folder}")String outputForOrderPath) {
+               @Value("${app.bot.order.output.folder}") String outputForOrderPath) {
+        this.gmailSender = gmailSender;
         this.outputForOrderPath = outputForOrderPath;
         this.orderService = orderService;
         this.botVisitorService = botVisitorService;
@@ -201,10 +207,17 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                 } else {
                     visitor.setOrders(new LinkedList<>());
                 }
-                log.info("saving order: "+order.orderId());
-                var orderFileName = "/"+order.userName()+"_"+order.orderId()+"_"+order.date()+".csv";
-                orderFileName = orderFileName.replaceAll(" ","_").replaceAll("-","_");
-                OrderHandler.saveOrderAsCsv(order,outputForOrderPath+orderFileName);
+                log.info("saving order: " + order.orderId());
+                var orderFileName = "/" + order.userName() + "_" + order.orderId() + "_" + order.date() + ".csv";
+                orderFileName = orderFileName.replaceAll(" ", "_").replaceAll("-", "_");
+                OrderHandler.saveOrderAsCsv(order, outputForOrderPath + orderFileName);
+
+                // send email
+                try {
+                    gmailSender.sendExampleMessage();
+                } catch (MessagingException e) {
+                    log.error(e.getMessage());
+                }
 
                 botVisitorService.saveBotVisitor(visitor);
                 visitor.setBucket(new HashSet<>());
@@ -218,7 +231,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                 visitor.setNameEditingMode(false);
                 this.botVisitorService.saveBotVisitor(visitor);
                 yield scalaHelper
-                        .buildReplyMessage(userId,scalaHelper.getMainMenuText(firstName),keyboardHelper.buildMainMenuReply());
+                        .buildReplyMessage(userId, scalaHelper.getMainMenuText(firstName), keyboardHelper.buildMainMenuReply());
             }
 
             default -> {
