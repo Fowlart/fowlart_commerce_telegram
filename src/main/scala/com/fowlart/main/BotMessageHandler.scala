@@ -79,9 +79,9 @@ object BotMessageHandler {
         }
       }
 
-      // DEFAULT
+      // default
       case (visitor, _) => {
-        val sendMessage = SendMessage.builder.chatId(chatId).text(scalaHelper.getMainMenuText(visitor.user.getFirstName)).replyMarkup(keyboardHelper.buildMainMenuReply).build
+        val sendMessage = SendMessage.builder.chatId(chatId).text(scalaHelper.getMainMenuText(visitor.name)).replyMarkup(keyboardHelper.buildMainMenuReply).build
         ResponseWithSendMessageAndScalaBotVisitor(sendMessage, visitor)
       }
     }

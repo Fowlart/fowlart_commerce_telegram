@@ -114,7 +114,6 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         BotVisitor visitor = this.botVisitorService.getBotVisitorByUserId(userId.toString());
         log.info(visitor.toString());
         String callBackButton = callbackQuery.getData();
-        String firstName = callbackQuery.getFrom().getFirstName();
 
         if (callBackButton.startsWith("QTY_")) {
             displayEditItemQtyMenu(scalaHelper, visitor, callBackButton);
@@ -123,127 +122,21 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
 
         var answer = switch (callBackButton) {
             // personal data editing BEGIN
-            case MY_DATA -> {
-                visitor.setNameEditingMode(false);
-                this.botVisitorService.saveBotVisitor(visitor);
-                yield scalaHelper.buildSimpleReplyMessage(
-                        userId,
-                        scalaHelper.getPersonalDataEditingSectionText(visitor),
-                        this.keyboardHelper.buildPersonalDataEditingMenu());
-            }
-
-            case EDIT_PHONE -> {
-                visitor.setPhoneNumberFillingMode(true);
-                visitor.setNameEditingMode(false);
-                this.botVisitorService.saveBotVisitor(visitor);
-                yield scalaHelper.buildSimpleReplyMessage(userId,
-                        scalaHelper.getPhoneEditingText(userId),
-                        this.keyboardHelper.buildInPhoneEditingModeMenu());
-            }
-
-            case EDIT_PHONE_EXIT -> {
-                visitor.setPhoneNumberFillingMode(false);
-                this.botVisitorService.saveBotVisitor(visitor);
-                yield scalaHelper.buildSimpleReplyMessage(userId,
-                        scalaHelper.getPhoneEditingText(userId),
-                        this.keyboardHelper.buildPersonalDataEditingMenu());
-            }
-
-            case EDIT_NAME -> {
-                visitor.setNameEditingMode(true);
-                this.botVisitorService.saveBotVisitor(visitor);
-                yield scalaHelper.buildSimpleReplyMessage(userId,
-                        scalaHelper.getNameEditingText(userId),
-                        this.keyboardHelper.buildPersonalDataEditingMenu());
-            }
+            case MY_DATA -> handleMyDataEditing(visitor);
+            case EDIT_PHONE -> handleEditPhone(visitor);
+            case EDIT_PHONE_EXIT -> handleEditPhoneExitPushed(visitor);
+            case EDIT_NAME -> handleEditName(visitor);
             // personal data editing END
-            case GOODS_QTY_EDIT -> {
-                visitor.setNameEditingMode(false);
-                this.botVisitorService.saveBotVisitor(visitor);
-                yield scalaHelper.buildSimpleReplyMessage(userId, "Обирай товар у корзині для редагування кількості:",
-                        this.keyboardHelper.buildEditQtyItemMenu(visitor.getBucket()));
-            }
-
-            case CATALOG -> {
-                // todo: what we do with the photos?
-                //execute(getGoodsContainerPhotoMsg(userId));
-                visitor.setNameEditingMode(false);
-                this.botVisitorService.saveBotVisitor(visitor);
-                yield scalaHelper.buildSimpleReplyMessage(userId, "Обирай з товарних груп:",
-                        keyboardHelper.buildCatalogItemsMenu());
-            }
-
-            case BUCKET -> {
-                visitor = this.botVisitorService.getOrCreateVisitor(visitor.getUser());
-                visitor.setNameEditingMode(false);
-                this.botVisitorService.saveBotVisitor(visitor);
-                yield scalaHelper.getBucketMessage(visitor, visitor.getUserId(), keyboardHelper);
-            }
-
-            case CONTACTS -> {
-                visitor = this.botVisitorService.getOrCreateVisitor(visitor.getUser());
-                visitor.setNameEditingMode(false);
-                this.botVisitorService.saveBotVisitor(visitor);
-                yield scalaHelper.buildSimpleReplyMessage(userId, scalaHelper.getContactsMsg(), keyboardHelper.buildMainMenuReply());
-            }
-
-            case MAIN_SCREEN -> {
-                visitor.setNameEditingMode(false);
-                this.botVisitorService.saveBotVisitor(visitor);
-                yield scalaHelper.buildSimpleReplyMessage(userId,
-                        scalaHelper.getMainMenuText(firstName), keyboardHelper.buildMainMenuReply());
-            }
-
-            case SUBMIT -> {
-
-                var order = OrderHandler.handleOrder(BotVisitorToScalaBotVisitorConverter
-                        .convertBotVisitorToScalaBotVisitor(visitor));
-
-                var orderSubmitReply = scalaHelper.buildSimpleReplyMessage(userId, "Замовлення прийнято!", keyboardHelper.buildMainMenuReply());
-
-                if (order.orderBucket().isEmpty()) {
-                     orderSubmitReply.setText("Ви намагаєтеся відправити в обробку порожню корзину! Будь ласка, замовте бодай щось!");
-                     yield orderSubmitReply;
-                }
-                // order handling:
-                orderService.saveOrder(order);
-                var orderList = visitor.getOrders();
-                if (Objects.nonNull(orderList)) {
-                    orderList.addLast(order.orderId());
-                } else {
-                    visitor.setOrders(new LinkedList<>());
-                }
-                log.info("saving order: " + order.orderId());
-                var orderFileName = ("/" + order.userName() + "_" + order.orderId() + "_" + order.date() + ".csv")
-                        .replaceAll(" ", "_")
-                        .replaceAll("-", "_");
-                // send email:
-                try {
-                    var savedCsv = OrderHandler.saveOrderAsCsv(order, outputForOrderPath + orderFileName);
-                    gmailSender.sendOrderMessage(scalaHelper.getEmailOrderText(order),savedCsv);
-                } catch (MessagingException | IOException e) {
-                    log.error(e.getMessage());
-                    orderSubmitReply.setText("Якась бачіна з відправленням листа! Повторість, будь ласка, спробу!");
-                    yield orderSubmitReply;
-                }
-                botVisitorService.saveBotVisitor(visitor);
-                visitor.setBucket(new HashSet<>());
-                visitor.setNameEditingMode(false);
-                this.botVisitorService.saveBotVisitor(visitor);
-                yield orderSubmitReply;
-            }
-
-            case DISCARD -> {
-                visitor.setBucket(new HashSet<>());
-                visitor.setNameEditingMode(false);
-                this.botVisitorService.saveBotVisitor(visitor);
-                yield scalaHelper
-                        .buildSimpleReplyMessage(userId, scalaHelper.getMainMenuText(firstName), keyboardHelper.buildMainMenuReply());
-            }
+            case GOODS_QTY_EDIT -> handleGoodsQtyEdit(visitor);
+            case CATALOG -> handleCatalog(visitor);
+            case BUCKET -> handleBucket(visitor);
+            case CONTACTS -> handleContacts(visitor);
+            case MAIN_SCREEN -> handleMainScreen(visitor);
+            case SUBMIT -> handleOrderSubmit(visitor);
+            case DISCARD -> handleDiscard(visitor);
 
             default -> {
                 var subGroupItems = scalaHelper.getSubMenuText(this.catalog.getItemList(), callBackButton);
-
                 for (String str : subGroupItems) {
                     var lastMessage = subGroupItems[subGroupItems.length - 1];
                     var subCatalogAnswer = SendMessage.builder().allowSendingWithoutReply(true).text(str).chatId(userId).build();
@@ -262,6 +155,109 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         if (Objects.nonNull(answer)) {
             this.sendApiMethod(answer);
         }
+    }
+
+    private SendMessage handleMyDataEditing(BotVisitor visitor) {
+        visitor.setNameEditingMode(false);
+        return scalaHelper.buildSimpleReplyMessage(
+                visitor.getUser().getId(),
+                scalaHelper.getPersonalDataEditingSectionText(visitor),
+                this.keyboardHelper.buildPersonalDataEditingMenu());
+    }
+
+    private SendMessage handleEditPhone(BotVisitor visitor) {
+        visitor.setPhoneNumberFillingMode(true);
+        visitor.setNameEditingMode(false);
+        return scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(),
+                scalaHelper.getPhoneEditingText(visitor.getUser().getId()),
+                this.keyboardHelper.buildInPhoneEditingModeMenu());
+    }
+
+    private SendMessage handleEditPhoneExitPushed(BotVisitor visitor) {
+        visitor.setPhoneNumberFillingMode(false);
+        return scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(),
+                scalaHelper.getPhoneEditingText(visitor.getUser().getId()),
+                this.keyboardHelper.buildPersonalDataEditingMenu());
+    }
+
+    private SendMessage handleEditName(BotVisitor visitor) {
+        visitor.setNameEditingMode(true);
+        return scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(),
+                scalaHelper.getNameEditingText(visitor.getUser().getId()),
+                this.keyboardHelper.buildPersonalDataEditingMenu());
+    }
+
+    private SendMessage handleGoodsQtyEdit(BotVisitor visitor) {
+        visitor.setNameEditingMode(false);
+        return scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(), "Обирай товар у корзині для редагування кількості:",
+                this.keyboardHelper.buildEditQtyItemMenu(visitor.getBucket()));
+    }
+
+    private SendMessage handleCatalog(BotVisitor visitor) {
+        // todo: what we do with the photos?
+        //execute(getGoodsContainerPhotoMsg(userId));
+        visitor.setNameEditingMode(false);
+        return scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(), "Обирай з товарних груп:",
+                keyboardHelper.buildCatalogItemsMenu());
+    }
+
+    private SendMessage handleBucket(BotVisitor visitor) {
+        visitor.setNameEditingMode(false);
+        return scalaHelper.getBucketMessage(visitor, visitor.getUserId(), keyboardHelper);
+    }
+
+    private SendMessage handleContacts(BotVisitor visitor) {
+        visitor.setNameEditingMode(false);
+        return scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(), scalaHelper.getContactsMsg(), keyboardHelper.buildMainMenuReply());
+    }
+
+    private SendMessage handleMainScreen(BotVisitor visitor) {
+        var msg = scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(), scalaHelper.getMainMenuText(visitor.getName()), keyboardHelper.buildMainMenuReply());
+        visitor.setNameEditingMode(false);
+        return msg;
+    }
+
+    private SendMessage handleDiscard(BotVisitor visitor) {
+        visitor.setBucket(new HashSet<>());
+        visitor.setNameEditingMode(false);
+        return scalaHelper
+                .buildSimpleReplyMessage(visitor.getUser().getId(), scalaHelper.getMainMenuText(visitor.getName()), keyboardHelper.buildMainMenuReply());
+    }
+
+    private SendMessage handleOrderSubmit(BotVisitor visitor) {
+
+        var order = OrderHandler.handleOrder(BotVisitorToScalaBotVisitorConverter.convertBotVisitorToScalaBotVisitor(visitor));
+
+        var orderSubmitReply = scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(), "Замовлення прийнято!", keyboardHelper.buildMainMenuReply());
+
+        if (order.orderBucket().isEmpty()) {
+            orderSubmitReply.setText("Ви намагаєтеся відправити в обробку порожню корзину! Будь ласка, замовте бодай щось!");
+            return orderSubmitReply;
+        }
+        // order handling:
+        orderService.saveOrder(order);
+        var orderList = visitor.getOrders();
+        if (Objects.nonNull(orderList)) {
+            orderList.addLast(order.orderId());
+        } else {
+            visitor.setOrders(new LinkedList<>());
+        }
+        log.info("saving order: " + order.orderId());
+        var orderFileName = ("/" + order.userName() + "_" + order.orderId() + "_" + order.date() + ".csv")
+                .replaceAll(" ", "_")
+                .replaceAll("-", "_");
+        // send email:
+        try {
+            var savedCsv = OrderHandler.saveOrderAsCsv(order, outputForOrderPath + orderFileName);
+            gmailSender.sendOrderMessage(scalaHelper.getEmailOrderText(order), savedCsv);
+        } catch (MessagingException | IOException e) {
+            log.error(e.getMessage());
+            orderSubmitReply.setText("Якась бачіна з відправленням листа! Повторість, будь ласка, спробу!");
+            return orderSubmitReply;
+        }
+        visitor.setBucket(new HashSet<>());
+        visitor.setNameEditingMode(false);
+        return orderSubmitReply;
     }
 
     private void displayEditItemQtyMenu(ScalaHelper scalaHelper,

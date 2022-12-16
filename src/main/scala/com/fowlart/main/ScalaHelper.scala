@@ -76,7 +76,8 @@ class ScalaHelper {
 
   def getEmailOrderText(order: Order): String = {
     s"""
-       |<br/><b>Дата:</b> ${order.date}
+       |<H3 style="color: green">Дані користувача:</H3>
+       |<b>Дата:</b> ${order.date}
        |
        |<br/><b>ID користувача:</b> ${order.userId}
        |
