@@ -3,6 +3,7 @@ package com.fowlart.main;
 import com.fowlart.main.catalog_fetching.ExcelFetcher;
 import com.fowlart.main.email.GmailSender;
 import com.fowlart.main.in_mem_catalog.Catalog;
+import com.fowlart.main.in_mem_catalog.Item;
 import com.fowlart.main.messages.ResponseWithSendMessageAndScalaBotVisitor;
 import com.fowlart.main.state.BotVisitor;
 import com.fowlart.main.state.BotVisitorService;
@@ -20,6 +21,7 @@ import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
+import org.telegram.telegrambots.meta.api.objects.inlinequery.InlineQuery;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import javax.mail.MessagingException;
@@ -29,6 +31,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Component
 public class Bot extends TelegramLongPollingBot implements InitializingBean {
@@ -103,37 +106,32 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         this.catalog.setItemList(this.excelFetcher.getCatalogItems());
     }
 
-    private SendPhoto getGoodsContainerPhotoMsg(long chatId) {
-        File goodsContainerImg = new File("src/main/resources/goods/goods_box.webp");
-        return SendPhoto.builder().caption("⚡️" + "Каталог ").chatId(chatId).photo(new InputFile(goodsContainerImg)).build();
-    }
-
     private void handleInlineButtonClicks(CallbackQuery callbackQuery) throws TelegramApiException {
-
         Long userId = callbackQuery.getFrom().getId();
         BotVisitor visitor = this.botVisitorService.getBotVisitorByUserId(userId.toString());
         log.info(visitor.toString());
-        String callBackButton = callbackQuery.getData();
-
-        if (callBackButton.startsWith("QTY_")) {
-            displayEditItemQtyMenu(scalaHelper, visitor, callBackButton);
-            return;
+        var callBackButtonArr =  callbackQuery.getData().split("__");
+        String callBackButton = callBackButtonArr[0];
+        String mbItemId = null;
+        if (callBackButtonArr.length>1) {
+            mbItemId = callBackButtonArr[1];
         }
 
         var answer = switch (callBackButton) {
+            case "DISCARD_ITEM" -> handleItemRemove(visitor,mbItemId);
+            case GOODS_QTY_EDIT -> handleGoodsQtyEdit(visitor,mbItemId);
             // personal data editing BEGIN
             case MY_DATA -> handleMyDataEditing(visitor);
             case EDIT_PHONE -> handleEditPhone(visitor);
             case EDIT_PHONE_EXIT -> handleEditPhoneExitPushed(visitor);
             case EDIT_NAME -> handleEditName(visitor);
             // personal data editing END
-            case GOODS_QTY_EDIT -> handleGoodsQtyEdit(visitor);
             case CATALOG -> handleCatalog(visitor);
-            case BUCKET -> handleBucket(visitor);
             case CONTACTS -> handleContacts(visitor);
             case MAIN_SCREEN -> handleMainScreen(visitor);
             case SUBMIT -> handleOrderSubmit(visitor);
             case DISCARD -> handleDiscard(visitor);
+            case BUCKET -> handleBucket(visitor);
 
             default -> {
                 var subGroupItems = scalaHelper.getSubMenuText(this.catalog.getItemList(), callBackButton);
@@ -155,6 +153,22 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         if (Objects.nonNull(answer)) {
             this.sendApiMethod(answer);
         }
+    }
+
+    private SendPhoto getMessageWithPhoto(long chatId, String text,String filePath) {
+        File goodsContainerImg = new File(filePath);
+        return SendPhoto.builder().caption(text).chatId(chatId).photo(new InputFile(goodsContainerImg)).build();
+    }
+
+    private SendMessage handleBucket(BotVisitor visitor) throws TelegramApiException {
+        if (visitor.getBucket().isEmpty()) return scalaHelper.getBucketMessage(visitor,visitor.getUserId(),keyboardHelper);
+        visitor.setNameEditingMode(false);
+        this.sendApiMethod(scalaHelper.getItemBucketIntroMessage(visitor.getUserId(),keyboardHelper));
+        for (Item item: visitor.getBucket()) {
+            var itemMessage = scalaHelper.getItemBucketMessage(item,keyboardHelper, visitor.getUserId());
+            this.sendApiMethod(itemMessage);
+        }
+        return null;
     }
 
     private SendMessage handleMyDataEditing(BotVisitor visitor) {
@@ -187,10 +201,20 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                 this.keyboardHelper.buildPersonalDataEditingMenu());
     }
 
-    private SendMessage handleGoodsQtyEdit(BotVisitor visitor) {
+    private SendMessage handleGoodsQtyEdit(BotVisitor visitor, String itemId) throws TelegramApiException {
         visitor.setNameEditingMode(false);
-        return scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(), "Обирай товар у корзині для редагування кількості:",
-                this.keyboardHelper.buildEditQtyItemMenu(visitor.getBucket()));
+        var itemToEditQty  = visitor.getBucket().stream().filter(it->itemId.equals(it.id())).findFirst();
+        visitor.setItemToEditQty(itemToEditQty.orElse(null));
+        displayEditItemQtyMenu(scalaHelper, visitor);
+        return null;
+    }
+
+    private SendMessage handleItemRemove(BotVisitor visitor, String itemId) {
+        visitor.setNameEditingMode(false);
+        var newBucket = visitor.getBucket().stream().filter(it->!itemId.equals(it.id())).collect(Collectors.toSet());
+        visitor.setItemToEditQty(null);
+        visitor.setBucket(newBucket);
+        return SendMessage.builder().chatId(visitor.getUserId()).text("Товар видалено. Корзину збережено. Не забудьте відправити замовлення.").replyMarkup(keyboardHelper.buildMainMenuReply()).build();
     }
 
     private SendMessage handleCatalog(BotVisitor visitor) {
@@ -199,11 +223,6 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         visitor.setNameEditingMode(false);
         return scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(), "Обирай з товарних груп:",
                 keyboardHelper.buildCatalogItemsMenu());
-    }
-
-    private SendMessage handleBucket(BotVisitor visitor) {
-        visitor.setNameEditingMode(false);
-        return scalaHelper.getBucketMessage(visitor, visitor.getUserId(), keyboardHelper);
     }
 
     private SendMessage handleContacts(BotVisitor visitor) {
@@ -220,6 +239,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     private SendMessage handleDiscard(BotVisitor visitor) {
         visitor.setBucket(new HashSet<>());
         visitor.setNameEditingMode(false);
+
         return scalaHelper
                 .buildSimpleReplyMessage(visitor.getUser().getId(), scalaHelper.getMainMenuText(visitor.getName()), keyboardHelper.buildMainMenuReply());
     }
@@ -261,19 +281,12 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     }
 
     private void displayEditItemQtyMenu(ScalaHelper scalaHelper,
-                                        BotVisitor visitor,
-                                        String callBackButton) throws TelegramApiException {
-        String itemId;
-        if (Objects.nonNull(callBackButton)) {
-            itemId = callBackButton.replaceAll("QTY_", "");
-        } else {
-            itemId = visitor.getItemToEditQty().id();
-        }
+                                        BotVisitor visitor) throws TelegramApiException {
+        String itemId = visitor.getItemToEditQty().id();
         final String finalItemId = itemId;
         var item = visitor.getBucket().stream().filter(i -> finalItemId.equals(i.id())).findFirst().get();
         visitor.setItemToEditQty(item);
         var editItemQtyAnswer = SendMessage.builder().allowSendingWithoutReply(true).text(scalaHelper.getEditItemQtyMsg(item)).chatId(visitor.getUserId()).build();
-        this.botVisitorService.saveBotVisitor(visitor);
         this.sendApiMethod(editItemQtyAnswer);
     }
 

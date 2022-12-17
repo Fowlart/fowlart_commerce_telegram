@@ -26,6 +26,26 @@ class ScalaHelper {
 
     getBucketMessage(BotVisitorToScalaBotVisitorConverter.convertToJavaBotVisitor(visitor),userId,keyboardHelper)
   }
+
+  def getItemBucketIntroMessage(userId: String,keyboardHelper: KeyboardHelper): SendMessage = {
+    SendMessage.builder.chatId(userId)
+      .replyMarkup(keyboardHelper.buildBucketKeyboardMenu())
+      .text(
+        s"""
+           | Нижче, список товарів у корзині.
+           | Будь ласка, переглядайте та керуйте кількістю товарів.
+           |""".stripMargin).build
+  }
+  def getItemBucketMessage(item: Item,keyboardHelper: KeyboardHelper,userId: String): SendMessage = {
+
+    SendMessage.builder.chatId(userId)
+      .text(
+        s"""
+           |$item
+           |
+           |""".stripMargin)
+      .replyMarkup(keyboardHelper.buildBucketItemKeyboardMenu(item.id())).build
+  }
   def getBucketMessage(visitor: BotVisitor,
                        userId: String,
                        keyboardHelper: KeyboardHelper): SendMessage = {
@@ -40,7 +60,7 @@ class ScalaHelper {
            |
            |$textInBucket
            |""".stripMargin)
-      .replyMarkup(keyboardHelper.buildBucketKeyboardMenu).build
+      .replyMarkup(if (itemList.isEmpty) keyboardHelper.buildMainMenuReply() else keyboardHelper.buildBucketKeyboardMenu).build
   }
 
   def isNumeric(strNum: String): Boolean = {
@@ -181,8 +201,6 @@ class ScalaHelper {
        |$item
        |
        |Введіть кількість товару цілим позитивним числом.
-       |
-       |/remove - видалити з корзини.
        |""".stripMargin
 
   def getContactsMsg(): String =

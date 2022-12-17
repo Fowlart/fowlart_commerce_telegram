@@ -89,13 +89,23 @@ public class KeyboardHelper {
         markupInline.setKeyboard(rowsInline);
         return markupInline;
     }
+    public InlineKeyboardMarkup buildBucketItemKeyboardMenu(String itemId) {
+        InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
+        List<InlineKeyboardButton> rowInline1 = new ArrayList<>();
+        rowInline1.add(buildButton("Видалити", "DISCARD_ITEM__"+itemId));
+        rowInline1.add(buildButton("Кількість", "GOODS_QTY_EDIT__"+itemId));
+        rowsInline.add(rowInline1);
+        // Add it to the message
+        markupInline.setKeyboard(rowsInline);
+        return markupInline;
+    }
     public InlineKeyboardMarkup buildBucketKeyboardMenu() {
         InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
         List<InlineKeyboardButton> rowInline = new ArrayList<>();
         rowInline.add(buildButton("Очистити", "DISCARD"));
         rowInline.add(buildButton("OK \uD83C\uDF6B", "SUBMIT"));
-        rowInline.add(buildButton("Кількість", "GOODS_QTY_EDIT"));
 
         rowsInline.add(rowInline);
         // Add it to the message

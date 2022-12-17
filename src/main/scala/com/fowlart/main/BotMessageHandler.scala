@@ -41,27 +41,19 @@ object BotMessageHandler {
         ResponseWithSendMessageAndScalaBotVisitor(sendMessage, updatedBotVisitor)
       }
 
-      // a user trying to remove an item from the basket
-      case (ScalaBotVisitor(name,isNameEditingMode,phoneNumber, false, itemToEditQty, user, userId, bucket), message: String) if message.startsWith(REMOVE_COMMAND) => {
-        val newBucket = bucket - itemToEditQty
-        val updateScalaBotVisitor = state.ScalaBotVisitor(name,isNameEditingMode,phoneNumber, false, null, user, userId, newBucket)
-        val message = scalaHelper.getBucketMessageForScalaBotVisitor(updateScalaBotVisitor, updateScalaBotVisitor.userId, keyboardHelper)
-        ResponseWithSendMessageAndScalaBotVisitor(message, updateScalaBotVisitor)
-      }
-
       // user in quantity-edit mode at the basket and entered text is numeric
       case (ScalaBotVisitor(name,isNameEditingMode,phoneNumber, false, itemToEditQty, user, userId, bucket), textFromUser: String) if itemToEditQty != null && scalaHelper.isNumeric(textFromUser) => {
         val qty = textFromUser.toInt
         val toAdd = new Item(itemToEditQty.id, itemToEditQty.name, itemToEditQty.price, itemToEditQty.group, qty)
         val updateScalaBotVisitor = state.ScalaBotVisitor(name,isNameEditingMode,phoneNumber, false, null, user, userId, bucket - itemToEditQty + toAdd)
-        val message = scalaHelper.getBucketMessageForScalaBotVisitor(updateScalaBotVisitor, updateScalaBotVisitor.userId, keyboardHelper)
+        val message = SendMessage.builder.chatId(chatId).text("Кількість прийнята. Корзину збережено. Не забудьте відправити замовлення.").replyMarkup(keyboardHelper.buildMainMenuReply).build
         ResponseWithSendMessageAndScalaBotVisitor(message, updateScalaBotVisitor)
       }
 
       // user in quantity-edit mode at the basket and entered text is NOT numeric
       case (ScalaBotVisitor(name,isNameEditingMode,phoneNumber, false, itemToEditQty, user, userId, bucket), textFromUser: String) if itemToEditQty != null => {
         val visitor = state.ScalaBotVisitor(name,isNameEditingMode,phoneNumber, false, itemToEditQty, user, userId, bucket)
-        val sendMessage = SendMessage.builder.chatId(chatId).text(scalaHelper.getItemQtyWrongEnteredNumber(visitor)).replyMarkup(keyboardHelper.buildMainMenuReply).build
+        val sendMessage = SendMessage.builder.chatId(chatId).text(scalaHelper.getItemQtyWrongEnteredNumber(visitor)).build
         ResponseWithSendMessageAndScalaBotVisitor(sendMessage, visitor)
       }
 
