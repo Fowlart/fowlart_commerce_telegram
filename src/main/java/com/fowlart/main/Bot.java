@@ -109,9 +109,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         var callBackButtonArr =  callbackQuery.getData().split("__");
         String callBackButton = callBackButtonArr[0];
         String mbItemId = null;
-        if (callBackButtonArr.length>1) {
-            mbItemId = callBackButtonArr[1];
-        }
+        if (callBackButtonArr.length>1) mbItemId = callBackButtonArr[1];
 
         var answer = switch (callBackButton) {
             case DISCARD_ITEM -> handleItemRemove(visitor,mbItemId);
@@ -165,7 +163,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         this.sendApiMethod(scalaHelper.getItemBucketIntroMessage(visitor.getUserId(),keyboardHelper));
         for (Item item: visitor.getBucket()) {
 
-            var itemMessage = scalaHelper.getItemMessageWithPhoto(
+            var itemMessage = scalaHelper.getItemMessageWithPhotoInBucket(
                     visitor.getUser().getId(),
                     item,
                     ITEM_NOT_FOUND_IMG_PATH,
@@ -348,9 +346,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         }
     }
 
-    /**
-     * <h2 style='color:red'>Main method for handling input messages</h2>
-     */
+    /**<h3 style='color:red'>Main method for handling input messages</h3>*/
     @Override
     public void onUpdateReceived(Update update) {
         try {

@@ -19,37 +19,44 @@ import scala.collection.JavaConverters._
 
 class ScalaHelper {
 
- 
-   def getItemMessageWithPhoto(chatId: Long, 
-                               item: Item, 
+
+   def getItemMessageWithPhoto(chatId: Long,
+                               item: Item,
                                itemNotFoundImgPath: String,
                                inputForImgPath: String,
                                keyboardHelper: KeyboardHelper) = {
-     
+
      val biPredicate: BiPredicate[Path,BasicFileAttributes] = (path, _) => {
        val theFile = path.toFile
        val mimetype = new MimetypesFileTypeMap().getContentType(theFile)
        val theType = mimetype.split("/")(0)
        path.getFileName.toString.toLowerCase.contains(item.name.toLowerCase) && theType == "image"
      }
-     
+
      val itemImgOp = Files.find(Path.of(s"$inputForImgPath/"), 1, biPredicate).findFirst()
-     
+
      val noImageImg = new File(itemNotFoundImgPath)
-     
+
      val response = SendPhoto
        .builder
-       .caption(getItemBucketMessage(item))
+       .caption(getEditItemQtyMsg(item))
        .replyMarkup(keyboardHelper.buildBucketItemKeyboardMenu(item.id))
        .chatId(chatId)
        .photo(new InputFile(noImageImg)).build
-   
+
      if (itemImgOp.isPresent && itemImgOp.get.toFile.exists) {
        response.setPhoto(new InputFile(itemImgOp.get.toFile))
      }
-     
+
      response
    }
+
+  def getItemMessageWithPhotoInBucket(chatId: Long, item: Item, itemNotFoundImgPath: String, inputForImgPath: String, keyboardHelper: KeyboardHelper) = {
+
+    val response = getItemMessageWithPhoto(chatId, item, itemNotFoundImgPath, inputForImgPath, keyboardHelper)
+    response.setCaption(getItemBucketMessage(item))
+    response
+  }
 
 
   def buildSimpleReplyMessage(userId: Long, text: String, markUp: InlineKeyboardMarkup): SendMessage = {
@@ -72,13 +79,23 @@ class ScalaHelper {
            |""".stripMargin).build
   }
 
-  def getItemBucketMessage(item: Item): String = {
+  def getItemBucketMessage(item: Item): String =
     s"""
-       |$item
+       |${item.name()}
+       |${item.price()} грн
        |
        |""".stripMargin
 
-  }
+  def getEditItemQtyMsg(item: Item): String =
+    s"""
+       |ТОВАР, ЩО РЕДАГУЄТЬСЯ::
+       |
+       |${item.name()}
+       |${item.price()} грн
+       |
+       |Введіть кількість товару цілим позитивним числом.
+       |""".stripMargin
+
   def getEmptyBucketMessage(keyboardHelper: KeyboardHelper, userId: Long): SendMessage = {
 
     SendMessage.builder.chatId(userId)
@@ -117,7 +134,7 @@ class ScalaHelper {
     res.toArray
   }
 
-  def getEmailOrderText(order: Order): String = {
+  def getEmailOrderText(order: Order): String =
     s"""
        |<H3 style="color: green">Дані користувача:</H3>
        |<b>Дата:</b> ${order.date}
@@ -134,20 +151,18 @@ class ScalaHelper {
        |   ${order.orderBucket.map(it=>s"""${it.toString}""").reduce((s1,s2)=>s"$s1<br/>$s2")}
        |
        |""".stripMargin
-  }
 
-  def getNameEditingText(userId: Long): String = {
 
+  def getNameEditingText(userId: Long): String =
     s"""| 😎Данні користувача $userId/ПІБ:
         |
         |Будь ласка, назвіться. Краще дотримуватися формату:
         |Прізвище Ім'я.
         |Увага, ми не будемо намагатися валідувати введений текст.
         |""".stripMargin
-  }
+
 
   def getPhoneEditingText(userId: Long): String = {
-
     s"""| 😎Данні користувача $userId/телефон:
         |
         | Введіть, будь ласка, номер телефону
@@ -179,15 +194,14 @@ class ScalaHelper {
         |
         |Редагування кількостей відбувається в корзині.""".stripMargin}
 
-  def getPhoneNumberReceivedText(): String = {
+  def getPhoneNumberReceivedText(): String =
     s"""|Дякуємо. Номер збережено в особистий профіль.""".stripMargin
-  }
 
-  def getFullNameReceivedText(): String = {
+
+  def getFullNameReceivedText(): String =
     s"""|Дякуємо. Ім'я збережено в особистий профіль.""".stripMargin
-  }
 
-  def getItemQtyWrongEnteredNumber(botVisitor: ScalaBotVisitor): String = {
+  def getItemQtyWrongEnteredNumber(botVisitor: ScalaBotVisitor): String =
     s"""|🤷‍♂️ Введене некоректне число в
         |режимі редагування кількості.
         |Будь ласка, введи ціле позитивне ЧИСЛО.
@@ -195,24 +209,13 @@ class ScalaHelper {
         |ТОВАР, ЩО РЕДАГУЄТЬСЯ:
         |${botVisitor.itemToEditQty}
         |""".stripMargin
-  }
 
-  def getItemNotAcceptedText(): String = {
+  def getItemNotAcceptedText(): String =
     s"""
        |Ви або ввели некоректне ID,
        |або додатковий текст крім самого ID товару
        |або зробили щось таке, чого ми не передбачили.
        |Спробуйте, будь-ласка ще разок.
-       |""".stripMargin
-  }
-
-  def getEditItemQtyMsg(item: Item): String =
-    s"""
-       |ТОВАР, ЩО РЕДАГУЄТЬСЯ::
-       |
-       |$item
-       |
-       |Введіть кількість товару цілим позитивним числом.
        |""".stripMargin
 
   def getContactsMsg(): String =
