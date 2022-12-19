@@ -294,6 +294,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         var editItemQtyAnswer = SendMessage
                 .builder()
                 .allowSendingWithoutReply(true)
+                .parseMode("html")
                 .text(scalaHelper.getEditItemQtyMsg(item))
                 .chatId(visitor.getUserId()).build();
 

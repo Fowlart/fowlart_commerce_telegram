@@ -42,6 +42,7 @@ class ScalaHelper {
        .caption(getEditItemQtyMsg(item))
        .replyMarkup(keyboardHelper.buildBucketItemKeyboardMenu(item.id))
        .chatId(chatId)
+       .parseMode("html")
        .photo(new InputFile(noImageImg)).build
 
      if (itemImgOp.isPresent && itemImgOp.get.toFile.exists) {
@@ -81,19 +82,15 @@ class ScalaHelper {
 
   def getItemBucketMessage(item: Item): String =
     s"""
-       |${item.name()}
-       |${item.price()} грн
-       |
+       |${item.toString2}
        |""".stripMargin
 
   def getEditItemQtyMsg(item: Item): String =
     s"""
-       |ТОВАР, ЩО РЕДАГУЄТЬСЯ:
        |
-       |${item.name()}
-       |${item.price()} грн
+       |Введіть кількість товару <b>цілим</b> позитивним числом:
        |
-       |Введіть кількість товару цілим позитивним числом.
+       |${item.toString3}
        |""".stripMargin
 
   def getEmptyBucketMessage(keyboardHelper: KeyboardHelper, userId: Long): SendMessage = {
@@ -128,7 +125,7 @@ class ScalaHelper {
         s"""
            |<b>${item.name.trim}
            |${item.price} грн
-           |⏩/${item.id}</b>
+           |🔥 /${item.id}</b> 🔥
            |""".stripMargin).reduce((v1, v2) => s"$v1$v2")
     })
     res.toArray
@@ -209,8 +206,7 @@ class ScalaHelper {
         |режимі редагування кількості.
         |Будь ласка, введи ціле позитивне ЧИСЛО.
         |
-        |ТОВАР, ЩО РЕДАГУЄТЬСЯ:
-        |${botVisitor.itemToEditQty}
+        |${botVisitor.itemToEditQty.toString3}
         |""".stripMargin
 
   def getItemNotAcceptedText(): String =
@@ -224,6 +220,7 @@ class ScalaHelper {
   def getContactsMsg(): String =
     s"""
        |Власник: Андрій Скіра Володимирович
+       |
        |тел: 097-257-0077
        |""".stripMargin
 

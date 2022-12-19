@@ -30,7 +30,7 @@ object BotMessageHandler {
       case (ScalaBotVisitor(_,_,_, true, _, _, _, _), message: String) if scalaHelper.isPhoneNumber(message) =>
         handleUserEnteredCorrectPhoneNumber(scalaBotVisitor, message, keyboardHelper, chatId)
 
-      case (ScalaBotVisitor(_,_,_, true, _, _, _, _), _) =>
+      case (ScalaBotVisitor(_,_,_, true, _, _, _, _), message)  if !scalaHelper.isPhoneNumber(message) =>
         handleUserEnteredIncorrectPhoneNumber(scalaBotVisitor, keyboardHelper, chatId)
 
       case (ScalaBotVisitor(name,isNameEditingMode,phoneNumber, false, itemToEditQty, user, userId, bucket), textFromUser: String) if itemToEditQty != null && scalaHelper.isNumeric(textFromUser) =>
@@ -64,7 +64,12 @@ object BotMessageHandler {
 
     val itemId = textFromUser.replaceAll("/", "")
     val matchedItem = catalog.getItemList.asScala.find((it: Item) => it.id.equalsIgnoreCase(itemId))
-    val sendMessage = SendMessage.builder.chatId(chatId).text(scalaHelper.getEditItemQtyMsg(matchedItem.get)).build
+
+    val sendMessage = SendMessage.builder.chatId(chatId)
+      .text(scalaHelper.getEditItemQtyMsg(matchedItem.get))
+      .parseMode("html")
+      .build
+
     if (matchedItem.isDefined) {
       val updatedScalaVisitor = state.ScalaBotVisitor(name, isNameEditingMode, phoneNumber, false, matchedItem.get, user, userId, bucket + matchedItem.get)
 
