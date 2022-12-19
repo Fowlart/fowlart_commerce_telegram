@@ -47,8 +47,7 @@ public class GmailSender {
 
         Message message = new MimeMessage(session);
         message.setFrom(new InternetAddress(gmailAccName));
-        message.setRecipients(
-                Message.RecipientType.TO, InternetAddress.parse(gmailAccName));
+        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(gmailAccName));
         message.setSubject("Замовлення!");
 
         MimeBodyPart mimeBodyPart = new MimeBodyPart();

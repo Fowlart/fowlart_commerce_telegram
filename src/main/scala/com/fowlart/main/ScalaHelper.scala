@@ -2,13 +2,55 @@ package com.fowlart.main
 
 import com.fowlart.main.in_mem_catalog.Item
 import com.fowlart.main.state.{BotVisitor, Order, ScalaBotVisitor}
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage
+import org.telegram.telegrambots.meta.api.methods.send.{SendMessage, SendPhoto}
+import org.telegram.telegrambots.meta.api.objects.InputFile
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup
 
+import java.io.{File, IOException}
+import java.nio.file.attribute.BasicFileAttributes
+import java.nio.file.{Files, Path}
+import java.util
+import java.util.function.BiPredicate
+import java.util.{List, Optional}
 import java.util.regex.Pattern
+import java.util.stream.{Collectors, Stream}
+import javax.activation.MimetypesFileTypeMap
 import scala.collection.JavaConverters._
 
 class ScalaHelper {
+
+ 
+   def getItemMessageWithPhoto(chatId: Long, 
+                               item: Item, 
+                               itemNotFoundImgPath: String,
+                               inputForImgPath: String,
+                               keyboardHelper: KeyboardHelper) = {
+     
+     val biPredicate: BiPredicate[Path,BasicFileAttributes] = (path, _) => {
+       val theFile = path.toFile
+       val mimetype = new MimetypesFileTypeMap().getContentType(theFile)
+       val theType = mimetype.split("/")(0)
+       path.getFileName.toString.toLowerCase.contains(item.name.toLowerCase) && theType == "image"
+     }
+     
+     val itemImgOp = Files.find(Path.of(s"$inputForImgPath/"), 1, biPredicate).findFirst()
+     
+     val noImageImg = new File(itemNotFoundImgPath)
+     
+     val response = SendPhoto
+       .builder
+       .caption(getItemBucketMessage(item))
+       .replyMarkup(keyboardHelper.buildBucketItemKeyboardMenu(item.id))
+       .chatId(chatId)
+       .photo(new InputFile(noImageImg)).build
+   
+     if (itemImgOp.isPresent && itemImgOp.get.toFile.exists) {
+       response.setPhoto(new InputFile(itemImgOp.get.toFile))
+     }
+     
+     response
+   }
+
 
   def buildSimpleReplyMessage(userId: Long, text: String, markUp: InlineKeyboardMarkup): SendMessage = {
 
@@ -20,13 +62,6 @@ class ScalaHelper {
       .build
   }
 
-  def getBucketMessageForScalaBotVisitor(visitor: ScalaBotVisitor,
-                                         userId: String,
-                                         keyboardHelper: KeyboardHelper): SendMessage = {
-
-    getBucketMessage(BotVisitorToScalaBotVisitorConverter.convertToJavaBotVisitor(visitor),userId,keyboardHelper)
-  }
-
   def getItemBucketIntroMessage(userId: String,keyboardHelper: KeyboardHelper): SendMessage = {
     SendMessage.builder.chatId(userId)
       .replyMarkup(keyboardHelper.buildBucketKeyboardMenu())
@@ -36,31 +71,19 @@ class ScalaHelper {
            | Будь ласка, переглядайте та керуйте кількістю товарів.
            |""".stripMargin).build
   }
-  def getItemBucketMessage(item: Item,keyboardHelper: KeyboardHelper,userId: String): SendMessage = {
 
-    SendMessage.builder.chatId(userId)
-      .text(
-        s"""
-           |$item
-           |
-           |""".stripMargin)
-      .replyMarkup(keyboardHelper.buildBucketItemKeyboardMenu(item.id())).build
+  def getItemBucketMessage(item: Item): String = {
+    s"""
+       |$item
+       |
+       |""".stripMargin
+
   }
-  def getBucketMessage(visitor: BotVisitor,
-                       userId: String,
-                       keyboardHelper: KeyboardHelper): SendMessage = {
-
-    val itemList = visitor.getBucket.asScala.filter(it => it != null).map(item => s"$item").toList
-    val textInBucket = if (itemList.isEmpty) "[Корзина порожня]" else itemList.reduce((i1, i2) => s"$i1\n\n$i2")
+  def getEmptyBucketMessage(keyboardHelper: KeyboardHelper, userId: Long): SendMessage = {
 
     SendMessage.builder.chatId(userId)
-      .text(
-        s"""
-           |Корзина:
-           |
-           |$textInBucket
-           |""".stripMargin)
-      .replyMarkup(if (itemList.isEmpty) keyboardHelper.buildMainMenuReply() else keyboardHelper.buildBucketKeyboardMenu).build
+      .text( "[Корзина порожня]")
+      .replyMarkup(keyboardHelper.buildMainMenuReply()).build
   }
 
   def isNumeric(strNum: String): Boolean = {
@@ -86,9 +109,9 @@ class ScalaHelper {
     val res = grouped.toList.filter(it => it.nonEmpty).map(it => {
       it.map(item =>
         s"""
-           |⏺ ${item.name.trim.toLowerCase}
-           |💳${item.price} грн
-           |⏩/${item.id}
+           |<b>${item.name.trim}
+           |${item.price} грн
+           |⏩/${item.id}</b>
            |""".stripMargin).reduce((v1, v2) => s"$v1$v2")
     })
     res.toArray
@@ -105,7 +128,7 @@ class ScalaHelper {
        |
        |<br/><b>Ім'я:</b> ${order.userName}
        |
-       |<br/><b>Номер телефону:</b> ${order.userPhoneNumber}
+       |<br/><b>Номер телефону:</b> ${if (order.userPhoneNumber!=null) order.userPhoneNumber else "[номер не вказаний/вказаний не вірно]"}
        |
        |<H3 style="color: green">Замовлення:</H3>
        |   ${order.orderBucket.map(it=>s"""${it.toString}""").reduce((s1,s2)=>s"$s1<br/>$s2")}
@@ -156,34 +179,23 @@ class ScalaHelper {
         |
         |Редагування кількостей відбувається в корзині.""".stripMargin}
 
-  def getPhoneNumberReceivedText(name: String): String = {
+  def getPhoneNumberReceivedText(): String = {
     s"""|Дякуємо. Номер збережено в особистий профіль.""".stripMargin
   }
 
-  def getFullNameReceivedText(name: String): String = {
+  def getFullNameReceivedText(): String = {
     s"""|Дякуємо. Ім'я збережено в особистий профіль.""".stripMargin
   }
 
   def getItemQtyWrongEnteredNumber(botVisitor: ScalaBotVisitor): String = {
-    s"""|Введене некоректне число в
+    s"""|🤷‍♂️ Введене некоректне число в
         |режимі редагування кількості.
-        |Будь ласка, введи ціле позитивне число.
+        |Будь ласка, введи ціле позитивне ЧИСЛО.
         |
         |ТОВАР, ЩО РЕДАГУЄТЬСЯ:
         |${botVisitor.itemToEditQty}
         |""".stripMargin
   }
-
-
-    def getItemAcceptedText(item: Item): String = {
-      s"""
-         |Додано:
-         |
-         |${item.toString}
-         |
-         |Подальше редагування кількості відбувається у корзині.
-         |""".stripMargin
-    }
 
   def getItemNotAcceptedText(): String = {
     s"""

@@ -25,7 +25,7 @@ public final class Item implements Serializable {
     public String toString() {
         var str = "⏺"+"  "+id + "\n" + "\uD83D\uDCCC"+name + "\n" + "\uD83D\uDCB3" + price + "грн.";
         if (Objects.nonNull(qty)) str = str + "\n[" + qty + "шт]";
-        else str = str + "\n" + "\uD83E\uDD37\u200D♂️кільк. не вибрана";
+        else str = str + "\n" + "[кільк. не вибрана]";
         return str;
     }
 

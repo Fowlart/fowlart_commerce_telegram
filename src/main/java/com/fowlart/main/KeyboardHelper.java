@@ -4,8 +4,12 @@ import com.fowlart.main.in_mem_catalog.Catalog;
 import com.fowlart.main.in_mem_catalog.Item;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.objects.MessageEntity;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ForceReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
+import org.telegram.telegrambots.meta.api.objects.webapp.SentWebAppMessage;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -103,11 +107,13 @@ public class KeyboardHelper {
     public InlineKeyboardMarkup buildBucketKeyboardMenu() {
         InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
-        List<InlineKeyboardButton> rowInline = new ArrayList<>();
-        rowInline.add(buildButton("Очистити", "DISCARD"));
-        rowInline.add(buildButton("OK \uD83C\uDF6B", "SUBMIT"));
+        List<InlineKeyboardButton> rowInline1 = new ArrayList<>();
+        List<InlineKeyboardButton> rowInline2 = new ArrayList<>();
+        rowInline1.add(buildButton("Очистити ❌", "DISCARD"));
+        rowInline2.add(buildButton("ЗАМОВИТИ ⏩", "SUBMIT"));
 
-        rowsInline.add(rowInline);
+        rowsInline.add(rowInline1);
+        rowsInline.add(rowInline2);
         // Add it to the message
         markupInline.setKeyboard(rowsInline);
         return markupInline;

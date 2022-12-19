@@ -4,6 +4,7 @@ import com.fowlart.main.catalog_fetching.ExcelFetcher;
 import com.fowlart.main.email.GmailSender;
 import com.fowlart.main.in_mem_catalog.Catalog;
 import com.fowlart.main.in_mem_catalog.Item;
+import com.fowlart.main.messages.ResponseWithPhotoMessageAndScalaBotVisitor;
 import com.fowlart.main.messages.ResponseWithSendMessageAndScalaBotVisitor;
 import com.fowlart.main.state.BotVisitor;
 import com.fowlart.main.state.BotVisitorService;
@@ -16,21 +17,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
-import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
-import org.telegram.telegrambots.meta.api.objects.InputFile;
-import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.User;
-import org.telegram.telegrambots.meta.api.objects.inlinequery.InlineQuery;
+import org.telegram.telegrambots.meta.api.objects.*;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import javax.mail.MessagingException;
-import java.io.File;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
@@ -47,6 +39,8 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     private static final String MAIN_SCREEN = "MAIN_SCREEN";
     private static final String SUBMIT = "SUBMIT";
     private static final String DISCARD = "DISCARD";
+    public static final String DISCARD_ITEM = "DISCARD_ITEM";
+    public static final String ITEM_NOT_FOUND_IMG_PATH = "src/main/resources/no_image_available.png";
     private static Bot instance;
     private final BotVisitorService botVisitorService;
     private final ExcelFetcher excelFetcher;
@@ -57,8 +51,8 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     private final ScalaHelper scalaHelper;
     private final OrderService orderService;
     private final String outputForOrderPath;
-
     private final GmailSender gmailSender;
+    private final String inputForImgPath;
 
     public Bot(@Autowired GmailSender gmailSender,
                @Autowired BotVisitorService botVisitorService,
@@ -68,7 +62,9 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                @Autowired OrderService orderService,
                @Value("${app.bot.userName}") String userName,
                @Value("${app.bot.userName.token}") String token,
-               @Value("${app.bot.order.output.folder}") String outputForOrderPath) {
+               @Value("${app.bot.order.output.folder}") String outputForOrderPath,
+               @Value("${app.bot.items.img.folder}") String inputForImgPath) {
+        this.inputForImgPath = inputForImgPath;
         this.gmailSender = gmailSender;
         this.outputForOrderPath = outputForOrderPath;
         this.orderService = orderService;
@@ -118,7 +114,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         }
 
         var answer = switch (callBackButton) {
-            case "DISCARD_ITEM" -> handleItemRemove(visitor,mbItemId);
+            case DISCARD_ITEM -> handleItemRemove(visitor,mbItemId);
             case GOODS_QTY_EDIT -> handleGoodsQtyEdit(visitor,mbItemId);
             // personal data editing BEGIN
             case MY_DATA -> handleMyDataEditing(visitor);
@@ -137,10 +133,19 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                 var subGroupItems = scalaHelper.getSubMenuText(this.catalog.getItemList(), callBackButton);
                 for (String str : subGroupItems) {
                     var lastMessage = subGroupItems[subGroupItems.length - 1];
-                    var subCatalogAnswer = SendMessage.builder().allowSendingWithoutReply(true).text(str).chatId(userId).build();
+                    var subCatalogAnswer = SendMessage
+                            .builder()
+                            .allowSendingWithoutReply(true)
+                            .parseMode("html")
+                            .disableWebPagePreview(false)
+                            .text(str)
+                            .chatId(userId)
+                            .build();
+
                     if (str.equals(lastMessage)) {
                         subCatalogAnswer.setReplyMarkup(this.keyboardHelper.buildMainMenuReply());
                     }
+
                     this.sendApiMethod(subCatalogAnswer);
                 }
                 this.botVisitorService.saveBotVisitor(visitor);
@@ -154,19 +159,20 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             this.sendApiMethod(answer);
         }
     }
-
-    private SendPhoto getMessageWithPhoto(long chatId, String text,String filePath) {
-        File goodsContainerImg = new File(filePath);
-        return SendPhoto.builder().caption(text).chatId(chatId).photo(new InputFile(goodsContainerImg)).build();
-    }
-
     private SendMessage handleBucket(BotVisitor visitor) throws TelegramApiException {
-        if (visitor.getBucket().isEmpty()) return scalaHelper.getBucketMessage(visitor,visitor.getUserId(),keyboardHelper);
+        if (visitor.getBucket().isEmpty()) return scalaHelper.getEmptyBucketMessage(keyboardHelper,visitor.getUser().getId());
         visitor.setNameEditingMode(false);
         this.sendApiMethod(scalaHelper.getItemBucketIntroMessage(visitor.getUserId(),keyboardHelper));
         for (Item item: visitor.getBucket()) {
-            var itemMessage = scalaHelper.getItemBucketMessage(item,keyboardHelper, visitor.getUserId());
-            this.sendApiMethod(itemMessage);
+
+            var itemMessage = scalaHelper.getItemMessageWithPhoto(
+                    visitor.getUser().getId(),
+                    item,
+                    ITEM_NOT_FOUND_IMG_PATH,
+                    inputForImgPath,
+                    keyboardHelper);
+
+            execute(itemMessage);
         }
         return null;
     }
@@ -205,7 +211,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         visitor.setNameEditingMode(false);
         var itemToEditQty  = visitor.getBucket().stream().filter(it->itemId.equals(it.id())).findFirst();
         visitor.setItemToEditQty(itemToEditQty.orElse(null));
-        displayEditItemQtyMenu(scalaHelper, visitor);
+        displayEditItemQtyResponse(scalaHelper, visitor);
         return null;
     }
 
@@ -218,8 +224,6 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     }
 
     private SendMessage handleCatalog(BotVisitor visitor) {
-        // todo: what we do with the photos?
-        //execute(getGoodsContainerPhotoMsg(userId));
         visitor.setNameEditingMode(false);
         return scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(), "Обирай з товарних груп:",
                 keyboardHelper.buildCatalogItemsMenu());
@@ -280,13 +284,23 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         return orderSubmitReply;
     }
 
-    private void displayEditItemQtyMenu(ScalaHelper scalaHelper,
-                                        BotVisitor visitor) throws TelegramApiException {
+    private void displayEditItemQtyResponse(ScalaHelper scalaHelper,
+                                            BotVisitor visitor) throws TelegramApiException {
+        if (Objects.isNull(visitor.getItemToEditQty())) {
+           var noSuchItemInBasket = scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(),"Такого товару вже немає у корзині.",keyboardHelper.buildMainMenuReply());
+           this.sendApiMethod(noSuchItemInBasket);
+        }
         String itemId = visitor.getItemToEditQty().id();
         final String finalItemId = itemId;
         var item = visitor.getBucket().stream().filter(i -> finalItemId.equals(i.id())).findFirst().get();
         visitor.setItemToEditQty(item);
-        var editItemQtyAnswer = SendMessage.builder().allowSendingWithoutReply(true).text(scalaHelper.getEditItemQtyMsg(item)).chatId(visitor.getUserId()).build();
+
+        var editItemQtyAnswer = SendMessage
+                .builder()
+                .allowSendingWithoutReply(true)
+                .text(scalaHelper.getEditItemQtyMsg(item))
+                .chatId(visitor.getUserId()).build();
+
         this.sendApiMethod(editItemQtyAnswer);
     }
 
@@ -303,16 +317,32 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
 
             var scalaBotVisitor = BotVisitorToScalaBotVisitorConverter.convertBotVisitorToScalaBotVisitor(botVisitor);
 
-            var response = (ResponseWithSendMessageAndScalaBotVisitor) BotMessageHandler.handleMessageOrCommand(scalaBotVisitor, textFromUser, keyboardHelper, chatId, catalog);
-            var sendMessage = response.sendMessageResponse();
+            var response = BotMessageHandler.handleMessageOrCommand(
+                    scalaBotVisitor,
+                    textFromUser,
+                    keyboardHelper,
+                    chatId,
+                    catalog,
+                    ITEM_NOT_FOUND_IMG_PATH,
+                    inputForImgPath);
+
+            if (response instanceof ResponseWithSendMessageAndScalaBotVisitor castedResponse) {
+                var sendMessage = castedResponse.sendMessageResponse();
+                sendApiMethod(sendMessage);
+                var updatedBotVisitor = BotVisitorToScalaBotVisitorConverter.convertToJavaBotVisitor(castedResponse.scalaBotVisitor());
+                botVisitorService.saveBotVisitor(updatedBotVisitor);
+            }
+
+            if (response instanceof ResponseWithPhotoMessageAndScalaBotVisitor castedResponse) {
+                var photoMessage = castedResponse.photoMessage();
+                execute(photoMessage);
+                var updatedBotVisitor = BotVisitorToScalaBotVisitorConverter.convertToJavaBotVisitor(castedResponse.scalaBotVisitor());
+                botVisitorService.saveBotVisitor(updatedBotVisitor);
+            }
+
             var updatedBotVisitor = BotVisitorToScalaBotVisitorConverter.convertToJavaBotVisitor(response.scalaBotVisitor());
             botVisitorService.saveBotVisitor(updatedBotVisitor);
 
-            try {
-                this.sendApiMethod(sendMessage);
-            } catch (TelegramApiException e) {
-                log.error("Exception when sending message: ", e);
-            }
         } else {
             log.warn("Unexpected update from user");
         }
