@@ -52,6 +52,17 @@ class ScalaHelper {
      response
    }
 
+  def getItemMessageWithPhotoWithDeleteButtonOnly(chatId: Long,
+                                                  item: Item,
+                                                  itemNotFoundImgPath: String,
+                                                  inputForImgPath: String,
+                                                  keyboardHelper: KeyboardHelper) = {
+
+    val response = getItemMessageWithPhoto(chatId,item,itemNotFoundImgPath,inputForImgPath,keyboardHelper)
+    response.setReplyMarkup(keyboardHelper.buildAddToBucketItemKeyboardMenu(item.id()))
+    response
+  }
+
   def getItemMessageWithPhotoInBucket(chatId: Long, item: Item, itemNotFoundImgPath: String, inputForImgPath: String, keyboardHelper: KeyboardHelper) = {
 
     val response = getItemMessageWithPhoto(chatId, item, itemNotFoundImgPath, inputForImgPath, keyboardHelper)

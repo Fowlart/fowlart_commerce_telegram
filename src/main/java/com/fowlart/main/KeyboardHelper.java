@@ -104,6 +104,16 @@ public class KeyboardHelper {
         markupInline.setKeyboard(rowsInline);
         return markupInline;
     }
+    public InlineKeyboardMarkup buildAddToBucketItemKeyboardMenu(String itemId) {
+        InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
+        List<InlineKeyboardButton> rowInline1 = new ArrayList<>();
+        rowInline1.add(buildButton("Відмінити додавання", "DISCARD_ITEM__"+itemId));
+        rowsInline.add(rowInline1);
+        // Add it to the message
+        markupInline.setKeyboard(rowsInline);
+        return markupInline;
+    }
     public InlineKeyboardMarkup buildBucketKeyboardMenu() {
         InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();

@@ -73,7 +73,7 @@ object BotMessageHandler {
     if (matchedItem.isDefined) {
       val updatedScalaVisitor = state.ScalaBotVisitor(name, isNameEditingMode, phoneNumber, false, matchedItem.get, user, userId, bucket + matchedItem.get)
 
-      val photoMessage = scalaHelper.getItemMessageWithPhoto(
+      val photoMessage = scalaHelper.getItemMessageWithPhotoWithDeleteButtonOnly(
           chatId,
           matchedItem.get,
           itemNotFoundImgPath,
