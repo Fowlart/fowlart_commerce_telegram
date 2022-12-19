@@ -88,7 +88,7 @@ class ScalaHelper {
 
   def getEditItemQtyMsg(item: Item): String =
     s"""
-       |ТОВАР, ЩО РЕДАГУЄТЬСЯ::
+       |ТОВАР, ЩО РЕДАГУЄТЬСЯ:
        |
        |${item.name()}
        |${item.price()} грн
@@ -154,7 +154,8 @@ class ScalaHelper {
 
 
   def getNameEditingText(userId: Long): String =
-    s"""| 😎Данні користувача $userId/ПІБ:
+    s"""|😎
+        |Данні користувача $userId/ПІБ
         |
         |Будь ласка, назвіться. Краще дотримуватися формату:
         |Прізвище Ім'я.
@@ -163,26 +164,27 @@ class ScalaHelper {
 
 
   def getPhoneEditingText(userId: Long): String = {
-    s"""| 😎Данні користувача $userId/телефон:
+    s"""|😎
+        |Данні користувача $userId/телефон
         |
-        | Введіть, будь ласка, номер телефону
-        | в наступному форматі:
-        | xxx-xxx-xxxx
+        |Введіть, будь ласка, номер телефону
+        |в наступному форматі:
+        |     xxx-xxx-xxxx
         |""".stripMargin
   }
   def getPersonalDataEditingSectionText(botVisitor: BotVisitor): String = {
 
     val phoneNumber = if (botVisitor.getPhoneNumber==null) "" else botVisitor.getPhoneNumber
 
-    s"""| 😎
-        | ID користувача:
-        | ${botVisitor.getUserId}
+    s"""|😎
+        |ID користувача:
+        |${botVisitor.getUserId}
         |
-        | Ім'я/Прізвище:
-        | ${if (botVisitor.getName!=null) botVisitor.getName else botVisitor.getUser.getFirstName}
+        |Ім'я/Прізвище:
+        |${if (botVisitor.getName!=null) botVisitor.getName else botVisitor.getUser.getFirstName}
         |
-        | Телфон:
-        | $phoneNumber
+        |Телфон:
+        |$phoneNumber
         |""".stripMargin
   }
   def getMainMenuText(name: String): String ={
