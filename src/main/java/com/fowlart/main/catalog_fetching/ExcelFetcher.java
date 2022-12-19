@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 @Component
@@ -39,12 +38,12 @@ public class ExcelFetcher {
                     id++;
                     var itemName = item.split("\\|")[0];
                     var itemPrice = Double.parseDouble(item.split("\\|")[1]);
-                    var itemToAdd = new Item("ID" + id, itemName, itemPrice, group,null);
+                    var itemToAdd = new Item("ID" + id, itemName, itemPrice, group, null);
                     catalogItems.add(itemToAdd);
                 }
             }
 
-           return catalogItems;
+            return catalogItems;
 
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -99,8 +98,7 @@ public class ExcelFetcher {
                         shouldCollect = true;
                     }
 
-                    if (currentCellVal.equals(nextGroup) || rowCount==sheet.getLastRowNum()) {
-                        log.info(Arrays.toString(items.toArray()));
+                    if (currentCellVal.equals(nextGroup) || rowCount == sheet.getLastRowNum()) {
                         return items;
                     }
                 }
@@ -109,11 +107,10 @@ public class ExcelFetcher {
 
         items.remove(null);
         items.remove(START_PARSING_PHRASE);
-        log.info(Arrays.toString(items.toArray()));
         return items;
     }
 
-    public List<String> getProductGroupsFromSheet(){
+    public List<String> getProductGroupsFromSheet() {
         Sheet sheet;
         try {
             sheet = getSheet();

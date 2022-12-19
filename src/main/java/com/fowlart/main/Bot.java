@@ -139,11 +139,9 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                             .text(str)
                             .chatId(userId)
                             .build();
-
                     if (str.equals(lastMessage)) {
                         subCatalogAnswer.setReplyMarkup(this.keyboardHelper.buildMainMenuReply());
                     }
-
                     this.sendApiMethod(subCatalogAnswer);
                 }
                 this.botVisitorService.saveBotVisitor(visitor);
