@@ -79,7 +79,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         this.token = token;
         this.catalog = catalog;
         this.scalaHelper = new ScalaHelper();
-        this.logger = FowlartCommerceApplication.getLoggerContext().getLogger(this.getClass());
+        this.logger = FowlartCommerceApplication.getLoggerContext().getLogger("MyLogger");
     }
 
     public static Bot getInstance() {
