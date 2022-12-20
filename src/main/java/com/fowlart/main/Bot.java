@@ -9,28 +9,34 @@ import com.fowlart.main.messages.ResponseWithSendMessageAndScalaBotVisitor;
 import com.fowlart.main.state.BotVisitor;
 import com.fowlart.main.state.BotVisitorService;
 import com.fowlart.main.state.OrderService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.spi.ExtendedLogger;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.*;
+import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
+import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import javax.mail.MessagingException;
 import java.io.IOException;
-import java.util.*;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Component
 public class Bot extends TelegramLongPollingBot implements InitializingBean {
+
     public static final String EDIT_PHONE = "EDIT_PHONE";
     public static final String EDIT_PHONE_EXIT = "EDIT_PHONE_EXIT";
     public static final String EDIT_NAME = "EDIT_NAME";
-    private static final Logger log = LoggerFactory.getLogger(Bot.class);
+    public static final String DISCARD_ITEM = "DISCARD_ITEM";
+    public static final String ITEM_NOT_FOUND_IMG_PATH = "src/main/resources/no_image_available.png";
     private static final String CATALOG = "CATALOG";
     private static final String MY_DATA = "MYDATA";
     private static final String GOODS_QTY_EDIT = "GOODS_QTY_EDIT";
@@ -39,8 +45,6 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     private static final String MAIN_SCREEN = "MAIN_SCREEN";
     private static final String SUBMIT = "SUBMIT";
     private static final String DISCARD = "DISCARD";
-    public static final String DISCARD_ITEM = "DISCARD_ITEM";
-    public static final String ITEM_NOT_FOUND_IMG_PATH = "src/main/resources/no_image_available.png";
     private static Bot instance;
     private final BotVisitorService botVisitorService;
     private final ExcelFetcher excelFetcher;
@@ -53,7 +57,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     private final String outputForOrderPath;
     private final GmailSender gmailSender;
     private final String inputForImgPath;
-
+    private final ExtendedLogger logger;
     public Bot(@Autowired GmailSender gmailSender,
                @Autowired BotVisitorService botVisitorService,
                @Autowired ExcelFetcher excelFetcher,
@@ -75,6 +79,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         this.token = token;
         this.catalog = catalog;
         this.scalaHelper = new ScalaHelper();
+        this.logger = FowlartCommerceApplication.getLoggerContext().getLogger(this.getClass());
     }
 
     public static Bot getInstance() {
@@ -105,15 +110,15 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     private void handleInlineButtonClicks(CallbackQuery callbackQuery) throws TelegramApiException {
         Long userId = callbackQuery.getFrom().getId();
         BotVisitor visitor = this.botVisitorService.getBotVisitorByUserId(userId.toString());
-        log.info(visitor.toString());
-        var callBackButtonArr =  callbackQuery.getData().split("__");
+        logger.info(visitor.toString());
+        var callBackButtonArr = callbackQuery.getData().split("__");
         String callBackButton = callBackButtonArr[0];
         String mbItemId = null;
-        if (callBackButtonArr.length>1) mbItemId = callBackButtonArr[1];
+        if (callBackButtonArr.length > 1) mbItemId = callBackButtonArr[1];
 
         var answer = switch (callBackButton) {
-            case DISCARD_ITEM -> handleItemRemove(visitor,mbItemId);
-            case GOODS_QTY_EDIT -> handleGoodsQtyEdit(visitor,mbItemId);
+            case DISCARD_ITEM -> handleItemRemove(visitor, mbItemId);
+            case GOODS_QTY_EDIT -> handleGoodsQtyEdit(visitor, mbItemId);
             // personal data editing BEGIN
             case MY_DATA -> handleMyDataEditing(visitor);
             case EDIT_PHONE -> handleEditPhone(visitor);
@@ -155,11 +160,13 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             this.sendApiMethod(answer);
         }
     }
+
     private SendMessage handleBucket(BotVisitor visitor) throws TelegramApiException {
-        if (visitor.getBucket().isEmpty()) return scalaHelper.getEmptyBucketMessage(keyboardHelper,visitor.getUser().getId());
+        if (visitor.getBucket().isEmpty())
+            return scalaHelper.getEmptyBucketMessage(keyboardHelper, visitor.getUser().getId());
         visitor.setNameEditingMode(false);
-        this.sendApiMethod(scalaHelper.getItemBucketIntroMessage(visitor.getUserId(),keyboardHelper));
-        for (Item item: visitor.getBucket()) {
+        this.sendApiMethod(scalaHelper.getItemBucketIntroMessage(visitor.getUserId(), keyboardHelper));
+        for (Item item : visitor.getBucket()) {
 
             var itemMessage = scalaHelper.getItemMessageWithPhotoInBucket(
                     visitor.getUser().getId(),
@@ -205,7 +212,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
 
     private SendMessage handleGoodsQtyEdit(BotVisitor visitor, String itemId) throws TelegramApiException {
         visitor.setNameEditingMode(false);
-        var itemToEditQty  = visitor.getBucket().stream().filter(it->itemId.equals(it.id())).findFirst();
+        var itemToEditQty = visitor.getBucket().stream().filter(it -> itemId.equals(it.id())).findFirst();
         visitor.setItemToEditQty(itemToEditQty.orElse(null));
         displayEditItemQtyResponse(scalaHelper, visitor);
         return null;
@@ -213,7 +220,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
 
     private SendMessage handleItemRemove(BotVisitor visitor, String itemId) {
         visitor.setNameEditingMode(false);
-        var newBucket = visitor.getBucket().stream().filter(it->!itemId.equals(it.id())).collect(Collectors.toSet());
+        var newBucket = visitor.getBucket().stream().filter(it -> !itemId.equals(it.id())).collect(Collectors.toSet());
         visitor.setItemToEditQty(null);
         visitor.setBucket(newBucket);
         return SendMessage.builder().chatId(visitor.getUserId()).text("Товар видалено. Корзину збережено. Не забудьте відправити замовлення.").replyMarkup(keyboardHelper.buildMainMenuReply()).build();
@@ -262,7 +269,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         } else {
             visitor.setOrders(new LinkedList<>());
         }
-        log.info("saving order: " + order.orderId());
+        logger.info("saving order: " + order.orderId());
         var orderFileName = ("/" + order.userName() + "_" + order.orderId() + "_" + order.date() + ".csv")
                 .replaceAll(" ", "_")
                 .replaceAll("-", "_");
@@ -271,7 +278,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             var savedCsv = OrderHandler.saveOrderAsCsv(order, outputForOrderPath + orderFileName);
             gmailSender.sendOrderMessage(scalaHelper.getEmailOrderText(order), savedCsv);
         } catch (MessagingException | IOException e) {
-            log.error(e.getMessage());
+            logger.error(e.getMessage());
             orderSubmitReply.setText("Якась бачіна з відправленням листа! Повторість, будь ласка, спробу!");
             return orderSubmitReply;
         }
@@ -283,8 +290,8 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     private void displayEditItemQtyResponse(ScalaHelper scalaHelper,
                                             BotVisitor visitor) throws TelegramApiException {
         if (Objects.isNull(visitor.getItemToEditQty())) {
-           var noSuchItemInBasket = scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(),"Такого товару вже немає у корзині.",keyboardHelper.buildMainMenuReply());
-           this.sendApiMethod(noSuchItemInBasket);
+            var noSuchItemInBasket = scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(), "Такого товару вже немає у корзині.", keyboardHelper.buildMainMenuReply());
+            this.sendApiMethod(noSuchItemInBasket);
         }
         String itemId = visitor.getItemToEditQty().id();
         final String finalItemId = itemId;
@@ -310,7 +317,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             Long chatId = update.getMessage().getChatId();
             String userFirstName = update.getMessage().getFrom().getFirstName();
             BotVisitor botVisitor = this.botVisitorService.getBotVisitorByUserId(userId);
-            log.info("[chatID:{}, userFirstName:{}] : {}", chatId, userFirstName, textFromUser);
+            logger.info("[chatID:{}, userFirstName:{}] : {}", chatId, userFirstName, textFromUser);
 
             var scalaBotVisitor = BotVisitorToScalaBotVisitorConverter.convertBotVisitorToScalaBotVisitor(botVisitor);
 
@@ -341,11 +348,13 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             botVisitorService.saveBotVisitor(updatedBotVisitor);
 
         } else {
-            log.warn("Unexpected update from user");
+            logger.warn("Unexpected update from user");
         }
     }
 
-    /**<h3 style='color:red'>Main method for handling input messages</h3>*/
+    /**
+     * <h3 style='color:red'>Main method for handling input messages</h3>
+     */
     @Override
     public void onUpdateReceived(Update update) {
         try {
