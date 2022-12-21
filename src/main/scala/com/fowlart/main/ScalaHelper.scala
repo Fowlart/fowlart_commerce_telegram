@@ -86,6 +86,7 @@ class ScalaHelper {
       .replyMarkup(keyboardHelper.buildBucketKeyboardMenu())
       .text(
         s"""
+           |🛒
            | Нижче, список товарів у корзині.
            | Будь ласка, переглядайте та керуйте кількістю товарів.
            |""".stripMargin).build
@@ -98,8 +99,7 @@ class ScalaHelper {
 
   def getEditItemQtyMsg(item: Item): String =
     s"""
-       |
-       |Введіть кількість товару <b>цілим</b> позитивним числом:
+       |Введіть кількість товару <b>цілим</b> 0️⃣1️⃣2️⃣3️⃣ позитивним числом:
        |
        |${item.toString3}
        |""".stripMargin
@@ -107,7 +107,7 @@ class ScalaHelper {
   def getEmptyBucketMessage(keyboardHelper: KeyboardHelper, userId: Long): SendMessage = {
 
     SendMessage.builder.chatId(userId)
-      .text( "[Корзина порожня]")
+      .text( "\uD83D\uDDD1[Корзина порожня]\uD83D\uDDD1")
       .replyMarkup(keyboardHelper.buildMainMenuReply()).build
   }
 
@@ -134,9 +134,9 @@ class ScalaHelper {
     val res = grouped.toList.filter(it => it.nonEmpty).map(it => {
       it.map(item =>
         s"""
-           |<b>${item.name.trim}
+           |${item.name.trim}
            |${item.price} грн
-           |🔥 /${item.id}</b> 🔥
+           |➡️️<b>/${item.id}</b>⬅
            |""".stripMargin).reduce((v1, v2) => s"$v1$v2")
     })
     res.toArray
@@ -162,7 +162,7 @@ class ScalaHelper {
 
 
   def getNameEditingText(userId: Long): String =
-    s"""|😎
+    s"""|🚹🚺
         |Данні користувача $userId/ПІБ
         |
         |Будь ласка, назвіться. Краще дотримуватися формату:
@@ -172,7 +172,7 @@ class ScalaHelper {
 
 
   def getPhoneEditingText(userId: Long): String = {
-    s"""|😎
+    s"""|🚹🚺
         |Данні користувача $userId/телефон
         |
         |Введіть, будь ласка, номер телефону
@@ -184,14 +184,13 @@ class ScalaHelper {
 
     val phoneNumber = if (botVisitor.getPhoneNumber==null) "" else botVisitor.getPhoneNumber
 
-    s"""|😎
-        |ID користувача:
+    s"""|💾ID користувача:
         |${botVisitor.getUserId}
         |
-        |Ім'я/Прізвище:
+        |🚹🚺Ім'я/Прізвище:
         |${if (botVisitor.getName!=null) botVisitor.getName else botVisitor.getUser.getFirstName}
         |
-        |Телфон:
+        |☎️Телфон:
         |$phoneNumber
         |""".stripMargin
   }
@@ -205,23 +204,25 @@ class ScalaHelper {
         |Редагування кількостей відбувається в корзині.""".stripMargin}
 
   def getPhoneNumberReceivedText(): String =
-    s"""|Дякуємо. Номер збережено в особистий профіль.""".stripMargin
+    s"""|💾
+        |Дякуємо. Номер збережено в особистий профіль.""".stripMargin
 
 
   def getFullNameReceivedText(): String =
-    s"""|Дякуємо. Ім'я збережено в особистий профіль.""".stripMargin
+    s"""|💾
+        |Дякуємо. Ім'я збережено в особистий профіль.""".stripMargin
 
   def getItemQtyWrongEnteredNumber(botVisitor: ScalaBotVisitor): String =
-    s"""|🤷‍♂️
-        |Введене некоректне число в
-        |режимі редагування кількості.
-        |Будь ласка, введи ціле позитивне ЧИСЛО.
+    s"""|🤷‍♂️🔒
+        |Введене некоректне число в режимі редагування кількості.
+        |Введіть кількість товару <b>цілим</b> 0️⃣1️⃣2️⃣3️⃣ позитивним числом.
         |
         |${botVisitor.itemToEditQty.toString3}
         |""".stripMargin
 
   def getItemNotAcceptedText(): String =
     s"""
+       |🤷‍♂️
        |Ви або ввели некоректне ID,
        |або додатковий текст крім самого ID товару
        |або зробили щось таке, чого ми не передбачили.

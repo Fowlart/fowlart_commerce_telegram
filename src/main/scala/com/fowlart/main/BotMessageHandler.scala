@@ -89,7 +89,7 @@ object BotMessageHandler {
 
   private def handleItemQuantityEditWithNOTnumericValue(chatId: Long, name: String, isNameEditingMode: Boolean, phoneNumber: String, itemToEditQty: Item, user: User, userId: String, bucket: Set[Item]) = {
     val visitor = state.ScalaBotVisitor(name, isNameEditingMode, phoneNumber, false, itemToEditQty, user, userId, bucket)
-    val sendMessage = SendMessage.builder.chatId(chatId).text(scalaHelper.getItemQtyWrongEnteredNumber(visitor)).build
+    val sendMessage = SendMessage.builder.chatId(chatId).parseMode("html").text(scalaHelper.getItemQtyWrongEnteredNumber(visitor)).build
     ResponseWithSendMessageAndScalaBotVisitor(sendMessage, visitor)
   }
 

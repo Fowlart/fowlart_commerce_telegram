@@ -79,7 +79,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         this.token = token;
         this.catalog = catalog;
         this.scalaHelper = new ScalaHelper();
-        this.logger = FowlartCommerceApplication.getLoggerContext().getLogger("MyLogger");
+        this.logger = FowlartCommerceApplication.getLoggerContext().getLogger("FileLogger");
     }
 
     public static Bot getInstance() {
@@ -223,12 +223,12 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         var newBucket = visitor.getBucket().stream().filter(it -> !itemId.equals(it.id())).collect(Collectors.toSet());
         visitor.setItemToEditQty(null);
         visitor.setBucket(newBucket);
-        return SendMessage.builder().chatId(visitor.getUserId()).text("Товар видалено. Корзину збережено. Не забудьте відправити замовлення.").replyMarkup(keyboardHelper.buildMainMenuReply()).build();
+        return SendMessage.builder().chatId(visitor.getUserId()).text(" Товар видалено. Корзину збережено. Не забудьте відправити замовлення.").replyMarkup(keyboardHelper.buildMainMenuReply()).build();
     }
 
     private SendMessage handleCatalog(BotVisitor visitor) {
         visitor.setNameEditingMode(false);
-        return scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(), "Обирай з товарних груп:",
+        return scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(), "\uD83D\uDD0E Обирай з товарних груп:",
                 keyboardHelper.buildCatalogItemsMenu());
     }
 
