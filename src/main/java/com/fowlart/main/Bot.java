@@ -4,6 +4,7 @@ import com.fowlart.main.catalog_fetching.ExcelFetcher;
 import com.fowlart.main.email.GmailSender;
 import com.fowlart.main.in_mem_catalog.Catalog;
 import com.fowlart.main.in_mem_catalog.Item;
+import com.fowlart.main.logging.LoggerBuilder;
 import com.fowlart.main.messages.ResponseWithPhotoMessageAndScalaBotVisitor;
 import com.fowlart.main.messages.ResponseWithSendMessageAndScalaBotVisitor;
 import com.fowlart.main.state.BotVisitor;
@@ -79,7 +80,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         this.token = token;
         this.catalog = catalog;
         this.scalaHelper = new ScalaHelper();
-        this.logger = FowlartCommerceApplication.getLoggerContext().getLogger("FileLogger");
+        this.logger = LoggerBuilder.getFileLogger();
     }
 
     public static Bot getInstance() {
