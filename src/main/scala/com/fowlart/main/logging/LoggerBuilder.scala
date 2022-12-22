@@ -47,8 +47,8 @@ object LoggerBuilder {
     val pathToLogFile = getPropertiesFromFile(propertiesPath).getProperty("logging.file.path.tg").trim
     val fileAppenderBuilder = builder.newAppender("FileAppender", "File")
     fileAppenderBuilder.addAttribute("fileName", pathToLogFile)
-    fileAppenderBuilder.add(builder.newLayout("PatternLayout").addAttribute("pattern", "%d [%t] %-5level: %msg%n%throwable"))
-    fileAppenderBuilder.add(builder.newFilter("MarkerFilter", Filter.Result.DENY, Filter.Result.NEUTRAL).addAttribute("marker", "FLOW"))
+    //fileAppenderBuilder.add(builder.newLayout("PatternLayout").addAttribute("pattern", "%msg"))
+    //fileAppenderBuilder.add(builder.newFilter("MarkerFilter", Filter.Result.DENY, Filter.Result.NEUTRAL).addAttribute("marker", "FLOW"))
     builder.add(fileAppenderBuilder)
 
     /** <h3>KAFKA appender <h3> */

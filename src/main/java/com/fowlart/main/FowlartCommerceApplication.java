@@ -24,7 +24,7 @@ public class FowlartCommerceApplication {
         System.setProperty("org.springframework.boot.logging.LoggingSystem", "none");
         SpringApplication.run(FowlartCommerceApplication.class, args);
         TelegramBotsApi telegramBotsApi;
-        LoggerHelper.logSimpleInfoMsgInKafka("Registering bot...");
+        LoggerHelper.logSimpleInfoMsgInFile("Registering bot...");
         try {
             telegramBotsApi = new TelegramBotsApi(DefaultBotSession.class);
             telegramBotsApi.registerBot(Bot.getInstance());
