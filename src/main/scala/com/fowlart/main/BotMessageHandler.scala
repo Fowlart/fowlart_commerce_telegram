@@ -1,6 +1,6 @@
 package com.fowlart.main
 import com.fowlart.main.in_mem_catalog.{Catalog, Item}
-import com.fowlart.main.logging.LoggerBuilder
+import com.fowlart.main.logging.{LoggerBuilder, LoggerHelper}
 import com.fowlart.main.messages._
 import com.fowlart.main.state.ScalaBotVisitor
 import com.google.gson.Gson
@@ -49,6 +49,7 @@ object BotMessageHandler {
 
       // default
       case (visitor, _) =>
+        LoggerHelper.logInfoInFile(visitor,"some not recognized msg from visitor")
         val sendMessage = SendMessage.builder.chatId(chatId).text(scalaHelper.getMainMenuText(visitor.name)).replyMarkup(keyboardHelper.buildMainMenuReply).build
         ResponseWithSendMessageAndScalaBotVisitor(sendMessage, visitor)
     }
@@ -91,20 +92,11 @@ object BotMessageHandler {
       ResponseWithSendMessageAndScalaBotVisitor(sendMessage, state.ScalaBotVisitor(name, isNameEditingMode, phoneNumber, false, null, user, userId, bucket))
     }
   }
-
-  case class MessageForLogger(date: String, msg: String)
-
   private def handleItemQuantityEditWithNOTnumericValue(chatId: Long, name: String, isNameEditingMode: Boolean, phoneNumber: String, itemToEditQty: Item, user: User, userId: String, bucket: Set[Item]) = {
-
-    val date = new Date()
-    logger.info(MessageForLogger(date.toString,"some message"))
-
     val visitor = state.ScalaBotVisitor(name, isNameEditingMode, phoneNumber, false, itemToEditQty, user, userId, bucket)
     val sendMessage = SendMessage.builder.chatId(chatId).parseMode("html").text(scalaHelper.getItemQtyWrongEnteredNumber(visitor)).build
     ResponseWithSendMessageAndScalaBotVisitor(sendMessage, visitor)
-
   }
-
   private def handleItemQuantityEditWithNumericValue(keyboardHelper: KeyboardHelper, chatId: Long, name: String, isNameEditingMode: Boolean, phoneNumber: String, itemToEditQty: Item, user: User, userId: String, bucket: Set[Item], textFromUser: String) = {
     val qty = textFromUser.toInt
     val toAdd = new Item(itemToEditQty.id, itemToEditQty.name, itemToEditQty.price, itemToEditQty.group, qty)

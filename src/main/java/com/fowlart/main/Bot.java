@@ -5,6 +5,7 @@ import com.fowlart.main.email.GmailSender;
 import com.fowlart.main.in_mem_catalog.Catalog;
 import com.fowlart.main.in_mem_catalog.Item;
 import com.fowlart.main.logging.LoggerBuilder;
+import com.fowlart.main.logging.LoggerHelper;
 import com.fowlart.main.messages.ResponseWithPhotoMessageAndScalaBotVisitor;
 import com.fowlart.main.messages.ResponseWithSendMessageAndScalaBotVisitor;
 import com.fowlart.main.state.BotVisitor;
@@ -58,7 +59,6 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     private final String outputForOrderPath;
     private final GmailSender gmailSender;
     private final String inputForImgPath;
-    private final ExtendedLogger logger;
     public Bot(@Autowired GmailSender gmailSender,
                @Autowired BotVisitorService botVisitorService,
                @Autowired ExcelFetcher excelFetcher,
@@ -80,7 +80,6 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         this.token = token;
         this.catalog = catalog;
         this.scalaHelper = new ScalaHelper();
-        this.logger = LoggerBuilder.getFileLogger();
     }
 
     public static Bot getInstance() {
@@ -111,7 +110,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     private void handleInlineButtonClicks(CallbackQuery callbackQuery) throws TelegramApiException {
         Long userId = callbackQuery.getFrom().getId();
         BotVisitor visitor = this.botVisitorService.getBotVisitorByUserId(userId.toString());
-        logger.info(visitor.toString());
+        LoggerHelper.logInfoInFile(visitor,"pushed the button");
         var callBackButtonArr = callbackQuery.getData().split("__");
         String callBackButton = callBackButtonArr[0];
         String mbItemId = null;
@@ -270,7 +269,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         } else {
             visitor.setOrders(new LinkedList<>());
         }
-        logger.info("saving order: " + order.orderId());
+        LoggerHelper.logInfoInFile(visitor,"saving order: " + order.orderId());
         var orderFileName = ("/" + order.userName() + "_" + order.orderId() + "_" + order.date() + ".csv")
                 .replaceAll(" ", "_")
                 .replaceAll("-", "_");
@@ -279,7 +278,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             var savedCsv = OrderHandler.saveOrderAsCsv(order, outputForOrderPath + orderFileName);
             gmailSender.sendOrderMessage(scalaHelper.getEmailOrderText(order), savedCsv);
         } catch (MessagingException | IOException e) {
-            logger.error(e.getMessage());
+            LoggerHelper.logSimpleErrorMsgInFile(e.getMessage());
             orderSubmitReply.setText("Якась бачіна з відправленням листа! Повторість, будь ласка, спробу!");
             return orderSubmitReply;
         }
@@ -316,10 +315,8 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             String textFromUser = update.getMessage().getText();
             String userId = update.getMessage().getFrom().getId().toString();
             Long chatId = update.getMessage().getChatId();
-            String userFirstName = update.getMessage().getFrom().getFirstName();
             BotVisitor botVisitor = this.botVisitorService.getBotVisitorByUserId(userId);
-            logger.info("[chatID:{}, userFirstName:{}] : {}", chatId, userFirstName, textFromUser);
-
+            LoggerHelper.logInfoInFile(botVisitor,"has entered message");
             var scalaBotVisitor = BotVisitorToScalaBotVisitorConverter.convertBotVisitorToScalaBotVisitor(botVisitor);
 
             var response = BotMessageHandler.handleMessageOrCommand(
@@ -349,7 +346,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             botVisitorService.saveBotVisitor(updatedBotVisitor);
 
         } else {
-            logger.warn("Unexpected update from user");
+            LoggerHelper.logSimpleErrorMsgInFile("Unexpected update from user");
         }
     }
 
