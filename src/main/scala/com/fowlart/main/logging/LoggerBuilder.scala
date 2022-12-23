@@ -39,7 +39,7 @@ object LoggerBuilder {
 
     /** <h3>CONSOLE appender <h3> */
     val consoleAppenderBuilder = builder.newAppender("Stdout", "CONSOLE").addAttribute("target", ConsoleAppender.Target.SYSTEM_OUT)
-    consoleAppenderBuilder.add(builder.newLayout("JsonTemplateLayout").addAttribute("eventTemplateUri", "classpath:EcsLayout.json"))
+    consoleAppenderBuilder.add(builder.newLayout("JsonTemplateLayout").addAttribute("eventTemplateUri", "classpath:LogstashJsonEventLayoutV1.json"))
     consoleAppenderBuilder.add(builder.newFilter("MarkerFilter", Filter.Result.DENY, Filter.Result.NEUTRAL).addAttribute("marker", "FLOW"))
     builder.add(consoleAppenderBuilder)
 
@@ -47,7 +47,7 @@ object LoggerBuilder {
     val pathToLogFile = getPropertiesFromFile(propertiesPath).getProperty("logging.file.path.tg").trim
     val fileAppenderBuilder = builder.newAppender("FileAppender", "File")
     fileAppenderBuilder.addAttribute("fileName", pathToLogFile)
-    fileAppenderBuilder.add(builder.newLayout("JsonTemplateLayout").addAttribute("eventTemplateUri", "classpath:EcsLayout.json"))
+    fileAppenderBuilder.add(builder.newLayout("JsonTemplateLayout").addAttribute("eventTemplateUri", "classpath:LogstashJsonEventLayoutV1.json"))
     builder.add(fileAppenderBuilder)
 
     /** <h3>KAFKA appender <h3> */
@@ -62,7 +62,7 @@ object LoggerBuilder {
     kafkaAppenderBuilder.addComponent(builder.newProperty(ProducerConfig.ACKS_CONFIG, "all"))
     kafkaAppenderBuilder.addComponent(builder.newProperty(ProducerConfig.RETRIES_CONFIG, "1"))
     kafkaAppenderBuilder.addComponent(builder.newProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer"))
-    kafkaAppenderBuilder.add(builder.newLayout("JsonTemplateLayout").addAttribute("eventTemplateUri", "classpath:EcsLayout.json"))
+    kafkaAppenderBuilder.add(builder.newLayout("JsonTemplateLayout").addAttribute("eventTemplateUri","classpath:LogstashJsonEventLayoutV1.json" ))
     builder.add(kafkaAppenderBuilder)
 
     // configure Root logger with file appender

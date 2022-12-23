@@ -24,11 +24,8 @@ object LoggerHelper {
   def logFatalInFile(msg: String) = fileLogger.fatal(msg)
 
   // kafka
-  def logSimpleInfoMsgInKafka(msg: String) = {
-    kafkaLogger.info(msg)
-  }
+  def logSimpleInfoMsgInKafka(msg: String) = kafkaLogger.info(msg)
 
-  def logSimpleErrorMsgInKafka(msg: String) = {
-    kafkaLogger.error(msg)
-  }
+  def logSimpleErrorMsgInKafka(msg: String) = kafkaLogger.error(msg)
+
 }
