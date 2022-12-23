@@ -11,7 +11,7 @@ object LoggerHelper {
 
   val fileLogger: Logger = LoggerBuilder.getFileLogger
 
-  val kafkaLogger: LoggerWrapper = LoggerBuilder.getKafkaLogger
+  val kafkaLogger: Logger = LoggerBuilder.getKafkaLogger
 
   def logInfoInFile(msg: String): Unit = fileLogger.info(msg)
   def logWarningInFile(msg: String) = fileLogger.warn(msg)
@@ -25,12 +25,10 @@ object LoggerHelper {
 
   // kafka
   def logSimpleInfoMsgInKafka(msg: String) = {
-    val date = new Date()
-    kafkaLogger.info(LoggerSimpleMessage(date.toString, msg))
+    kafkaLogger.info(msg)
   }
 
   def logSimpleErrorMsgInKafka(msg: String) = {
-    val date = new Date()
-    kafkaLogger.error(LoggerSimpleMessage(date.toString, msg))
+    kafkaLogger.error(msg)
   }
 }

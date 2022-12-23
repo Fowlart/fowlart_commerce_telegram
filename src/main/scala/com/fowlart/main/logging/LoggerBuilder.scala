@@ -39,7 +39,7 @@ object LoggerBuilder {
 
     /** <h3>CONSOLE appender <h3> */
     val consoleAppenderBuilder = builder.newAppender("Stdout", "CONSOLE").addAttribute("target", ConsoleAppender.Target.SYSTEM_OUT)
-    consoleAppenderBuilder.add(builder.newLayout("PatternLayout").addAttribute("pattern", "%d [%t] %-5level: %msg%n%throwable"))
+    consoleAppenderBuilder.add(builder.newLayout("JsonTemplateLayout").addAttribute("eventTemplateUri", "classpath:EcsLayout.json"))
     consoleAppenderBuilder.add(builder.newFilter("MarkerFilter", Filter.Result.DENY, Filter.Result.NEUTRAL).addAttribute("marker", "FLOW"))
     builder.add(consoleAppenderBuilder)
 
@@ -62,20 +62,28 @@ object LoggerBuilder {
     kafkaAppenderBuilder.addComponent(builder.newProperty(ProducerConfig.ACKS_CONFIG, "all"))
     kafkaAppenderBuilder.addComponent(builder.newProperty(ProducerConfig.RETRIES_CONFIG, "1"))
     kafkaAppenderBuilder.addComponent(builder.newProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer"))
-    kafkaAppenderBuilder.add(builder.newLayout("PatternLayout").addAttribute("pattern", "%msg"))
+    kafkaAppenderBuilder.add(builder.newLayout("JsonTemplateLayout").addAttribute("eventTemplateUri", "classpath:EcsLayout.json"))
     builder.add(kafkaAppenderBuilder)
 
     // configure Root logger with file appender
     builder.add(builder
       .newRootLogger(Level.INFO)
-      .add(builder.newAppenderRef("FileAppender")))
+      .add(builder.newAppenderRef("Stdout")))
 
-    builder.add(builder.newLogger("KafkaLogger", Level.ALL).add(builder.newAppenderRef("KafkaAppender")))
+    // kafka logger
+    builder.add(builder
+      .newLogger("KafkaLogger", Level.INFO)
+      .add(builder.newAppenderRef("KafkaAppender")))
+
+    // file logger
+    builder.add(builder
+      .newLogger("FileLogger", Level.INFO)
+      .add(builder.newAppenderRef("FileAppender")))
 
     Configurator.initialize(builder.build)
   }
 
-  def getFileLogger: Logger = loggerContext.getRootLogger
+  def getFileLogger: Logger = loggerContext.getLogger("FileLogger")
 
-  def getKafkaLogger: LoggerWrapper = new LoggerWrapper(loggerContext.getLogger("KafkaLogger"))
+  def getKafkaLogger: Logger = loggerContext.getLogger("KafkaLogger")
 }
