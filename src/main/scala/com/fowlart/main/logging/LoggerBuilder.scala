@@ -34,7 +34,7 @@ object LoggerBuilder {
 
     val builder = ConfigurationBuilderFactory.newConfigurationBuilder
     builder.setStatusLevel(Level.ALL)
-    builder.setConfigurationName("BuilderTest")
+    builder.setConfigurationName("BOTLog4JConfigs")
     builder.add(builder.newFilter("ThresholdFilter", Filter.Result.ACCEPT, Filter.Result.NEUTRAL).addAttribute("level", Level.INFO))
 
     /** <h3>CONSOLE appender <h3> */
@@ -47,8 +47,7 @@ object LoggerBuilder {
     val pathToLogFile = getPropertiesFromFile(propertiesPath).getProperty("logging.file.path.tg").trim
     val fileAppenderBuilder = builder.newAppender("FileAppender", "File")
     fileAppenderBuilder.addAttribute("fileName", pathToLogFile)
-    //fileAppenderBuilder.add(builder.newLayout("PatternLayout").addAttribute("pattern", "%msg"))
-    //fileAppenderBuilder.add(builder.newFilter("MarkerFilter", Filter.Result.DENY, Filter.Result.NEUTRAL).addAttribute("marker", "FLOW"))
+    fileAppenderBuilder.add(builder.newLayout("JsonTemplateLayout").addAttribute("eventTemplateUri", "classpath:EcsLayout.json"))
     builder.add(fileAppenderBuilder)
 
     /** <h3>KAFKA appender <h3> */
@@ -66,16 +65,17 @@ object LoggerBuilder {
     kafkaAppenderBuilder.add(builder.newLayout("PatternLayout").addAttribute("pattern", "%msg"))
     builder.add(kafkaAppenderBuilder)
 
-    builder.add(builder.newLogger("FileLogger", Level.ALL).add(builder.newAppenderRef("FileAppender")))
+    // configure Root logger with file appender
+    builder.add(builder
+      .newRootLogger(Level.INFO)
+      .add(builder.newAppenderRef("FileAppender")))
 
     builder.add(builder.newLogger("KafkaLogger", Level.ALL).add(builder.newAppenderRef("KafkaAppender")))
 
     Configurator.initialize(builder.build)
   }
 
-  def getFileLogger: LoggerWrapper = new LoggerWrapper(loggerContext.getLogger("FileLogger"))
+  def getFileLogger: Logger = loggerContext.getRootLogger
 
   def getKafkaLogger: LoggerWrapper = new LoggerWrapper(loggerContext.getLogger("KafkaLogger"))
-
-  def getCleanFileLogger: Logger = loggerContext.getLogger("FileLogger")
 }

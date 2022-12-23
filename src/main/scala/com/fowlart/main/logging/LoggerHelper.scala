@@ -3,57 +3,27 @@ package com.fowlart.main.logging
 import com.fowlart.main.BotVisitorToScalaBotVisitorConverter
 import com.fowlart.main.state.{BotVisitor, ScalaBotVisitor}
 import com.google.gson.Gson
+import org.apache.logging.log4j.core.Logger
 
 import java.util.Date
 
 object LoggerHelper {
 
-  val fileLogger: LoggerWrapper = LoggerBuilder.getFileLogger
+  val fileLogger: Logger = LoggerBuilder.getFileLogger
 
   val kafkaLogger: LoggerWrapper = LoggerBuilder.getKafkaLogger
 
-  def logInfoInFile(botVisitor: BotVisitor, msg: String): Unit = logInfoInFile(
-    BotVisitorToScalaBotVisitorConverter.convertBotVisitorToScalaBotVisitor(
-      botVisitor
-    ),
-    msg
-  )
+  def logInfoInFile(msg: String): Unit = fileLogger.info(msg)
+  def logWarningInFile(msg: String) = fileLogger.warn(msg)
 
-  def logInfoInFile(scalaBotVisitor: ScalaBotVisitor, msg: String): Unit = {
-    val date = new Date()
-    fileLogger.info( LoggerMessage(date.toString, scalaBotVisitor, msg))
-  }
+  def logErrorInFile(msg: String) = fileLogger.error(msg)
 
-  def logWarningInFile(scalaBotVisitor: ScalaBotVisitor, msg: String) = {
-    val date = new Date()
-    fileLogger.warn( LoggerMessage(date.toString, scalaBotVisitor, msg))
-  }
+  def logErrorInFile(msg: String,throwable: Throwable) = fileLogger.error(msg,throwable)
 
-  def logErrorInFile(scalaBotVisitor: ScalaBotVisitor, msg: String) = {
-    val date = new Date()
-    fileLogger.error(LoggerMessage(date.toString, scalaBotVisitor, msg))
-  }
+  def logDebugInFile(msg: String) = fileLogger.debug(msg)
+  def logFatalInFile(msg: String) = fileLogger.fatal(msg)
 
-  def logDebugInFile(scalaBotVisitor: ScalaBotVisitor, msg: String) = {
-    val date = new Date()
-    fileLogger.debug(LoggerMessage(date.toString, scalaBotVisitor, msg))
-  }
-
-  def logFatalInFile(scalaBotVisitor: ScalaBotVisitor, msg: String) = {
-    val date = new Date()
-    fileLogger.fatal(LoggerMessage(date.toString, scalaBotVisitor, msg))
-  }
-
-  def logSimpleInfoMsgInFile(msg: String) = {
-    val date = new Date()
-    fileLogger.info(LoggerSimpleMessage(date.toString, msg))
-  }
-
-  def logSimpleErrorMsgInFile(msg: String) = {
-    val date = new Date()
-    fileLogger.error(LoggerSimpleMessage(date.toString, msg))
-  }
-
+  // kafka
   def logSimpleInfoMsgInKafka(msg: String) = {
     val date = new Date()
     kafkaLogger.info(LoggerSimpleMessage(date.toString, msg))
@@ -63,6 +33,4 @@ object LoggerHelper {
     val date = new Date()
     kafkaLogger.error(LoggerSimpleMessage(date.toString, msg))
   }
-
-
 }
