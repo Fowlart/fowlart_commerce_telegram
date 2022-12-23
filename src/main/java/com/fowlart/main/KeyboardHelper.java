@@ -44,7 +44,7 @@ public class KeyboardHelper {
         var rowInline3 = new ArrayList<InlineKeyboardButton>();
 
         rowInline1.add(buildButton("☎️ Змінити номер телефону", "EDIT_PHONE"));
-        rowInline2.add(buildButton("\uD83D\uDCCB Змінити ФІО", "EDIT_NAME"));
+        rowInline2.add(buildButton("🚹🚺Змінити ФІО", "EDIT_NAME"));
         rowsInline.addAll(List.of(rowInline1, rowInline2, rowInline3));
         markupInline.setKeyboard(rowsInline);
         return markupInline;
@@ -54,7 +54,7 @@ public class KeyboardHelper {
         InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
         List<InlineKeyboardButton> rowInline1 = new ArrayList<>();
         rowInline1.add(buildButton("\uD83D\uDCD7 Каталог", "CATALOG"));
-        rowInline1.add(buildButton("\uD83D\uDCDD Корзина", "BUCKET"));
+        rowInline1.add(buildButton("\uD83D\uDED2 Корзина", "BUCKET"));
         rowInline1.add(buildButton("☎️ Контакти", "CONTACTS"));
 
         List<InlineKeyboardButton> rowInline2 = new ArrayList<>();
@@ -72,7 +72,7 @@ public class KeyboardHelper {
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
         List<InlineKeyboardButton> rowInline = new ArrayList<>();
         for (String groupItem : catalog.getGroupList()) {
-            rowInline.add(buildButton("➡️ "+groupItem, groupItem));
+            rowInline.add(buildButton(groupItem+"⬇️️", groupItem));
             rowsInline.add(rowInline);
             rowInline = new ArrayList<>();
         }
@@ -84,8 +84,8 @@ public class KeyboardHelper {
         InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
         List<InlineKeyboardButton> rowInline1 = new ArrayList<>();
-        rowInline1.add(buildButton("Видалити", "DISCARD_ITEM__" + itemId));
-        rowInline1.add(buildButton("Кількість", "GOODS_QTY_EDIT__" + itemId));
+        rowInline1.add(buildButton("\uD83D\uDEAE Видалити", "DISCARD_ITEM__" + itemId));
+        rowInline1.add(buildButton("\uD83E\uDDEE Кількість", "GOODS_QTY_EDIT__" + itemId));
         rowsInline.add(rowInline1);
         // Add it to the message
         markupInline.setKeyboard(rowsInline);
@@ -96,7 +96,7 @@ public class KeyboardHelper {
         InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
         List<InlineKeyboardButton> rowInline1 = new ArrayList<>();
-        rowInline1.add(buildButton("Відмінити додавання", "DISCARD_ITEM__" + itemId));
+        rowInline1.add(buildButton("\uD83D\uDEAE Відмінити додавання", "DISCARD_ITEM__" + itemId));
         rowsInline.add(rowInline1);
         // Add it to the message
         markupInline.setKeyboard(rowsInline);
@@ -108,8 +108,8 @@ public class KeyboardHelper {
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
         List<InlineKeyboardButton> rowInline1 = new ArrayList<>();
         List<InlineKeyboardButton> rowInline2 = new ArrayList<>();
-        rowInline1.add(buildButton("Очистити ❌", "DISCARD"));
-        rowInline2.add(buildButton("ЗАМОВИТИ ⏩", "SUBMIT"));
+        rowInline1.add(buildButton("Очистити \uD83D\uDEAE", "DISCARD"));
+        rowInline2.add(buildButton("ЗАМОВИТИ \uD83C\uDD97", "SUBMIT"));
 
         rowsInline.add(rowInline1);
         rowsInline.add(rowInline2);
