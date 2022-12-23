@@ -39,15 +39,15 @@ object LoggerBuilder {
 
     /** <h3>CONSOLE appender <h3> */
     val consoleAppenderBuilder = builder.newAppender("Stdout", "CONSOLE").addAttribute("target", ConsoleAppender.Target.SYSTEM_OUT)
-    consoleAppenderBuilder.add(builder.newLayout("JsonTemplateLayout").addAttribute("eventTemplateUri", "classpath:LogstashJsonEventLayoutV1.json"))
+    consoleAppenderBuilder.add(builder.newLayout("PatternLayout").addAttribute("pattern", "%d [%t] %-5level: %msg%n%throwable"))
     consoleAppenderBuilder.add(builder.newFilter("MarkerFilter", Filter.Result.DENY, Filter.Result.NEUTRAL).addAttribute("marker", "FLOW"))
     builder.add(consoleAppenderBuilder)
 
     /** <h3>FILE appender <h3> */
-    val pathToLogFile = getPropertiesFromFile(propertiesPath).getProperty("logging.file.path.tg").trim
+    val pathToLogFile = s"${getPropertiesFromFile(propertiesPath).getProperty("logging.folder.path.tg")}${java.time.LocalDate.now.toString}.txt"
     val fileAppenderBuilder = builder.newAppender("FileAppender", "File")
     fileAppenderBuilder.addAttribute("fileName", pathToLogFile)
-    fileAppenderBuilder.add(builder.newLayout("JsonTemplateLayout").addAttribute("eventTemplateUri", "classpath:LogstashJsonEventLayoutV1.json"))
+    fileAppenderBuilder.add(builder.newLayout("PatternLayout").addAttribute("pattern", "%d [%t] %-5level: %msg%n%throwable"))
     builder.add(fileAppenderBuilder)
 
     /** <h3>KAFKA appender <h3> */
@@ -65,10 +65,10 @@ object LoggerBuilder {
     kafkaAppenderBuilder.add(builder.newLayout("JsonTemplateLayout").addAttribute("eventTemplateUri","classpath:LogstashJsonEventLayoutV1.json" ))
     builder.add(kafkaAppenderBuilder)
 
-    // configure Root logger with file appender
+    // configure Root logger as FileLogger
     builder.add(builder
       .newRootLogger(Level.INFO)
-      .add(builder.newAppenderRef("Stdout")))
+      .add(builder.newAppenderRef("FileAppender")))
 
     // kafka logger
     builder.add(builder
@@ -77,13 +77,13 @@ object LoggerBuilder {
 
     // file logger
     builder.add(builder
-      .newLogger("FileLogger", Level.INFO)
+      .newLogger("FileLogger", Level.ALL)
       .add(builder.newAppenderRef("FileAppender")))
 
     Configurator.initialize(builder.build)
   }
 
-  def getFileLogger: Logger = loggerContext.getLogger("FileLogger")
+  def getFileLogger: Logger = loggerContext.getRootLogger
 
   def getKafkaLogger: Logger = loggerContext.getLogger("KafkaLogger")
 }
