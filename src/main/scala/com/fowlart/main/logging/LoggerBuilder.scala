@@ -50,40 +50,15 @@ object LoggerBuilder {
     fileAppenderBuilder.add(builder.newLayout("PatternLayout").addAttribute("pattern", "%d [%t] %-5level: %msg%n%throwable"))
     builder.add(fileAppenderBuilder)
 
-    /** <h3>KAFKA appender <h3> */
-    val kafkaServer = getPropertiesFromFile(propertiesPath).getProperty("logging.kafka.server").trim
-    val kafkaCredentials = getPropertiesFromFile(propertiesPath).getProperty("logging.kafka.sasl.jaas.config").trim
-    val kafkaAppenderBuilder = builder.newAppender("KafkaAppender", "Kafka")
-    kafkaAppenderBuilder.addAttribute("topic", "Sephora.DataPlatform.GoldenBook.VendorMaster")
-    kafkaAppenderBuilder.addComponent(builder.newProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaServer))
-    kafkaAppenderBuilder.addComponent(builder.newProperty("sasl.jaas.config", kafkaCredentials))
-    kafkaAppenderBuilder.addComponent(builder.newProperty("security.protocol", "SASL_SSL"))
-    kafkaAppenderBuilder.addComponent(builder.newProperty("sasl.mechanism", "PLAIN"))
-    kafkaAppenderBuilder.addComponent(builder.newProperty(ProducerConfig.ACKS_CONFIG, "all"))
-    kafkaAppenderBuilder.addComponent(builder.newProperty(ProducerConfig.RETRIES_CONFIG, "1"))
-    kafkaAppenderBuilder.addComponent(builder.newProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer"))
-    kafkaAppenderBuilder.add(builder.newLayout("JsonTemplateLayout").addAttribute("eventTemplateUri","classpath:LogstashJsonEventLayoutV1.json" ))
-    builder.add(kafkaAppenderBuilder)
-
     // configure Root logger as FileLogger
     builder.add(builder
       .newRootLogger(Level.INFO)
       .add(builder.newAppenderRef("FileAppender")))
 
-    // kafka logger
-    builder.add(builder
-      .newLogger("KafkaLogger", Level.INFO)
-      .add(builder.newAppenderRef("KafkaAppender")))
-
-    // file logger
-    builder.add(builder
-      .newLogger("FileLogger", Level.ALL)
-      .add(builder.newAppenderRef("FileAppender")))
-
+    
     Configurator.initialize(builder.build)
   }
 
   def getFileLogger: Logger = loggerContext.getRootLogger
-
-  def getKafkaLogger: Logger = loggerContext.getLogger("KafkaLogger")
+  
 }

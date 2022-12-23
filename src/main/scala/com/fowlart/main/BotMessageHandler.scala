@@ -14,8 +14,6 @@ object BotMessageHandler {
 
   private val scalaHelper: ScalaHelper = new ScalaHelper
 
-  private val logger = LoggerBuilder.getKafkaLogger
-
   def handleMessageOrCommand(
                               scalaBotVisitor: ScalaBotVisitor,
                               msg: String,

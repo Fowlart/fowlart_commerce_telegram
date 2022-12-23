@@ -17,7 +17,7 @@ object BotVisitorToScalaBotVisitorConverter {
       botVisitor.getUserId,
       botVisitor.getBucket.asScala.toSet)
   }
-  
+
   def convertToJavaBotVisitor(scalaBotVisitor: ScalaBotVisitor): BotVisitor = {
     val botVisitor = new BotVisitor(scalaBotVisitor.user,scalaBotVisitor.user.getId)
     botVisitor.setBucket(scalaBotVisitor.bucket.asJava)
