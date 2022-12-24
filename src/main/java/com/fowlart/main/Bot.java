@@ -117,6 +117,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         String mbItemId = null;
         if (callBackButtonArr.length > 1) mbItemId = callBackButtonArr[1];
 
+        // todo: add logging HERE
         var answer = switch (callBackButton) {
             case DISCARD_ITEM -> handleItemRemove(visitor, mbItemId);
             case GOODS_QTY_EDIT -> handleGoodsQtyEdit(visitor, mbItemId);
