@@ -18,12 +18,16 @@ public class GmailSender {
     private final String gmailAccName;
     private final String gmailAccEmailPassword;
 
+    private final String emailCC;
+
     public GmailSender(
             @Value("${app.bot.email.gmail.user}") String gmailAccName,
-            @Value("${app.bot.email.gmail.password}") String gmailAccEmailPassword) {
+            @Value("${app.bot.email.gmail.password}") String gmailAccEmailPassword,
+            @Value("${app.bot.email.recipients}") String emailCC) {
 
         this.gmailAccName = gmailAccName;
         this.gmailAccEmailPassword = gmailAccEmailPassword;
+        this.emailCC = emailCC;
     }
 
     public void sendOrderMessage(String text, File csv) throws MessagingException, IOException {
@@ -47,7 +51,7 @@ public class GmailSender {
 
         Message message = new MimeMessage(session);
         message.setFrom(new InternetAddress(gmailAccName));
-        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(gmailAccName));
+        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(emailCC));
         message.setSubject("Замовлення!");
 
         MimeBodyPart mimeBodyPart = new MimeBodyPart();
