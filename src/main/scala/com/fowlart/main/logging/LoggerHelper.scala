@@ -9,9 +9,9 @@ import java.util.Date
 
 object LoggerHelper {
 
-  val fileLogger: Logger = LoggerBuilder.getFileLogger
+  private val fileLogger: Logger = LoggerBuilder.getFileLogger
 
-  def logInfoInFile(msg: String): Unit = fileLogger.info(msg)
+  def logInfoInFile(msg: String) = fileLogger.info(msg)
   def logWarningInFile(msg: String) = fileLogger.warn(msg)
 
   def logErrorInFile(msg: String) = fileLogger.error(msg)

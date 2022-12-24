@@ -111,7 +111,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         Long userId = callbackQuery.getFrom().getId();
         BotVisitor visitor = this.botVisitorService.getBotVisitorByUserId(userId.toString());
         var scalaBotVisitor = BotVisitorToScalaBotVisitorConverter.convertBotVisitorToScalaBotVisitor(visitor);
-        LoggerHelper.logInfoInFile("Visitor pushed the button: "+scalaBotVisitor);
+        LoggerHelper.logInfoInFile("handleInlineButtonClicks method, visitor: "+scalaBotVisitor);
         var callBackButtonArr = callbackQuery.getData().split("__");
         String callBackButton = callBackButtonArr[0];
         String mbItemId = null;
@@ -164,6 +164,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     }
 
     private SendMessage handleBucket(BotVisitor visitor) throws TelegramApiException {
+        LoggerHelper.logInfoInFile("handleBucket method, visitorId "+visitor.getUserId());
         if (visitor.getBucket().isEmpty())
             return scalaHelper.getEmptyBucketMessage(keyboardHelper, visitor.getUser().getId());
         visitor.setNameEditingMode(false);
@@ -183,6 +184,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     }
 
     private SendMessage handleMyDataEditing(BotVisitor visitor) {
+        LoggerHelper.logInfoInFile("handleMyDataEditing method, visitorId "+visitor.getUserId());
         visitor.setNameEditingMode(false);
         return scalaHelper.buildSimpleReplyMessage(
                 visitor.getUser().getId(),
@@ -191,6 +193,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     }
 
     private SendMessage handleEditPhone(BotVisitor visitor) {
+        LoggerHelper.logInfoInFile("handleEditPhone method, visitorId "+visitor.getUserId());
         visitor.setPhoneNumberFillingMode(true);
         visitor.setNameEditingMode(false);
         return scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(),
@@ -199,6 +202,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     }
 
     private SendMessage handleEditPhoneExitPushed(BotVisitor visitor) {
+        LoggerHelper.logInfoInFile("handleEditPhoneExitPushed method, visitorId "+visitor.getUserId());
         visitor.setPhoneNumberFillingMode(false);
         return scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(),
                 scalaHelper.getPhoneEditingText(visitor.getUser().getId()),
@@ -206,6 +210,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     }
 
     private SendMessage handleEditName(BotVisitor visitor) {
+        LoggerHelper.logInfoInFile("handleEditName method, visitorId "+visitor.getUserId());
         visitor.setNameEditingMode(true);
         return scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(),
                 scalaHelper.getNameEditingText(visitor.getUser().getId()),
@@ -213,6 +218,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     }
 
     private SendMessage handleGoodsQtyEdit(BotVisitor visitor, String itemId) throws TelegramApiException {
+        LoggerHelper.logInfoInFile("handleGoodsQtyEdit method, visitorId "+visitor.getUserId());
         visitor.setNameEditingMode(false);
         var itemToEditQty = visitor.getBucket().stream().filter(it -> itemId.equals(it.id())).findFirst();
         visitor.setItemToEditQty(itemToEditQty.orElse(null));
@@ -221,6 +227,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     }
 
     private SendMessage handleItemRemove(BotVisitor visitor, String itemId) {
+        LoggerHelper.logInfoInFile("handleItemRemove method, visitorId "+visitor.getUserId());
         visitor.setNameEditingMode(false);
         var newBucket = visitor.getBucket().stream().filter(it -> !itemId.equals(it.id())).collect(Collectors.toSet());
         visitor.setItemToEditQty(null);
@@ -229,23 +236,27 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     }
 
     private SendMessage handleCatalog(BotVisitor visitor) {
+        LoggerHelper.logInfoInFile("handleCatalog method, visitorId "+visitor.getUserId());
         visitor.setNameEditingMode(false);
         return scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(), "\uD83D\uDD0E Обирай з товарних груп:",
                 keyboardHelper.buildCatalogItemsMenu());
     }
 
     private SendMessage handleContacts(BotVisitor visitor) {
+        LoggerHelper.logInfoInFile("handleContacts method, visitorId "+visitor.getUserId());
         visitor.setNameEditingMode(false);
         return scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(), scalaHelper.getContactsMsg(), keyboardHelper.buildMainMenuReply());
     }
 
     private SendMessage handleMainScreen(BotVisitor visitor) {
+        LoggerHelper.logInfoInFile("handleMainScreen method, visitorId "+visitor.getUserId());
         var msg = scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(), scalaHelper.getMainMenuText(visitor.getName()), keyboardHelper.buildMainMenuReply());
         visitor.setNameEditingMode(false);
         return msg;
     }
 
     private SendMessage handleDiscard(BotVisitor visitor) {
+        LoggerHelper.logInfoInFile("handleDiscard method, visitorId "+visitor.getUserId());
         visitor.setBucket(new HashSet<>());
         visitor.setNameEditingMode(false);
 
@@ -255,6 +266,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
 
     private SendMessage handleOrderSubmit(BotVisitor visitor) {
 
+        LoggerHelper.logInfoInFile("handleOrderSubmit method, visitorId "+visitor.getUserId());
         var order = OrderHandler.handleOrder(BotVisitorToScalaBotVisitorConverter.convertBotVisitorToScalaBotVisitor(visitor));
 
         var orderSubmitReply = scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(), "Замовлення прийнято!", keyboardHelper.buildMainMenuReply());
@@ -271,7 +283,6 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         } else {
             visitor.setOrders(new LinkedList<>());
         }
-        LoggerHelper.logInfoInFile("Saving order: " + order);
         var orderFileName = ("/" + order.userName() + "_" + order.orderId() + "_" + order.date() + ".csv")
                 .replaceAll(" ", "_")
                 .replaceAll("-", "_");
@@ -291,10 +302,12 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
 
     private void displayEditItemQtyResponse(ScalaHelper scalaHelper,
                                             BotVisitor visitor) throws TelegramApiException {
+
         if (Objects.isNull(visitor.getItemToEditQty())) {
             var noSuchItemInBasket = scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(), "Такого товару вже немає у корзині.", keyboardHelper.buildMainMenuReply());
             this.sendApiMethod(noSuchItemInBasket);
         }
+
         String itemId = visitor.getItemToEditQty().id();
         final String finalItemId = itemId;
         var item = visitor.getBucket().stream().filter(i -> finalItemId.equals(i.id())).findFirst().get();
@@ -319,7 +332,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             Long chatId = update.getMessage().getChatId();
             BotVisitor botVisitor = this.botVisitorService.getBotVisitorByUserId(userId);
             var scalaBotVisitor = BotVisitorToScalaBotVisitorConverter.convertBotVisitorToScalaBotVisitor(botVisitor);
-            LoggerHelper.logInfoInFile("Entered text by visitor: "+scalaBotVisitor);
+            LoggerHelper.logInfoInFile("handleInputMsgOrCommand begin, visitor: "+scalaBotVisitor);
 
             var response = BotMessageHandler.handleMessageOrCommand(
                     scalaBotVisitor,
@@ -344,6 +357,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                 botVisitorService.saveBotVisitor(updatedBotVisitor);
             }
 
+            LoggerHelper.logInfoInFile("handleInputMsgOrCommand end, visitor to be saved: "+scalaBotVisitor);
             var updatedBotVisitor = BotVisitorToScalaBotVisitorConverter.convertToJavaBotVisitor(response.scalaBotVisitor());
             botVisitorService.saveBotVisitor(updatedBotVisitor);
 
