@@ -284,7 +284,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         var orderFileName = ("/" + order.userName() + "_" + order.orderId() + "_" + order.date() + ".csv")
                 .replaceAll(" ", "_")
                 .replaceAll("-", "_");
-        // send email:
+        // send email, save order on the disk
         try {
             var savedCsv = OrderHandler.saveOrderAsCsv(order, outputForOrderPath + orderFileName);
             gmailSender.sendOrderMessage(scalaHelper.getEmailOrderText(order), savedCsv);
