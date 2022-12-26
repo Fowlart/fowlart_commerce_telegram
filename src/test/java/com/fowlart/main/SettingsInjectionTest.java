@@ -10,9 +10,6 @@ import java.util.Objects;
 
 @SpringBootTest
 class SettingsInjectionTest {
-
-	private static final Logger log = LoggerFactory.getLogger(SettingsInjectionTest.class);
-
 	@Value("${app.bot.userName}")
 	private String userName;
 

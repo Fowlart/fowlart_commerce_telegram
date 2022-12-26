@@ -4,14 +4,12 @@ import com.fowlart.main.catalog_fetching.ExcelFetcher;
 import com.fowlart.main.email.GmailSender;
 import com.fowlart.main.in_mem_catalog.Catalog;
 import com.fowlart.main.in_mem_catalog.Item;
-import com.fowlart.main.logging.LoggerBuilder;
 import com.fowlart.main.logging.LoggerHelper;
 import com.fowlart.main.messages.ResponseWithPhotoMessageAndScalaBotVisitor;
 import com.fowlart.main.messages.ResponseWithSendMessageAndScalaBotVisitor;
 import com.fowlart.main.state.BotVisitor;
 import com.fowlart.main.state.BotVisitorService;
 import com.fowlart.main.state.OrderService;
-import org.apache.logging.log4j.spi.ExtendedLogger;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -103,7 +101,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
 
     @Override
     public void onRegister() {
-        this.catalog.setGroupList(this.excelFetcher.getProductGroupsFromSheet());
+        this.catalog.setGroupList(this.excelFetcher.getProductGroupsFromPrice());
         this.catalog.setItemList(this.excelFetcher.getCatalogItems());
     }
 

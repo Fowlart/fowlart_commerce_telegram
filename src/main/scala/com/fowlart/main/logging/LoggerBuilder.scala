@@ -50,10 +50,11 @@ object LoggerBuilder {
     fileAppenderBuilder.add(builder.newLayout("PatternLayout").addAttribute("pattern", "%d [%t] %-5level: %msg%n%throwable"))
     builder.add(fileAppenderBuilder)
 
-    // configure Root logger as FileLogger
+    //configure Root logger as FileLogger
     builder.add(builder
       .newRootLogger(Level.INFO)
-      .add(builder.newAppenderRef("FileAppender")))
+      //switch loggers HERE
+      .add(builder.newAppenderRef("Stdout")))
 
     
     Configurator.initialize(builder.build)

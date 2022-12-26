@@ -25,6 +25,8 @@ object BotMessageHandler {
 
     val tuple = (scalaBotVisitor,msg)
 
+    LoggerHelper.logInfoInFile(s"Entered BotMessageHandler. UserId $chatId, threadId ${Thread.currentThread.getId}")
+
     tuple match {
 
       case (ScalaBotVisitor(_,true,_, false, _, _, _, _), message: String) =>
@@ -66,7 +68,7 @@ object BotMessageHandler {
                                           inputForImgPath: String,
                                           keyboardHelper: KeyboardHelper) = {
 
-    LoggerHelper.logInfoInFile(s"handleUserAddedItemToBasket method, userID: $userId threadId: ${Thread.currentThread().getId}")
+    LoggerHelper.logInfoInFile(s"handleUserAddedItemToBasket method, userID: $userId}")
     val itemId = textFromUser.replaceAll("/", "")
     val matchedItem = catalog.getItemList.asScala.find((it: Item) => it.id.equalsIgnoreCase(itemId))
 

@@ -3,8 +3,6 @@ package com.fowlart.main.catalog_fetching;
 import com.fowlart.main.in_mem_catalog.Item;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -12,6 +10,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Component
 public class ExcelFetcher {
@@ -19,8 +20,6 @@ public class ExcelFetcher {
     public ExcelFetcher(@Value("${app.bot.catalog.path}") String pathToCatalog) {
         this.PATH_TO_CATALOG = pathToCatalog;
     }
-
-    private static final Logger log = LoggerFactory.getLogger(ExcelFetcher.class);
 
     private static final String START_PARSING_PHRASE = "Продукция";
     private String PATH_TO_CATALOG;
@@ -36,9 +35,9 @@ public class ExcelFetcher {
         int id = 0;
 
         try {
-            List<String> groups = getProductGroupsFromSheet();
+            List<String> groups = getProductGroupsFromPrice();
             for (String group : groups) {
-                List<String> items = getGoodsFromProductGroup(group);
+                List<String> items = getUnparsedGoodsFromProductGroup(group);
                 for (String item : items) {
                     id++;
                     var itemName = item.split("\\|")[0];
@@ -55,67 +54,60 @@ public class ExcelFetcher {
         }
     }
 
-    public List<String> getGoodsFromProductGroup(String productGroup) throws IOException {
-
+    private Integer rowNumberOfGroup(String productGroup) throws IOException {
         Sheet sheet = getSheet();
-        List<String> items = new ArrayList<>();
-        List<String> groupItems = this.getProductGroupsFromSheet();
-        int indexOfCurrentGroupItem = groupItems.indexOf(productGroup);
-
-        String nextGroup;
-        int nextElementIndex = indexOfCurrentGroupItem + 1;
-        if (nextElementIndex <= groupItems.size() - 1) {
-            nextGroup = groupItems.get(nextElementIndex);
-        } else {
-            nextGroup = "EOF";
-        }
-        boolean shouldCollect = false;
-        List<String> itemWithPrice = new ArrayList<>();
-        int rowCount = 0;
-
         for (Row row : sheet) {
             for (Cell cell : row) {
-                rowCount++;
-                // do nothing
-                if (cell.getCellType() == CellType.STRING || cell.getCellType() == CellType.NUMERIC) {
-
-                    String currentCellVal = "";
-                    double price = 0d;
-
-                    if (cell.getCellType() == CellType.STRING) {
-                        currentCellVal = cell.getRichStringCellValue().toString().trim();
-                    } else {
-                        price = cell.getNumericCellValue();
-                    }
-
-                    if (shouldCollect) {
-                        if (itemWithPrice.size() == 2) {
-                            items.add(itemWithPrice.stream().reduce((itemName, p) -> itemName + "|" + p).orElse(""));
-                            itemWithPrice = new ArrayList<>();
-                        } else {
-                            if (!currentCellVal.equals("шт") && !currentCellVal.equals("уп.") && !currentCellVal.equals(""))
-                                itemWithPrice.add(currentCellVal);
-                            if (price != 0d) itemWithPrice.add(Double.toString(price));
-                        }
-                    }
-
-                    if (currentCellVal.equals(productGroup)) {
-                        shouldCollect = true;
-                    }
-
-                    if (currentCellVal.equals(nextGroup) || rowCount == sheet.getLastRowNum()) {
-                        return items;
-                    }
+                var cellType = cell.getCellType();
+                if (cellType.equals(CellType.STRING) && productGroup.trim().equals(cell.getRichStringCellValue().getString().trim())) {
+                    return cell.getRow().getRowNum();
                 }
             }
         }
+        return 0;
+    }
 
-        items.remove(null);
-        items.remove(START_PARSING_PHRASE);
+
+    public List<String> getUnparsedGoodsFromProductGroup(String productGroup) throws IOException {
+
+        List<String> productGroupsFromPrice = this.getProductGroupsFromPrice();
+        String trimmedPG = productGroup.trim();
+        List<String> items = new ArrayList<>();
+
+        if (!productGroupsFromPrice.contains(trimmedPG)) {
+            return items;
+        }
+
+        Sheet sheet = getSheet();
+
+        int rowNumberFromWhereWeShouldCollectItems = rowNumberOfGroup(trimmedPG);
+
+        int indexOfCurrentGroupItem = productGroupsFromPrice.indexOf(trimmedPG);
+        String nextGroup;
+        int nextGroupIndex = indexOfCurrentGroupItem + 1;
+        if (nextGroupIndex <= productGroupsFromPrice.size() - 1) {
+            nextGroup = productGroupsFromPrice.get(nextGroupIndex);
+        } else {
+            nextGroup = "EOF";
+        }
+
+        int rowNumberWhereWeShouldStop = sheet.getLastRowNum()+1;
+
+        if (!"EOF".equals(nextGroup)) {
+            rowNumberWhereWeShouldStop = rowNumberOfGroup(nextGroup);
+        }
+
+        if (rowNumberWhereWeShouldStop>=rowNumberFromWhereWeShouldCollectItems) {
+           items = IntStream.range(rowNumberFromWhereWeShouldCollectItems+1,rowNumberWhereWeShouldStop)
+                    .mapToObj(sheet::getRow)
+                    .map(row->row.getCell(0).getRichStringCellValue().getString().trim()+"|"+row.getCell(1).getNumericCellValue())
+                    .collect(Collectors.toList());
+        }
+
         return items;
     }
 
-    public List<String> getProductGroupsFromSheet() {
+    public List<String> getProductGroupsFromPrice() {
         Sheet sheet;
         try {
             sheet = getSheet();
@@ -134,13 +126,12 @@ public class ExcelFetcher {
 
                     case BLANK -> {
                         resetIndex++;
-                        if (resetIndex == 3) {
-                            groups.add(mayBeGroup);
+                        if (resetIndex == 3 && Objects.nonNull(mayBeGroup)) {
+                            groups.add(mayBeGroup.trim());
                             resetIndex = 0;
                         }
                     }
-                    default -> {
-                    }
+                    default -> {}
                 }
             }
         }
