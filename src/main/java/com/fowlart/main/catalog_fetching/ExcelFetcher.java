@@ -17,8 +17,14 @@ import java.util.stream.IntStream;
 @Component
 public class ExcelFetcher {
 
+    public static final String DEFAULT_CATALOG_PATH = "src/main/resources/catalog/catalog.xls";
     public ExcelFetcher(@Value("${app.bot.catalog.path}") String pathToCatalog) {
-        this.PATH_TO_CATALOG = pathToCatalog;
+        if (pathToCatalog.isEmpty()) {
+            this.PATH_TO_CATALOG = DEFAULT_CATALOG_PATH;
+        }
+        else {
+            this.PATH_TO_CATALOG = pathToCatalog;
+        }
     }
 
     private static final String START_PARSING_PHRASE = "Продукция";
