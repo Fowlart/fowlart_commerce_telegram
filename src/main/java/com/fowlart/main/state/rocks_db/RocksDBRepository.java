@@ -5,6 +5,7 @@ import org.rocksdb.RocksDB;
 import org.rocksdb.RocksDBException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.SerializationUtils;
 
@@ -20,9 +21,11 @@ public class RocksDBRepository implements KVRepository<String, Object> {
     private static final Logger log = LoggerFactory.getLogger(RocksDBRepository.class);
     private final static String FILE_NAME = "rocks-db";
 
+    @Value("${app.bot.db.path}")
+    private String dbPath;
 
-    File baseDir;
-    RocksDB db;
+    private File baseDir;
+    private RocksDB db;
 
     @PostConstruct
         // execute after the application starts.
@@ -30,7 +33,7 @@ public class RocksDBRepository implements KVRepository<String, Object> {
         RocksDB.loadLibrary();
         final Options options = new Options();
         options.setCreateIfMissing(true);
-        baseDir = new File("src/main/resources/", FILE_NAME);
+        baseDir = new File(dbPath);
         try {
             Files.createDirectories(baseDir.getParentFile().toPath());
             Files.createDirectories(baseDir.getAbsoluteFile().toPath());

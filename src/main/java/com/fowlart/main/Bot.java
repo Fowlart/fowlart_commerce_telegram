@@ -248,7 +248,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
 
     private SendMessage handleMainScreen(BotVisitor visitor) {
         LoggerHelper.logInfoInFile("handleMainScreen method, visitorId "+visitor.getUserId());
-        var msg = scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(), scalaHelper.getMainMenuText(visitor.getName()), keyboardHelper.buildMainMenuReply());
+        var msg = scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(), scalaHelper.getMainMenuText(visitor), keyboardHelper.buildMainMenuReply());
         visitor.setNameEditingMode(false);
         return msg;
     }
@@ -259,7 +259,8 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         visitor.setNameEditingMode(false);
 
         return scalaHelper
-                .buildSimpleReplyMessage(visitor.getUser().getId(), scalaHelper.getMainMenuText(visitor.getName()), keyboardHelper.buildMainMenuReply());
+                .buildSimpleReplyMessage(visitor.getUser().getId(), "Корзину очищено!",
+                        keyboardHelper.buildMainMenuReply());
     }
 
     private SendMessage handleOrderSubmit(BotVisitor visitor) {

@@ -50,7 +50,7 @@ object BotMessageHandler {
       // default
       case (visitor, _) =>
         LoggerHelper.logInfoInFile(s"some not recognized message from visitor: ${visitor.userId}")
-        val sendMessage = SendMessage.builder.chatId(chatId).text(scalaHelper.getMainMenuText(visitor.name)).replyMarkup(keyboardHelper.buildMainMenuReply).build
+        val sendMessage = SendMessage.builder.chatId(chatId).text(scalaHelper.getMainMenuText(visitor)).replyMarkup(keyboardHelper.buildMainMenuReply).build
         ResponseWithSendMessageAndScalaBotVisitor(sendMessage, visitor)
     }
   }

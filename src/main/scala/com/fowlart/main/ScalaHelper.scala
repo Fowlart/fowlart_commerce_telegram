@@ -194,7 +194,13 @@ class ScalaHelper {
         |$phoneNumber
         |""".stripMargin
   }
-  def getMainMenuText(name: String): String ={
+
+  def getMainMenuText(botVisitor: BotVisitor): String = {
+    getMainMenuText(BotVisitorToScalaBotVisitorConverter.convertBotVisitorToScalaBotVisitor(botVisitor))
+  }
+  
+  def getMainMenuText(botVisitor: ScalaBotVisitor): String ={
+    val name = if (botVisitor.name!=null) botVisitor.name else botVisitor.user.getFirstName
     s"""|Привіт, $name!
         |
         |Це бот для замовлення товарів, натискай кнопки для навігації по меню.
