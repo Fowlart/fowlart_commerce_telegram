@@ -54,7 +54,7 @@ object LoggerBuilder {
     builder.add(builder
       .newRootLogger(Level.INFO)
       //switch loggers HERE
-      .add(builder.newAppenderRef("FileAppender")))
+      .add(builder.newAppenderRef("Stdout")))
 
     
     Configurator.initialize(builder.build)
