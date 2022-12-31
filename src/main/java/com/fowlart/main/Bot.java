@@ -36,7 +36,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     public static final String EDIT_PHONE_EXIT = "EDIT_PHONE_EXIT";
     public static final String EDIT_NAME = "EDIT_NAME";
     public static final String DISCARD_ITEM = "DISCARD_ITEM";
-    public static final String ITEM_NOT_FOUND_IMG_PATH = "src/main/resources/no_image_available.png";
+    public static final String ITEM_NOT_FOUND_IMG_FILE_NAME = "/no_image_available.png";
     private static final String CATALOG = "CATALOG";
     private static final String MY_DATA = "MYDATA";
     private static final String GOODS_QTY_EDIT = "GOODS_QTY_EDIT";
@@ -171,8 +171,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
 
             var itemMessage = scalaHelper.getItemMessageWithPhotoInBucket(
                     visitor.getUser().getId(),
-                    item,
-                    ITEM_NOT_FOUND_IMG_PATH,
+                    item, inputForImgPath+"/"+ITEM_NOT_FOUND_IMG_FILE_NAME,
                     inputForImgPath,
                     keyboardHelper);
 
@@ -287,7 +286,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                 .replaceAll("-", "_");
         // send email, save order on the disk
         try {
-            var savedCsv = OrderHandler.saveOrderAsCsv(order, outputForOrderPath + orderFileName);
+            var savedCsv = OrderHandler.saveOrderAsCsv(order, outputForOrderPath+ "/" + orderFileName);
             gmailSender.sendOrderMessage(scalaHelper.getEmailOrderText(order), savedCsv);
         } catch (MessagingException | IOException e) {
             LoggerHelper.logErrorInFile(e.getMessage(),e);
@@ -339,7 +338,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                     keyboardHelper,
                     chatId,
                     catalog,
-                    ITEM_NOT_FOUND_IMG_PATH,
+                    inputForImgPath+ITEM_NOT_FOUND_IMG_FILE_NAME,
                     inputForImgPath);
 
             if (response instanceof ResponseWithSendMessageAndScalaBotVisitor castedResponse) {
