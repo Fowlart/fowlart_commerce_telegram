@@ -15,6 +15,9 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 public class BotCommerceApplication {
 
     public static void main(String[] args) {
+        // todo: refactor to switch loggers according to the chosen profile
+        var activeProfile = System.getProperty("spring.profiles.active");
+        System.out.println("ACTIVE PROFILE: "+activeProfile);
         // this line somehow switch-on all logs
         LoggerBuilder.getLogger();
         System.setProperty("org.springframework.boot.logging.LoggingSystem", "none");

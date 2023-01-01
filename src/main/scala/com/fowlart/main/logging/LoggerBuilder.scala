@@ -40,9 +40,15 @@ object LoggerBuilder {
     builder.add(consoleAppenderBuilder)
 
     /** <h3>FILE appender <h3> */
-    val pathToLogFile = s"/logs/${java.time.LocalDate.now.toString}.txt"
-    val fileAppenderBuilder = builder.newAppender("FileAppender", "File")
-    fileAppenderBuilder.addAttribute("fileName", pathToLogFile)
+    val filePattern = "logs/%d{MM-dd-yyyy}.log.gz"
+
+    val fileAppenderBuilder = builder
+      .newAppender("FileAppender", "RollingFile")
+      fileAppenderBuilder.addAttribute("filePattern",filePattern)
+    fileAppenderBuilder.addAttribute("ignoreExceptions","false")
+
+    fileAppenderBuilder.addComponent(builder.newComponent("TimeBasedTriggeringPolicy"))
+
     fileAppenderBuilder.add(
       builder
         .newLayout("PatternLayout")
@@ -60,5 +66,4 @@ object LoggerBuilder {
   }
 
   def getLogger: Logger = loggerContext.getRootLogger
-
 }
