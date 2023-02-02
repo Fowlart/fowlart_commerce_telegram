@@ -1,5 +1,5 @@
 #BUILDING STAGE
-FROM maven:3.5-jdk-8 as BUILD
+FROM maven:3.8.6-amazoncorretto-17 as BUILD
 #ADD repository.tar.gz /usr/share/maven/ref/
 COPY src /usr/src/app
 COPY pom.xml /usr/src/app
@@ -7,7 +7,7 @@ WORKDIR /usr/src/app
 RUN mvn package -f pom.xml
 
 # USING PREVIOUS STAGE
-FROM openjdk:8-jre
+FROM openjdk:17
 EXPOSE 8080 5005
 COPY --from=BUILD /usr/src/app/target /opt/target
 WORKDIR /opt/target
