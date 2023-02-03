@@ -8,9 +8,8 @@
         <version>2.6.11</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>com.fowlart</groupId>
-    <artifactId>FowlartCommerce</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <artifactId>app</artifactId>
+    <version>1</version>
     <name>FowlartCommerce</name>
     <description>Telegram BOT</description>
     <properties>
@@ -131,15 +130,23 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.6.11</version>
                 <configuration>
-                    <source>16</source>
-                    <target>16</target>
+                    <mainClass>com.fowlart.main.BotCommerceApplication</mainClass>
                 </configuration>
             </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.0</version>
+                    <configuration>
+                        <source>16</source>
+                        <target>16</target>
+                        <includes>
+                            <include>./src</include>
+                        </includes>
+                    </configuration>
+                </plugin>
 
             <!-- Scala compiler -->
             <plugin>
@@ -152,13 +159,6 @@
                         <phase>process-resources</phase>
                         <goals>
                             <goal>compile</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>scala-test-compile</id>
-                        <phase>process-test-resources</phase>
-                        <goals>
-                            <goal>testCompile</goal>
                         </goals>
                     </execution>
                 </executions>
