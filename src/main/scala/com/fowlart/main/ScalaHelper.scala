@@ -99,7 +99,7 @@ class ScalaHelper {
 
   def getEditItemQtyMsg(item: Item): String =
     s"""
-       |Введіть кількість товару <b>цілим</b> 0️⃣1️⃣2️⃣3️⃣ позитивним числом:
+       |Введіть кількість товару <b>цілим</b> 1️⃣-9️⃣ позитивним числом:
        |
        |${item.toString3}
        |""".stripMargin
@@ -107,7 +107,7 @@ class ScalaHelper {
   def getEmptyBucketMessage(keyboardHelper: KeyboardHelper, userId: Long): SendMessage = {
 
     SendMessage.builder.chatId(userId)
-      .text( "\uD83D\uDDD1[Корзина порожня]\uD83D\uDDD1")
+      .text( "Корзина порожня \uD83D\uDDD1. Додайте товар.")
       .replyMarkup(keyboardHelper.buildMainMenuReply()).build
   }
 
