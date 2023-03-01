@@ -19,6 +19,6 @@ public class StatisticController {
     @GetMapping("/all-visitors")
     public String getExampleData() {
         var visitors = botVisitorService.getAllVisitors();
-        return visitors.stream().map(BotVisitor::toString).reduce((s1,s2)->s1+"\n"+s2).orElse("None");
+        return visitors.stream().map(BotVisitor::toString).reduce((s1,s2)->s1+"</br>"+s2).orElse("None");
     }
 }
