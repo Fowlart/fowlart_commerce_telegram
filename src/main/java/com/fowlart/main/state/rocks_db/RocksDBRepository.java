@@ -3,6 +3,7 @@ package com.fowlart.main.state.rocks_db;
 import org.rocksdb.Options;
 import org.rocksdb.RocksDB;
 import org.rocksdb.RocksDBException;
+import org.rocksdb.RocksIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,7 +20,6 @@ import java.util.Optional;
 public class RocksDBRepository implements KVRepository<String, Object> {
 
     private static final Logger log = LoggerFactory.getLogger(RocksDBRepository.class);
-    private final static String FILE_NAME = "rocks-db";
 
     @Value("${app.bot.db.path}")
     private String dbPath;
@@ -42,6 +42,10 @@ public class RocksDBRepository implements KVRepository<String, Object> {
         } catch (IOException | RocksDBException e) {
             log.error("Error initializng RocksDB. Exception: '{}', message: '{}'", e.getCause(), e.getMessage(), e);
         }
+    }
+
+    public RocksIterator getIterator(){
+       return db.newIterator();
     }
 
     @Override

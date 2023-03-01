@@ -5,14 +5,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.User;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Component
 public class BotVisitorService {
 
-    @Autowired
-    private RocksDBRepository rocksDBRepository;
-    
+    private final RocksDBRepository rocksDBRepository;
+
+    public BotVisitorService(RocksDBRepository rocksDBRepository) {
+        this.rocksDBRepository = rocksDBRepository;
+    }
+
     public boolean saveBotVisitor(BotVisitor botVisitor) {
        return rocksDBRepository.save(botVisitor.getUserId(),botVisitor);
     }
@@ -20,6 +25,19 @@ public class BotVisitorService {
     public BotVisitor getBotVisitorByUserId(String id) {
         Optional<Object> botVisitor = rocksDBRepository.find(id);
         return (BotVisitor) botVisitor.orElse(null);
+    }
+
+    public List<BotVisitor> getAllVisitors(){
+        var res = new ArrayList<BotVisitor>();
+        var rocksIterator = rocksDBRepository.getIterator();
+        for (rocksIterator.seekToFirst(); rocksIterator.isValid(); rocksIterator.next()) {
+            var key = new String(rocksIterator.key());
+            var mbVisitor = rocksDBRepository.find(key);
+            if (mbVisitor.isPresent() &&(mbVisitor.get() instanceof BotVisitor)) {
+                res.add((BotVisitor)mbVisitor.get());
+            }
+        }
+        return res;
     }
 
     public BotVisitor getOrCreateVisitor(User user) {

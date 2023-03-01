@@ -1,5 +1,6 @@
 package com.fowlart.main.sftp;
 
+import com.fowlart.main.logging.LoggerHelper;
 import org.apache.sshd.common.file.virtualfs.VirtualFileSystemFactory;
 import org.apache.sshd.server.SshServer;
 import org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider;
@@ -22,7 +23,7 @@ public class MySftpServer {
 
     public MySftpServer( @Value("${app.sftp.login}") String login,
                          @Value("${app.sftp.password}") String password,
-                         @Value("${app.sftp.ser}") String path) {
+                         @Value("${app.sftp.folder}") String path) {
 
         this.login = login;
         this.path = path;
@@ -38,14 +39,14 @@ public class MySftpServer {
         SshServer sshd = SshServer.setUpDefaultServer();
 
         VirtualFileSystemFactory fileSystemFactory = new VirtualFileSystemFactory();
-        fileSystemFactory.setDefaultHomeDir(Path.of("/dp_transfer"));
+        fileSystemFactory.setDefaultHomeDir(Path.of(path));
         sshd.setFileSystemFactory(fileSystemFactory);
 
         sshd.setPort(2222);
         sshd.setKeyPairProvider(new SimpleGeneratorHostKeyProvider(new File(path+"/"+"sftp.ser")));
         sshd.setSubsystemFactories(Collections.singletonList(new SftpSubsystemFactory()));
-        sshd.setPasswordAuthenticator((username, password1, session) -> username.equals(login) && password1.equals(password));
+        sshd.setPasswordAuthenticator((username, password, session) -> username.equals(login) && password.equals(this.password));
         sshd.start();
-        System.out.println("SFTP server started");
+        LoggerHelper.logInfoInFile("SFTP server started");
     }
 }

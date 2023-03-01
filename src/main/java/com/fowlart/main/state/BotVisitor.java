@@ -107,8 +107,12 @@ public class BotVisitor implements Serializable {
     @Override
     public String toString() {
         return "BotVisitor{" +
-                "user=" + user +
+                "phoneNumber='" + phoneNumber + '\'' +
+                ", name='" + name + '\'' +
+                ", user=" + user +
                 ", userId=" + userId +
+                ", bucket=" + bucket +
+                ", orders=" + orders +
                 '}';
     }
 }
