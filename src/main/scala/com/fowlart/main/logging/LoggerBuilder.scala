@@ -51,7 +51,7 @@ object LoggerBuilder {
 
     fileAppenderBuilder.add(
       builder
-        .newLayout("PatternLayout")
+          .newLayout("PatternLayout")
         .addAttribute("pattern", "%d [%t] %-5level: %msg%n%throwable")
     )
     builder.add(fileAppenderBuilder)
