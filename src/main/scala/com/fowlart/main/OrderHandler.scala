@@ -30,12 +30,12 @@ object OrderHandler {
   def saveOrderAsCsv(order: Order, path: String): File = {
 
     val header =
-      s"userId,userName,userPhoneNumber,date,itemId,itemGroup,itemName,qty"
+      s"userId;userName;userPhoneNumber;date;itemId;itemGroup;itemName;qty"
 
     val lines: List[String] = header +: order.orderBucket.toList
       .map(item =>
-        s"${order.userId},${order.userName},${order.userPhoneNumber},${order.date},${item
-          .id()},${item.group()},${item.name()},${if (item.qty() == null) 0
+        s"${order.userId};${order.userName};${order.userPhoneNumber};${order.date};${item
+          .id()};${item.group()};${item.name()};${if (item.qty() == null) 0
         else item.qty()}"
       )
       .map(str => new String(str.getBytes(), "UTF-8"))

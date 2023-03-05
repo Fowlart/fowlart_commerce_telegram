@@ -19,7 +19,7 @@ public class BotVisitorService {
     }
 
     public boolean saveBotVisitor(BotVisitor botVisitor) {
-       return rocksDBRepository.save(botVisitor.getUserId(),botVisitor);
+        return rocksDBRepository.save(botVisitor.getUserId(), botVisitor);
     }
 
     public BotVisitor getBotVisitorByUserId(String id) {
@@ -27,14 +27,14 @@ public class BotVisitorService {
         return (BotVisitor) botVisitor.orElse(null);
     }
 
-    public List<BotVisitor> getAllVisitors(){
+    public List<BotVisitor> getAllVisitors() {
         var res = new ArrayList<BotVisitor>();
         var rocksIterator = rocksDBRepository.getIterator();
         for (rocksIterator.seekToFirst(); rocksIterator.isValid(); rocksIterator.next()) {
             var key = new String(rocksIterator.key());
             var mbVisitor = rocksDBRepository.find(key);
-            if (mbVisitor.isPresent() &&(mbVisitor.get() instanceof BotVisitor)) {
-                res.add((BotVisitor)mbVisitor.get());
+            if (mbVisitor.isPresent() && (mbVisitor.get() instanceof BotVisitor)) {
+                res.add((BotVisitor) mbVisitor.get());
             }
         }
         return res;

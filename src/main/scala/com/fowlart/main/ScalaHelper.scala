@@ -99,7 +99,7 @@ class ScalaHelper {
 
   def getEditItemQtyMsg(item: Item): String =
     s"""
-       |Введіть кількість товару <b>цілим</b> 1️⃣-9️⃣ позитивним числом:
+       |Введіть кількість товару <b>цілим</b> 0️⃣-9️⃣ позитивним числом:
        |
        |${item.toString3}
        |""".stripMargin
@@ -107,7 +107,7 @@ class ScalaHelper {
   def getEmptyBucketMessage(keyboardHelper: KeyboardHelper, userId: Long): SendMessage = {
 
     SendMessage.builder.chatId(userId)
-      .text( "Корзина порожня \uD83D\uDDD1. Додайте товар.")
+      .text( "Корзина порожня. Додайте товар.")
       .replyMarkup(keyboardHelper.buildMainMenuReply()).build
   }
 
@@ -136,7 +136,7 @@ class ScalaHelper {
         s"""
            |${item.name.trim}
            |${item.price} грн
-           |➡️️<b>/${item.id}</b>⬅
+           |➡️️<b>/${item.id}</b>⬅️
            |""".stripMargin).reduce((v1, v2) => s"$v1$v2")
     })
     res.toArray
@@ -221,7 +221,7 @@ class ScalaHelper {
   def getItemQtyWrongEnteredNumber(botVisitor: ScalaBotVisitor): String =
     s"""|🤷‍♂️🔒
         |Введене некоректне число в режимі редагування кількості.
-        |Введіть кількість товару <b>цілим</b> 1️⃣-9️⃣ позитивним числом.
+        |Введіть кількість товару <b>цілим</b> 0️⃣-9️⃣ позитивним числом.
         |
         |${botVisitor.itemToEditQty.toString3}
         |""".stripMargin
