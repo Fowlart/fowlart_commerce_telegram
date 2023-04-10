@@ -6,10 +6,14 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fowlart.main.dto.BotVisitorDto;
 import com.fowlart.main.in_mem_catalog.Item;
 import com.fowlart.main.state.BotVisitorService;
+import org.apache.commons.compress.utils.IOUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.stream.Collectors;
 
 @RestController

@@ -13,6 +13,8 @@ public final class Item implements Serializable {
     private final String group;
     private final Integer qty;
 
+    private String imgBaseFolder = "src/main/resources/imgsForTGbot/";
+
     public Item(String id, String name, Double price, String group, Integer qty) {
         this.id = id;
         this.name = name;
@@ -38,6 +40,20 @@ public final class Item implements Serializable {
 
     public String toString3() {
         return "\uD83D\uDCCC"+name + "\n" + "\uD83D\uDCB3" + price + "грн.";
+    }
+
+    public String buildPage(String hostAndPort) {
+
+        var controllerPath = "/pdp/img/"+this.name;
+        var imgNotAvailablePath = "/pdp/img/imgNotAvailable.png";
+
+
+        // return "<div style=\"display: flex; flex-direction: column; align-items: center;\">" and image
+        return "<div style=\"display: flex; flex-direction: column; align-items: center;\">" +
+                "<img src=\""+controllerPath+"\" alt=\""+imgNotAvailablePath+"\">" +
+                "<p style=\"font-weight: bold; font-size: 20px;\">" + name + "</p>" +
+                "<p style=\"font-style: italic; font-size: 20px;\">" + price + "грн.</p>" +
+                "</div>";
     }
 
     public String id() {
