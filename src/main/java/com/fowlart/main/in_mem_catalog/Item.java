@@ -42,17 +42,6 @@ public final class Item implements Serializable {
         return "\uD83D\uDCCC"+name + "\n" + "\uD83D\uDCB3" + price + "грн.";
     }
 
-    public String buildPage(String imagePath) {
-
-        var html = "<div style=\"display: flex; flex-direction: column; align-items: center;\">" +
-                "<img src=\""+imagePath+id+"\">" +
-                "<p style=\"font-weight: bold; font-size: 20px;\">" + name + "</p>" +
-                "<p style=\"font-style: italic; font-size: 20px;\">" + price + "грн.</p>" +
-                "</div>";
-
-        return html;
-    }
-
     public String id() {
         return id;
     }

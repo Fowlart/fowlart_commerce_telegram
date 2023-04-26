@@ -23,21 +23,34 @@ public class ImgController {
     private final Catalog catalog;
     private final String inputForImgPath;
 
+    private final String hostAndPort;
+
+    private final String inputForHTMLPath;
+
 
     public ImgController(@Autowired Catalog catalog,
-                         @Value("${app.bot.items.img.folder}") String inputForImgPath) {
+                         @Value("${app.bot.items.img.folder}") String inputForImgPath,
+                         @Value("${app.bot.host.url}") String hostAndPort,
+                         @Value("${app.bot.html.templates}") String inputForHTMLPath) {
         this.catalog = catalog;
         this.inputForImgPath = inputForImgPath;
+        this.hostAndPort = hostAndPort;
+        this.inputForHTMLPath = inputForHTMLPath;
     }
 
     @GetMapping(value = "/{id}", produces = "text/html")
     public @ResponseBody String getProductInfo(@PathVariable String id, @RequestHeader Map<String, String> headers) throws IOException {
         var item = catalog.getItemList().stream().filter(i -> i.id().equals(id)).findFirst().orElse(null);
-        var hostAndPort = headers.get("host");
 
         if (Objects.isNull(item)) return "No such item";
 
-        return item.buildPage("http://" + hostAndPort + "/pdp/img/");
+        // reat pdp.html as a string
+        var pdpHtml = Files.readString(Path.of(inputForHTMLPath+"/pdp.html"));
+        var productId = item.id();
+        var productImageUri = hostAndPort + "/pdp/img/" + productId;
+
+        return pdpHtml.replace("{{productImageUri}}", productImageUri)
+                .replace("{{productPrice}}", item.price().toString());
     }
 
     @GetMapping(value = "/img/{id}", produces = "image/png")
@@ -55,7 +68,7 @@ public class ImgController {
             return res;
         };
 
-        var itemImgOp = Files.find(Path.of(inputForImgPath+"/"), 1, biPredicate).findFirst();
+        var itemImgOp = Files.find(Path.of(inputForImgPath + "/"), 1, biPredicate).findFirst();
 
         // if no image found, return no_image_available.png
         if (itemImgOp.isEmpty()) {

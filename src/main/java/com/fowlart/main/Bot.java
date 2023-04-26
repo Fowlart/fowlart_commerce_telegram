@@ -57,6 +57,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     private final String outputForOrderPath;
     private final GmailSender gmailSender;
     private final String inputForImgPath;
+    private final String hostPort;
     public Bot(@Autowired GmailSender gmailSender,
                @Autowired BotVisitorService botVisitorService,
                @Autowired ExcelFetcher excelFetcher,
@@ -66,7 +67,8 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                @Value("${app.bot.userName}") String userName,
                @Value("${app.bot.userName.token}") String token,
                @Value("${app.bot.order.output.folder}") String outputForOrderPath,
-               @Value("${app.bot.items.img.folder}") String inputForImgPath) {
+               @Value("${app.bot.items.img.folder}") String inputForImgPath,
+               @Value("${app.bot.host.url}")String hostPort) {
         this.inputForImgPath = inputForImgPath;
         this.gmailSender = gmailSender;
         this.outputForOrderPath = outputForOrderPath;
@@ -78,6 +80,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         this.token = token;
         this.catalog = catalog;
         this.scalaHelper = new ScalaHelper();
+        this.hostPort = hostPort;
     }
 
     public static Bot getInstance() {
@@ -133,7 +136,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             case BUCKET -> handleBucket(visitor);
 
             default -> {
-                var subGroupItems = scalaHelper.getSubMenuText(this.catalog.getItemList(), callBackButton);
+                var subGroupItems = scalaHelper.getSubMenuText(this.catalog.getItemList(), callBackButton,this.hostPort);
                 for (String str : subGroupItems) {
                     var lastMessage = subGroupItems[subGroupItems.length - 1];
                     var subCatalogAnswer = SendMessage
