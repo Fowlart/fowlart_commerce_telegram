@@ -137,8 +137,7 @@ class ScalaHelper {
            |${item.name.trim}
            |${item.price} грн
            |➡️️<b>/${item.id}</b>⬅️
-           |
-           |Замовляй в браузері: $hostPort/pdp/${item.id}
+           |🌐 $hostPort/pdp/${item.id} 🌐
            |""".stripMargin).reduce((v1, v2) => s"$v1$v2")
     })
     res.toArray

@@ -44,13 +44,15 @@ public class ImgController {
 
         if (Objects.isNull(item)) return "No such item";
 
-        // reat pdp.html as a string
+        // read pdp.html as a string
         var pdpHtml = Files.readString(Path.of(inputForHTMLPath+"/pdp.html"));
         var productId = item.id();
         var productImageUri = hostAndPort + "/pdp/img/" + productId;
 
         return pdpHtml.replace("{{productImageUri}}", productImageUri)
-                .replace("{{productPrice}}", item.price().toString());
+                .replace("{{productPrice}}", item.price().toString())
+                .replace("{{productName}}", item.name());
+
     }
 
     @GetMapping(value = "/img/{id}", produces = "image/png")
