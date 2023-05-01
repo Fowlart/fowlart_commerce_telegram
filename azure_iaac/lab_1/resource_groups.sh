@@ -17,7 +17,8 @@ az deployment group create \
   --template-file $templateFile\
   --resource-group "lab_resource_group"\
   --parameters storageAccountType=Standard_LRS\
-  --parameters storeName="fowlartlabstorage2"
+  --parameters storeName="fowlartlabstorage2"\
+  --parameters storageAccountKind="StorageV2"
 
 # delete resource group
 az group delete \
