@@ -66,7 +66,7 @@ public class ImgController {
             var theFile = path.toFile();
             var mimetype = new MimetypesFileTypeMap().getContentType(theFile);
             var theType = mimetype.split("/")[0];
-            var res = path.getFileName().toString().toLowerCase().contains(item.name().toLowerCase()) && theType.equals("image");
+            var res = path.getFileName().toString().toLowerCase().trim().contains(item.name().toLowerCase().trim()) && theType.equals("image");
             return res;
         };
 
