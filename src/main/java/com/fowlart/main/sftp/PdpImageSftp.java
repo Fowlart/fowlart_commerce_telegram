@@ -15,15 +15,15 @@ import java.nio.file.Path;
 import java.util.Collections;
 
 @Service
-public class MySftpServer {
+public class PdpImageSftp {
 
     private String login;
     private String password;
     private String path;
 
-    public MySftpServer( @Value("${app.sftp.login}") String login,
-                         @Value("${app.sftp.password}") String password,
-                         @Value("${app.sftp.folder}") String path) {
+    public PdpImageSftp(@Value("${app.sftp.login}") String login,
+                        @Value("${app.sftp.password}") String password,
+                        @Value("${app.sftp.folder}") String path) {
 
         this.login = login;
         this.path = path;
@@ -48,6 +48,6 @@ public class MySftpServer {
         sshd.setPasswordAuthenticator(
                 (username, password, session) -> username.equals(login) && password.equals(this.password));
         sshd.start();
-        LoggerHelper.logInfoInFile("SFTP server started");
+        LoggerHelper.logInfoInFile("SFTP server for PDP images started");
     }
 }

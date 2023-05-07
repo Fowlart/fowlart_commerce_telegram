@@ -22,13 +22,13 @@ jobs:
           java-version: '17'
 
       - name: Build with Maven
-        run: mvn clean install
+        run: mvn clean scala:compile package spring-boot:repackage && jar tf target/app-1.jar
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v2
         with:
           name: java-app
-          path: '${{ github.workspace }}/target/*.war'
+          path: '${{ github.workspace }}/target/*.jar'
 
   deploy:
     runs-on: ubuntu-latest
@@ -50,4 +50,4 @@ jobs:
           app-name: 'fowlart-simple-java-app'
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_F0BBA7C2D7A1420698F057ADAA5E68C5 }}
-          package: '*.war'
+          package: '*.jar'
