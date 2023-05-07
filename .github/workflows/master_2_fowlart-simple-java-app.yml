@@ -52,8 +52,10 @@ jobs:
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_F0BBA7C2D7A1420698F057ADAA5E68C5 }}
           package: '*.jar'
 
+      - name: Where I am
+        run: pwd
+
       - name: Run jar file
         run: java -jar -Dspring.profiles.active=prod /home/runner/work/fowlart_commerce_telegram/fowlart_commerce_telegram/app-1.jar
 
-      - name: Where I am
-        run: pwd
+
