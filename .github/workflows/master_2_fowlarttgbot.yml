@@ -47,7 +47,7 @@ jobs:
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v2
         with:
-          app-name: 'fowlart-simple-java-app'
+          app-name: 'FowlartTgBot'
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_E092E289E3F1499EA52BC2658D0CE7B5 }}
           package: '*.jar'
