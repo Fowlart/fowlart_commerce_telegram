@@ -19,7 +19,7 @@ jobs:
       - name: Set up Java version
         uses: actions/setup-java@v1
         with:
-          java-version: '17'
+          java-version: '16'
 
       - name: Build with Maven
         run: mvn clean scala:compile package spring-boot:repackage && jar tf target/app-1.jar
