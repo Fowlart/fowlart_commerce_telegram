@@ -51,3 +51,6 @@ jobs:
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_F0BBA7C2D7A1420698F057ADAA5E68C5 }}
           package: '*.jar'
+
+      - name: Run jar file
+        run: java -jar -Dspring.profiles.active=prod target/app-1.jar
