@@ -53,4 +53,7 @@ jobs:
           package: '*.jar'
 
       - name: Run jar file
-        run: java -jar -Dspring.profiles.active=prod target/app-1.jar
+        run: java -jar -Dspring.profiles.active=prod /home/runner/work/fowlart_commerce_telegram/fowlart_commerce_telegram/app-1.jar
+
+      - name: Where I am
+        run: pwd
