@@ -77,4 +77,4 @@ jobs:
         run: java -version
 
       - name: Run jar file
-        run: java -jar -Dspring.profiles.active=prod /home/runner/work/fowlart_commerce_telegram/fowlart_commerce_telegram/app-1.jar
+        run: java -jar -Dspring.profiles.active=azure /home/runner/work/fowlart_commerce_telegram/fowlart_commerce_telegram/app-1.jar
