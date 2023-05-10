@@ -15,6 +15,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - uses: microsoft/variable-substitution@v1
 
       - name: Set up Java version
         uses: actions/setup-java@v1
@@ -39,7 +40,6 @@ jobs:
 
     steps:
       - name: Set up Java version
-        uses: actions/setup-java@v1
         with:
           java-version: '17'
 
