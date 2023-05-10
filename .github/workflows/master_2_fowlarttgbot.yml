@@ -40,7 +40,7 @@ jobs:
         run: mvn clean scala:compile package spring-boot:repackage && jar tf target/app-1.jar
 
       - name: Upload artifact for deployment job
-        uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v2
         with:
           name: java-app
           path: '${{ github.workspace }}/target/*.jar'
