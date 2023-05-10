@@ -25,7 +25,7 @@ jobs:
         uses: ulaval/azure-blob-copy-action@v1
         with:
           action: upload
-          connection_string: https://fowlartstor.blob.core.windows.net/settings?sp=r&st=2023-05-10T10:29:01Z&se=2025-03-01T19:29:01Z&spr=https&sv=2022-11-02&sr=c&sig=bdcioggujf9aSBmJLhsPAA7k4imXUCyuF9%2Bwe8gQk48%3D
+          connection_string: DefaultEndpointsProtocol=https;AccountName=fowlartstor;AccountKey=xyCRvKh6KAbrM6g9ZPdRVs4qJxhM6BcbcP9bs1TVZVUqqoWuq/KXB9Q7C9TMH6rfDkvcjhuo/CX6d5Xxfr2Urw==;EndpointSuffix=core.windows.net
           container_name: settings
           local_directory: dist
           http_headers: |
