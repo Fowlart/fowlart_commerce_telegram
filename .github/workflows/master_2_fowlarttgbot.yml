@@ -1,7 +1,7 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy JAR app to Azure Web App - FowlartTgBot
+name: Build and deploy WAR app to Azure Web App - fowlart-simple-java-app
 
 on:
   push:
@@ -22,7 +22,7 @@ jobs:
           java-version: '17'
 
       - name: Build with Maven
-        run: mvn clean install
+        run: mvn clean scala:compile package spring-boot:repackage && jar tf target/app-1.jar
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v2
@@ -36,8 +36,13 @@ jobs:
     environment:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-    
+
     steps:
+      - name: Set up Java version
+        uses: actions/setup-java@v1
+        with:
+          java-version: '17'
+
       - name: Download artifact from build job
         uses: actions/download-artifact@v2
         with:
@@ -51,3 +56,9 @@ jobs:
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_7E05E7B8E1F84942AD86A094E1DA8623 }}
           package: '*.jar'
+
+      - name: Java version
+        run: java -version
+
+      - name: Run jar file
+        run: java -jar -Dspring.profiles.active=prod /home/runner/work/fowlart_commerce_telegram/fowlart_commerce_telegram/app-1.jar
