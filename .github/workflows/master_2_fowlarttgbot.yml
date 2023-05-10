@@ -21,11 +21,11 @@ jobs:
         with:
           java-version: '17'
 
-      - name: Copy files
+      - name: copy files
         uses: ulaval/azure-blob-copy-action@v1
         with:
-          action: upload
-          connection_string: DefaultEndpointsProtocol=https;AccountName=fowlartstor;AccountKey=xyCRvKh6KAbrM6g9ZPdRVs4qJxhM6BcbcP9bs1TVZVUqqoWuq/KXB9Q7C9TMH6rfDkvcjhuo/CX6d5Xxfr2Urw==;EndpointSuffix=core.windows.net
+          action: download
+          connection_string: ${{secrets.BLOB_CONNECT_URL}}
           container_name: settings
           local_directory: src/main/resources/
           http_headers: |
