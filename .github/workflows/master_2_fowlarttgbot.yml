@@ -21,8 +21,23 @@ jobs:
         with:
           java-version: '17'
 
+      - name: Copy files
+        uses: ulaval/azure-blob-copy-action@v1
+        with:
+          action: download
+          connection_string: https://fowlartstor.blob.core.windows.net/settings?sp=r&st=2023-05-10T10:29:01Z&se=2025-03-01T19:29:01Z&spr=https&sv=2022-11-02&sr=c&sig=bdcioggujf9aSBmJLhsPAA7k4imXUCyuF9%2Bwe8gQk48%3D
+          container_name: settings
+          local_directory: fowlart_commerce_telegram/src/main/resources
+          http_headers: |
+            - glob: "**/*.????????.*"
+              headers:
+                Cache-Control: public, max-age=604800, immutable
+            
+            - glob: "**/*"
+              headers:
+                Cache-Control: public, max-age=120, s-maxage=180, proxy-revalidate
+
       - name: Build with Maven
-        uses: microsoft/variable-substitution@v1
         run: mvn clean scala:compile package spring-boot:repackage && jar tf target/app-1.jar
 
       - name: Upload artifact for deployment job
