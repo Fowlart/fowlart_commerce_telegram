@@ -50,7 +50,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: catalog
-          path: src/main/resources/catalog/*.xls
+          path: "src/main/resources/catalog/*.xls"
 
   deploy:
     runs-on: ubuntu-latest
