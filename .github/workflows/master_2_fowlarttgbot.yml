@@ -46,6 +46,12 @@ jobs:
           name: java-app
           path: '${{ github.workspace }}/target/*.jar'
 
+      - name: Upload catalog for deployment job
+        uses: actions/upload-artifact@v2
+        with:
+          name: catalog
+          path: src/main/resources/catalog/*.xls
+
   deploy:
     runs-on: ubuntu-latest
     needs: build
@@ -87,6 +93,8 @@ jobs:
 
       - name: create folder for item catalog
         run: test -d /home/runner/work/fowlart_commerce_telegram/fowlart_commerce_telegram/item_catalog || mkdir -p /home/runner/work/fowlart_commerce_telegram/fowlart_commerce_telegram/item_catalog
+
+      - name: create folder for item catalo
 
       - name: create folder for static html
         run: test -d /home/runner/work/fowlart_commerce_telegram/fowlart_commerce_telegram/static_html || mkdir -p /home/runner/work/fowlart_commerce_telegram/fowlart_commerce_telegram/static_html
