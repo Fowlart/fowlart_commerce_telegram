@@ -100,5 +100,5 @@ jobs:
       - name: create folder for file transfer SFTP
         run: test -d /home/runner/work/fowlart_commerce_telegram/fowlart_commerce_telegram/file_transfer_sftp || mkdir -p /home/runner/work/fowlart_commerce_telegram/fowlart_commerce_telegram/file_transfer_sftp
 
-      #- name: run jar file
-      #  run: java -jar -Dspring.profiles.active=azure /home/runner/work/fowlart_commerce_telegram/fowlart_commerce_telegram/app-1.jar & export TG_BOT_PID=$!
+      - name: run jar file
+        run: java -jar -Dspring.profiles.active=azure /home/runner/work/fowlart_commerce_telegram/fowlart_commerce_telegram/app-1.jar & export TG_BOT_PID=$!
