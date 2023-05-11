@@ -204,34 +204,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <!-- plugin for deploy on Azure -->
-            <plugin>
-                <groupId>com.microsoft.azure</groupId>
-                <artifactId>azure-webapp-maven-plugin</artifactId>
-                <version>2.9.0</version>
-                <configuration>
-                    <schemaVersion>v2</schemaVersion>
-                    <resourceGroup>fowlart_tg_bot_rg</resourceGroup>
-                    <appName>FowlartTgBot</appName>
-                    <pricingTier>B1</pricingTier>
-                    <region>polandcentral</region>
-                    <runtime>
-                        <os>Linux</os>
-                        <javaVersion>Java 17</javaVersion>
-                        <webContainer>Tomcat 10</webContainer>
-                    </runtime>
-                    <deployment>
-                        <resources>
-                            <resource>
-                                <directory>${project.basedir}/target</directory>
-                                <includes>
-                                    <include>*.jar</include>
-                                </includes>
-                            </resource>
-                        </resources>
-                    </deployment>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
 
