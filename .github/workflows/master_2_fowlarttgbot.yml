@@ -49,8 +49,8 @@ jobs:
       - name: Upload catalog for deployment job
         uses: actions/upload-artifact@v2
         with:
-          name: java-app
-          path: "src/main/resources/catalog/*.xls"
+          name: file-catalog
+          path: 'src/main/resources/catalog/*.xls'
 
   deploy:
     runs-on: ubuntu-latest
