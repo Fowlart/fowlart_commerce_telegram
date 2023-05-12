@@ -64,12 +64,3 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: java-app
-
-      - name: Deploy to Azure Web App
-        id: deploy-to-webapp
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: 'FowlartTgBot'
-          slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_EF4E7B45DA084A818C8E386BAA2B23FD }}
-          package: '*.jar'
