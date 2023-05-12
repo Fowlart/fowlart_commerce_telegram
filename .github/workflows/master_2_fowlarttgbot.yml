@@ -27,7 +27,7 @@ jobs:
           action: download
           connection_string: ${{secrets.BLOB_CONNECT_URL}}
           container_name: settings
-          local_directory: src/main/resources/
+          local_directory: '${{ github.workspace }}/src/main/resources/'
           http_headers: |
             - glob: "**/*.????????.*"
               headers:
