@@ -60,19 +60,6 @@ jobs:
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
     steps:
-      - name: Set up Java version
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'corretto'
-          java-version: '17'
-      - run: test -d %HOME%/rocks_db || mkdir -p %HOME%/rocks_db
-      - run: test -d %HOME%/order_outputs || mkdir -p %HOME%/order_outputs
-      - run: test -d %HOME%/pdp_images || mkdir -p %HOME%/pdp_images
-      - run: test -d %HOME%/item_catalog || mkdir -p %HOME%/item_catalog
-      - run: -d /static_html || mkdir -p %HOME%/static_html
-      - run: test -d %HOME%/file_transfer_sftp || mkdir -p %HOME%/file_transfer_sftp
-      - run: java -jar -Dspring.profiles.active=azure app-1.jar & export TG_BOT_PID=$!
-
       - name: Download artifact from build job
         uses: actions/download-artifact@v2
         with:
@@ -86,3 +73,16 @@ jobs:
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_EF4E7B45DA084A818C8E386BAA2B23FD }}
           package: '*.jar'
+
+      - name: Set up Java version
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'corretto'
+          java-version: '17'
+      - run: test -d %HOME%/rocks_db || mkdir -p %HOME%/rocks_db
+      - run: test -d %HOME%/order_outputs || mkdir -p %HOME%/order_outputs
+      - run: test -d %HOME%/pdp_images || mkdir -p %HOME%/pdp_images
+      - run: test -d %HOME%/item_catalog || mkdir -p %HOME%/item_catalog
+      - run: -d /static_html || mkdir -p %HOME%/static_html
+      - run: test -d %HOME%/file_transfer_sftp || mkdir -p %HOME%/file_transfer_sftp
+      - run: java -jar -Dspring.profiles.active=azure app-1.jar & export TG_BOT_PID=$!
