@@ -63,6 +63,7 @@ jobs:
       - name: Set up Java version
         uses: actions/setup-java@v3
         with:
+          distribution: 'corretto'
           java-version: '17'
       - run: test -d /rocks_db || mkdir -p /rocks_db
       - run: test -d /order_outputs || mkdir -p /order_outputs
