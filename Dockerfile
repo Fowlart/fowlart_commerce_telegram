@@ -12,4 +12,4 @@ EXPOSE 8080 5005
 COPY --from=BUILD /usr/src/app/target /opt/target
 WORKDIR /opt/target
 #ENV _JAVA_OPTIONS '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005'
-CMD ["java", "-jar", "app-1.jar"]
+CMD ["java", "-jar", "-Dspring.profiles.active=prod tg_boot/app-1.jar","&"]

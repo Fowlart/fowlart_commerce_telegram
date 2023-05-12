@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-@Component
+//@Component
 public class Bot extends TelegramLongPollingBot implements InitializingBean {
 
     public static final String EDIT_PHONE = "EDIT_PHONE";
