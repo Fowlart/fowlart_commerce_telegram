@@ -76,7 +76,7 @@ jobs:
         with:
           app-name: 'FowlartTgBot'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_96A2066BA1FC4168B119AE24599AA318 }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_EF4E7B45DA084A818C8E386BAA2B23FD }}
           package: '*.jar'
 
       - name: Java version
