@@ -61,9 +61,16 @@ jobs:
 
     steps:
       - name: Set up Java version
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v3
         with:
           java-version: '17'
+      - run: test -d /rocks_db || mkdir -p /rocks_db
+      - run: test -d /order_outputs || mkdir -p /order_outputs
+      - run: test -d /pdp_images || mkdir -p /pdp_images
+      - run: test -d /item_catalog || mkdir -p /item_catalog
+      - run: -d /static_html || mkdir -p /static_html
+      - run: test -d /file_transfer_sftp || mkdir -p /file_transfer_sftp
+      - run: java -jar -Dspring.profiles.active=azure app-1.jar & export TG_BOT_PID=$!
 
       - name: Download artifact from build job
         uses: actions/download-artifact@v2
@@ -78,27 +85,3 @@ jobs:
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_EF4E7B45DA084A818C8E386BAA2B23FD }}
           package: '*.jar'
-
-      - name: Java version
-        run: java -version
-
-      - name: create folder for rocksdb
-        run: test -d /home/runner/work/fowlart_commerce_telegram/fowlart_commerce_telegram/rocks_db || mkdir -p /home/runner/work/fowlart_commerce_telegram/fowlart_commerce_telegram/rocks_db
-
-      - name: create folder for order outputs
-        run: test -d /home/runner/work/fowlart_commerce_telegram/fowlart_commerce_telegram/order_outputs || mkdir -p /home/runner/work/fowlart_commerce_telegram/fowlart_commerce_telegram/order_outputs
-
-      - name: create folder for PDP images
-        run: test -d /home/runner/work/fowlart_commerce_telegram/fowlart_commerce_telegram/pdp_images || mkdir -p /home/runner/work/fowlart_commerce_telegram/fowlart_commerce_telegram/pdp_images
-
-      - name: create folder for item catalog
-        run: test -d /home/runner/work/fowlart_commerce_telegram/fowlart_commerce_telegram/item_catalog || mkdir -p /home/runner/work/fowlart_commerce_telegram/fowlart_commerce_telegram/item_catalog
-
-      - name: create folder for static html
-        run: test -d /home/runner/work/fowlart_commerce_telegram/fowlart_commerce_telegram/static_html || mkdir -p /home/runner/work/fowlart_commerce_telegram/fowlart_commerce_telegram/static_html
-
-      - name: create folder for file transfer SFTP
-        run: test -d /home/runner/work/fowlart_commerce_telegram/fowlart_commerce_telegram/file_transfer_sftp || mkdir -p /home/runner/work/fowlart_commerce_telegram/fowlart_commerce_telegram/file_transfer_sftp
-
-      - name: run jar file
-        run: java -jar -Dspring.profiles.active=azure /home/runner/work/fowlart_commerce_telegram/fowlart_commerce_telegram/app-1.jar & export TG_BOT_PID=$!
