@@ -65,12 +65,12 @@ jobs:
         with:
           distribution: 'corretto'
           java-version: '17'
-      - run: test -d /rocks_db || mkdir -p /rocks_db
-      - run: test -d /order_outputs || mkdir -p /order_outputs
-      - run: test -d /pdp_images || mkdir -p /pdp_images
-      - run: test -d /item_catalog || mkdir -p /item_catalog
-      - run: -d /static_html || mkdir -p /static_html
-      - run: test -d /file_transfer_sftp || mkdir -p /file_transfer_sftp
+      - run: test -d /home/rocks_db || mkdir -p /home/rocks_db
+      - run: test -d /home/order_outputs || mkdir -p /home/order_outputs
+      - run: test -d /home/pdp_images || mkdir -p /home/pdp_images
+      - run: test -d /home/item_catalog || mkdir -p /home/item_catalog
+      - run: -d /static_html || mkdir -p /home/static_html
+      - run: test -d /file_transfer_sftp || mkdir -p /home/file_transfer_sftp
       - run: java -jar -Dspring.profiles.active=azure app-1.jar & export TG_BOT_PID=$!
 
       - name: Download artifact from build job
