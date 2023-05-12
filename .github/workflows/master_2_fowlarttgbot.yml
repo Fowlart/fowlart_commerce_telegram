@@ -85,5 +85,6 @@ jobs:
       - run: test -d %HOME%/item_catalog || mkdir -p %HOME%/item_catalog
       - run: -d /static_html || mkdir -p %HOME%/static_html
       - run: test -d %HOME%/file_transfer_sftp || mkdir -p %HOME%/file_transfer_sftp
+      - run: pwd
       - run: ls -la %HOME%
       - run: java -jar -Dspring.profiles.active=azure app-1.jar & export TG_BOT_PID=$!
