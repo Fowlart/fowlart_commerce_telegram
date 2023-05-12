@@ -58,3 +58,10 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: java-app
+
+      - name: Azure WebApp
+        uses: Azure/webapps-deploy@v2
+        with:
+          app-name: FowlartTgBot
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_EF4E7B45DA084A818C8E386BAA2B23FD }}
+          package: /home/runner/work/fowlart_commerce_telegram/fowlart_commerce_telegram/target/*.jar
