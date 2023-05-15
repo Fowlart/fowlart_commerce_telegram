@@ -38,6 +38,7 @@ jobs:
             - glob: "**/*"
               headers:
                 Cache-Control: public, max-age=120, s-maxage=180, proxy-revalidate
+            
 
       - name: ls
         run: ls -la ./src/main/resources/
