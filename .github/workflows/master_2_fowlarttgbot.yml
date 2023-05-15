@@ -23,16 +23,13 @@ jobs:
       - name: where am
         run: pwd
 
-      - name: ls
-        run: ls -la
-
       - name: copy files
         uses: ulaval/azure-blob-copy-action@v1
         with:
           action: download
           connection_string: ${{secrets.BLOB_CONNECT_URL}}
           container_name: settings
-          local_directory: '${{ github.workspace }}/src/main/resources/'
+          local_directory: './src/main/resources/'
           http_headers: |
             - glob: "**/*.????????.*"
               headers:
@@ -41,6 +38,9 @@ jobs:
             - glob: "**/*"
               headers:
                 Cache-Control: public, max-age=120, s-maxage=180, proxy-revalidate
+
+      - name: ls
+        run: ls -la ./src/main/resources/
 
       - name: Build with Maven
         run: mvn clean scala:compile package spring-boot:repackage && jar tf target/app-1.jar
