@@ -23,6 +23,9 @@ jobs:
       - name: where am
         run: pwd
 
+      - name: ls
+        run: ls -la
+
       - name: copy files
         uses: ulaval/azure-blob-copy-action@v1
         with:
