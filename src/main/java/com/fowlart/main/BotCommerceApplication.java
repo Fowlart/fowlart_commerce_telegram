@@ -21,6 +21,7 @@ public class BotCommerceApplication {
         // this line somehow switch-on all logs
         LoggerBuilder.getLogger();
         System.setProperty("org.springframework.boot.logging.LoggingSystem", "none");
+
         SpringApplication.run(BotCommerceApplication.class, args);
         TelegramBotsApi telegramBotsApi;
         LoggerHelper.logInfoInFile("Registering bot...");
