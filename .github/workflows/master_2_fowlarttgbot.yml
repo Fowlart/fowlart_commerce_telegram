@@ -20,6 +20,9 @@ jobs:
         with:
           java-version: '17'
 
+      - name: where am
+        run: pwd
+
       - name: copy files
         uses: ulaval/azure-blob-copy-action@v1
         with:
