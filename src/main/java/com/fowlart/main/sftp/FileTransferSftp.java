@@ -14,7 +14,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
 
-@Service
+//@Service
 public class FileTransferSftp {
 
     private String login;
