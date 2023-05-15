@@ -16,7 +16,6 @@ import java.util.Collections;
 
 @Service
 public class PdpImageSftp {
-
     private String login;
     private String password;
     private String path;
