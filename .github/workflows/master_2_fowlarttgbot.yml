@@ -69,5 +69,5 @@ jobs:
         uses: Azure/webapps-deploy@v2
         with:
           app-name: FowlartTgBot
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_6948864C03B04DF3835579A4F6A0F4D9 }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_90A23C1CDFA74B96A892D0F9903B801C }}
           package: /home/runner/work/fowlart_commerce_telegram/fowlart_commerce_telegram/*.jar
