@@ -16,6 +16,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          ref: ready_for_app_service_deploy_azure
       - name: Set up Java version
         uses: actions/setup-java@v1
         with:
