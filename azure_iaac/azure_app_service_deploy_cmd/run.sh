@@ -11,4 +11,3 @@ az group create \
   --location "polandcentral"
 
 az group list --output table
-
