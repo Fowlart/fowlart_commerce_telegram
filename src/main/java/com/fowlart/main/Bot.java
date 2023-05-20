@@ -4,12 +4,13 @@ import com.fowlart.main.catalog_fetching.ExcelFetcher;
 import com.fowlart.main.email.GmailSender;
 import com.fowlart.main.in_mem_catalog.Catalog;
 import com.fowlart.main.in_mem_catalog.Item;
-import com.fowlart.main.logging.LoggerHelper;
 import com.fowlart.main.messages.ResponseWithPhotoMessageAndScalaBotVisitor;
 import com.fowlart.main.messages.ResponseWithSendMessageAndScalaBotVisitor;
 import com.fowlart.main.state.BotVisitor;
 import com.fowlart.main.state.BotVisitorService;
 import com.fowlart.main.state.OrderService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -58,6 +59,8 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     private final GmailSender gmailSender;
     private final String inputForImgPath;
     private final String hostPort;
+
+    private final static Logger logger = LoggerFactory.getLogger(Bot.class);
     public Bot(@Autowired GmailSender gmailSender,
                @Autowired BotVisitorService botVisitorService,
                @Autowired ExcelFetcher excelFetcher,
@@ -112,7 +115,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         Long userId = callbackQuery.getFrom().getId();
         BotVisitor visitor = this.botVisitorService.getBotVisitorByUserId(userId.toString());
         var scalaBotVisitor = BotVisitorToScalaBotVisitorConverter.convertBotVisitorToScalaBotVisitor(visitor);
-        LoggerHelper.logInfoInFile("handleInlineButtonClicks method, visitor: "+scalaBotVisitor);
+        logger.info("handleInlineButtonClicks method, visitor: "+scalaBotVisitor);
         var callBackButtonArr = callbackQuery.getData().split("__");
         String callBackButton = callBackButtonArr[0];
         String mbItemId = null;
@@ -165,7 +168,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     }
 
     private SendMessage handleBucket(BotVisitor visitor) throws TelegramApiException {
-        LoggerHelper.logInfoInFile("handleBucket method, visitorId "+visitor.getUserId());
+        logger.info("handleBucket method, visitorId "+visitor.getUserId());
         if (visitor.getBucket().isEmpty())
             return scalaHelper.getEmptyBucketMessage(keyboardHelper, visitor.getUser().getId());
         visitor.setNameEditingMode(false);
@@ -184,7 +187,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     }
 
     private SendMessage handleMyDataEditing(BotVisitor visitor) {
-        LoggerHelper.logInfoInFile("handleMyDataEditing method, visitorId "+visitor.getUserId());
+        logger.info("handleMyDataEditing method, visitorId "+visitor.getUserId());
         visitor.setNameEditingMode(false);
         return scalaHelper.buildSimpleReplyMessage(
                 visitor.getUser().getId(),
@@ -193,7 +196,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     }
 
     private SendMessage handleEditPhone(BotVisitor visitor) {
-        LoggerHelper.logInfoInFile("handleEditPhone method, visitorId "+visitor.getUserId());
+        logger.info("handleEditPhone method, visitorId "+visitor.getUserId());
         visitor.setPhoneNumberFillingMode(true);
         visitor.setNameEditingMode(false);
         return scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(),
@@ -202,7 +205,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     }
 
     private SendMessage handleEditPhoneExitPushed(BotVisitor visitor) {
-        LoggerHelper.logInfoInFile("handleEditPhoneExitPushed method, visitorId "+visitor.getUserId());
+        logger.info("handleEditPhoneExitPushed method, visitorId "+visitor.getUserId());
         visitor.setPhoneNumberFillingMode(false);
         return scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(),
                 scalaHelper.getPhoneEditingText(visitor.getUser().getId()),
@@ -210,7 +213,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     }
 
     private SendMessage handleEditName(BotVisitor visitor) {
-        LoggerHelper.logInfoInFile("handleEditName method, visitorId "+visitor.getUserId());
+        logger.info("handleEditName method, visitorId "+visitor.getUserId());
         visitor.setNameEditingMode(true);
         return scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(),
                 scalaHelper.getNameEditingText(visitor.getUser().getId()),
@@ -218,7 +221,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     }
 
     private SendMessage handleGoodsQtyEdit(BotVisitor visitor, String itemId) throws TelegramApiException {
-        LoggerHelper.logInfoInFile("handleGoodsQtyEdit method, visitorId "+visitor.getUserId());
+        logger.info("handleGoodsQtyEdit method, visitorId "+visitor.getUserId());
         visitor.setNameEditingMode(false);
         var itemToEditQty = visitor.getBucket().stream().filter(it -> itemId.equals(it.id())).findFirst();
         visitor.setItemToEditQty(itemToEditQty.orElse(null));
@@ -227,7 +230,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     }
 
     private SendMessage handleItemRemove(BotVisitor visitor, String itemId) {
-        LoggerHelper.logInfoInFile("handleItemRemove method, visitorId "+visitor.getUserId());
+        logger.info("handleItemRemove method, visitorId "+visitor.getUserId());
         visitor.setNameEditingMode(false);
         var newBucket = visitor.getBucket().stream().filter(it -> !itemId.equals(it.id())).collect(Collectors.toSet());
         visitor.setItemToEditQty(null);
@@ -236,27 +239,27 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     }
 
     private SendMessage handleCatalog(BotVisitor visitor) {
-        LoggerHelper.logInfoInFile("handleCatalog method, visitorId "+visitor.getUserId());
+        logger.info("handleCatalog method, visitorId "+visitor.getUserId());
         visitor.setNameEditingMode(false);
         return scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(), "\uD83D\uDD0E Обирай з товарних груп:",
                 keyboardHelper.buildCatalogItemsMenu());
     }
 
     private SendMessage handleContacts(BotVisitor visitor) {
-        LoggerHelper.logInfoInFile("handleContacts method, visitorId "+visitor.getUserId());
+        logger.info("handleContacts method, visitorId "+visitor.getUserId());
         visitor.setNameEditingMode(false);
         return scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(), scalaHelper.getContactsMsg(), keyboardHelper.buildMainMenuReply());
     }
 
     private SendMessage handleMainScreen(BotVisitor visitor) {
-        LoggerHelper.logInfoInFile("handleMainScreen method, visitorId "+visitor.getUserId());
+        logger.info("handleMainScreen method, visitorId "+visitor.getUserId());
         var msg = scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(), scalaHelper.getMainMenuText(visitor), keyboardHelper.buildMainMenuReply());
         visitor.setNameEditingMode(false);
         return msg;
     }
 
     private SendMessage handleDiscard(BotVisitor visitor) {
-        LoggerHelper.logInfoInFile("handleDiscard method, visitorId "+visitor.getUserId());
+        logger.info("handleDiscard method, visitorId "+visitor.getUserId());
         visitor.setBucket(new HashSet<>());
         visitor.setNameEditingMode(false);
 
@@ -267,7 +270,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
 
     private SendMessage handleOrderSubmit(BotVisitor visitor) {
 
-        LoggerHelper.logInfoInFile("handleOrderSubmit method, visitorId "+visitor.getUserId());
+        logger.info("handleOrderSubmit method, visitorId "+visitor.getUserId());
         var order = OrderHandler.handleOrder(BotVisitorToScalaBotVisitorConverter.convertBotVisitorToScalaBotVisitor(visitor));
 
         var orderSubmitReply = scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(), "Замовлення прийнято!", keyboardHelper.buildMainMenuReply());
@@ -292,7 +295,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             var savedCsv = OrderHandler.saveOrderAsCsv(order, outputForOrderPath+ "/" + orderFileName);
             gmailSender.sendOrderMessage(scalaHelper.getEmailOrderText(order), savedCsv);
         } catch (MessagingException | IOException e) {
-            LoggerHelper.logErrorInFile(e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             orderSubmitReply.setText("Якась бачіна з відправленням листа! Повторість, будь ласка, спробу!");
             return orderSubmitReply;
         }
@@ -333,7 +336,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             Long chatId = update.getMessage().getChatId();
             BotVisitor botVisitor = this.botVisitorService.getBotVisitorByUserId(userId);
             var scalaBotVisitor = BotVisitorToScalaBotVisitorConverter.convertBotVisitorToScalaBotVisitor(botVisitor);
-            LoggerHelper.logInfoInFile("handleInputMsgOrCommand begin, visitor: "+scalaBotVisitor);
+            logger.info("handleInputMsgOrCommand begin, visitor: "+scalaBotVisitor);
 
             var response = BotMessageHandler.handleMessageOrCommand(
                     scalaBotVisitor,
@@ -358,12 +361,12 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                 botVisitorService.saveBotVisitor(updatedBotVisitor);
             }
 
-            LoggerHelper.logInfoInFile("handleInputMsgOrCommand end, visitor to be saved: "+scalaBotVisitor);
+            logger.info("handleInputMsgOrCommand end, visitor to be saved: "+scalaBotVisitor);
             var updatedBotVisitor = BotVisitorToScalaBotVisitorConverter.convertToJavaBotVisitor(response.scalaBotVisitor());
             botVisitorService.saveBotVisitor(updatedBotVisitor);
 
         } else {
-            LoggerHelper.logErrorInFile("Unexpected update from user");
+            logger.error("Unexpected update from user");
         }
     }
 

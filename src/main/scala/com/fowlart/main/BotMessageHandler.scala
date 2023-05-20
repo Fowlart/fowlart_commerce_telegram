@@ -1,9 +1,9 @@
 package com.fowlart.main
 import com.fowlart.main.in_mem_catalog.{Catalog, Item}
-import com.fowlart.main.logging.{LoggerBuilder, LoggerHelper}
 import com.fowlart.main.messages._
 import com.fowlart.main.state.ScalaBotVisitor
 import com.google.gson.Gson
+import org.slf4j.{Logger, LoggerFactory}
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage
 import org.telegram.telegrambots.meta.api.objects.User
 
@@ -13,6 +13,8 @@ import scala.collection.JavaConverters._
 object BotMessageHandler {
 
   private val scalaHelper: ScalaHelper = new ScalaHelper
+
+  private val logger = LoggerFactory.getLogger(classOf[Bot])
 
   def handleMessageOrCommand(
                               scalaBotVisitor: ScalaBotVisitor,
@@ -25,7 +27,7 @@ object BotMessageHandler {
 
     val tuple = (scalaBotVisitor,msg)
 
-    LoggerHelper.logInfoInFile(s"Entered BotMessageHandler. UserId $chatId, threadId ${Thread.currentThread.getId}")
+    logger.info(s"Entered BotMessageHandler. UserId $chatId, threadId ${Thread.currentThread.getId}")
 
     tuple match {
 
@@ -49,7 +51,7 @@ object BotMessageHandler {
 
       // default
       case (visitor, _) =>
-        LoggerHelper.logInfoInFile(s"some not recognized message from visitor: ${visitor.userId}")
+        logger.info(s"some not recognized message from visitor: ${visitor.userId}")
         val sendMessage = SendMessage.builder.chatId(chatId).text(scalaHelper.getMainMenuText(visitor)).replyMarkup(keyboardHelper.buildMainMenuReply).build
         ResponseWithSendMessageAndScalaBotVisitor(sendMessage, visitor)
     }
@@ -68,7 +70,7 @@ object BotMessageHandler {
                                           inputForImgPath: String,
                                           keyboardHelper: KeyboardHelper) = {
 
-    LoggerHelper.logInfoInFile(s"handleUserAddedItemToBasket method, userID: $userId}")
+    logger.info(s"handleUserAddedItemToBasket method, userID: $userId}")
     val itemId = textFromUser.replaceAll("/", "")
     val matchedItem = catalog.getItemList.asScala.find((it: Item) => it.id.equalsIgnoreCase(itemId))
 
@@ -94,13 +96,13 @@ object BotMessageHandler {
     }
   }
   private def handleItemQuantityEditWithNotNumericValue(chatId: Long, name: String, isNameEditingMode: Boolean, phoneNumber: String, itemToEditQty: Item, user: User, userId: String, bucket: Set[Item]) = {
-    LoggerHelper.logInfoInFile(s"handleItemQuantityEditWithNotNumericValue method, userID: $userId")
+    logger.info(s"handleItemQuantityEditWithNotNumericValue method, userID: $userId")
     val visitor = state.ScalaBotVisitor(name, isNameEditingMode, phoneNumber, false, itemToEditQty, user, userId, bucket)
     val sendMessage = SendMessage.builder.chatId(chatId).parseMode("html").text(scalaHelper.getItemQtyWrongEnteredNumber(visitor)).build
     ResponseWithSendMessageAndScalaBotVisitor(sendMessage, visitor)
   }
   private def handleItemQuantityEditWithNumericValue(keyboardHelper: KeyboardHelper, chatId: Long, name: String, isNameEditingMode: Boolean, phoneNumber: String, itemToEditQty: Item, user: User, userId: String, bucket: Set[Item], textFromUser: String) = {
-    LoggerHelper.logInfoInFile(s"handleItemQuantityEditWithNumericValue method, userID: $userId")
+    logger.info(s"handleItemQuantityEditWithNumericValue method, userID: $userId")
     val qty = textFromUser.toInt
     val toAdd = new Item(itemToEditQty.id, itemToEditQty.name, itemToEditQty.price, itemToEditQty.group, qty)
     val updateScalaBotVisitor = state.ScalaBotVisitor(name, isNameEditingMode, phoneNumber, false, null, user, userId, bucket - itemToEditQty + toAdd)
@@ -109,21 +111,21 @@ object BotMessageHandler {
   }
 
   private def handleUserEnteredIncorrectPhoneNumber(scalaBotVisitor: ScalaBotVisitor, keyboardHelper: KeyboardHelper, chatId: Long) = {
-    LoggerHelper.logInfoInFile(s"handleUserEnteredIncorrectPhoneNumber method, userID: ${scalaBotVisitor.userId}")
+    logger.info(s"handleUserEnteredIncorrectPhoneNumber method, userID: ${scalaBotVisitor.userId}")
     val sendMessage = SendMessage.builder.chatId(chatId).text(scalaHelper.getPhoneEditingText(scalaBotVisitor.user.getId)).replyMarkup(keyboardHelper.buildInPhoneEditingModeMenu).build
     val updatedBotVisitor = scalaBotVisitor.copy(phoneNumber = "[номер не вказаний/вказаний не вірно]", isPhoneNumberFillingMode = true)
     ResponseWithSendMessageAndScalaBotVisitor(sendMessage, updatedBotVisitor)
   }
 
   private def handleUserEnteredCorrectPhoneNumber(scalaBotVisitor: ScalaBotVisitor, msg: String, keyboardHelper: KeyboardHelper, chatId: Long) = {
-    LoggerHelper.logInfoInFile(s"handleUserEnteredCorrectPhoneNumber method, userID: ${scalaBotVisitor.userId}")
+    logger.info(s"handleUserEnteredCorrectPhoneNumber method, userID: ${scalaBotVisitor.userId}")
     val sendMessage = SendMessage.builder.chatId(chatId).text(scalaHelper.getPhoneNumberReceivedText()).replyMarkup(keyboardHelper.buildMainMenuReply).build
     val updatedBotVisitor = scalaBotVisitor.copy(phoneNumber = msg, isPhoneNumberFillingMode = false)
     ResponseWithSendMessageAndScalaBotVisitor(sendMessage, updatedBotVisitor)
   }
 
   private def handleUserInNameEditMode(scalaBotVisitor: ScalaBotVisitor, msg: String, keyboardHelper: KeyboardHelper, chatId: Long) = {
-    LoggerHelper.logInfoInFile(s"handleUserInNameEditMode method, userID: ${scalaBotVisitor.userId}")
+    logger.info(s"handleUserInNameEditMode method, userID: ${scalaBotVisitor.userId}")
     val sendMessage = SendMessage.builder.chatId(chatId).text(scalaHelper.getFullNameReceivedText()).replyMarkup(keyboardHelper.buildMainMenuReply).build
     val updatedBotVisitor = scalaBotVisitor.copy(name = msg, isNameEditingMode = false)
     ResponseWithSendMessageAndScalaBotVisitor(sendMessage, updatedBotVisitor)
