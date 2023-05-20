@@ -11,3 +11,6 @@ az group create \
   --location "polandcentral"
 
 az group list --output table
+
+#kill deployment
+az webapp deployment source delete --name FowlartTgBot --resource-group tg_bot_app_service_rg
