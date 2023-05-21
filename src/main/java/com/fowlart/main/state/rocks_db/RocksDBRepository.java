@@ -74,7 +74,6 @@ public class RocksDBRepository implements KVRepository<String, Object> {
                     e.getMessage()
             );
         }
-        log.info("finding key '{}' returns '{}'", key, value);
         return value != null ? Optional.of(value) : Optional.empty();
     }
 
