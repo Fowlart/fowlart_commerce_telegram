@@ -45,6 +45,9 @@ public class StatisticController {
     @GetMapping("/all-visitors")
     public String getAllVisitorList(@RequestHeader Map<String, String> headers) {
 
+        var pleaseLogin = "You are not admin! Please login with Google account! " +
+                "</br><a href=”hostname/.auth/login/google/callback”>click here to login<a/>".replaceAll("hostname", hostName);
+
         // check if the request is from the admin
         var googleAccessToken = headers.get("x-ms-token-google-access-token");
         logger.info("googleAccessToken: " + googleAccessToken);
@@ -62,15 +65,14 @@ public class StatisticController {
                 var json = new ObjectMapper().readTree(response.getBody());
                 var email = json.get("email");
 
-                if ((!email.isNull()) || !gmailAccName.equals(email.asText())) {
-                    return "You are not admin!";
+                if ((!email.isNull()) && !gmailAccName.equals(email.asText())) {
+                    return pleaseLogin;
                 }
             } catch (UnirestException | JsonProcessingException e) {
                 throw new RuntimeException(e);
             }
         } else {
-            return "You are not admin! Please login with Google account! " +
-                    "</br><a href=”hostname/.auth/login/google/callback”>click here to login<a/>".replaceAll("hostname", hostName);
+            return pleaseLogin;
         }
 
         final ObjectMapper mapper = new ObjectMapper()
