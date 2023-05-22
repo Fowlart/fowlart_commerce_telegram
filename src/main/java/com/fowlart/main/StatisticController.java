@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.ws.rs.core.Response;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -68,7 +69,8 @@ public class StatisticController {
                 throw new RuntimeException(e);
             }
         } else {
-            return "You are not admin!";
+            return "You are not admin! Please login with Google account! " +
+                    "</br> https://fowlarttgbot.azurewebsites.net/.auth/login/google/callback";
         }
 
         final ObjectMapper mapper = new ObjectMapper()
