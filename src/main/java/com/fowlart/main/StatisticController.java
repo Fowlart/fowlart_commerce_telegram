@@ -47,7 +47,7 @@ public class StatisticController {
     public String getAllVisitorList(@RequestHeader Map<String, String> headers) {
 
         var pleaseLogin = "You are not admin! Please login with Google account!" +
-                "</br> hostname/.auth/login/google/callback”>click here to login".replaceAll("hostname", hostName);
+                "</br> hostname/.auth/login/google/callback".replaceAll("hostname", hostName);
 
         // check if the request is from the admin
         var googleAccessToken = headers.get("x-ms-token-google-access-token");
