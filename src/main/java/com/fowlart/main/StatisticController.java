@@ -23,7 +23,6 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/statistic")
 public class StatisticController {
 
 
@@ -49,7 +48,7 @@ public class StatisticController {
         return getAllVisitorList(headers);
     }
 
-    @GetMapping("/all-visitors")
+    @GetMapping("statistic/all-visitors")
     public String getAllVisitorList(@RequestHeader Map<String, String> headers) {
 
         var pleaseLogin = "You are not admin! Please login with Google account!" +
