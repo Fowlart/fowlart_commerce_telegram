@@ -6,18 +6,27 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fowlart.main.dto.BotVisitorDto;
 import com.fowlart.main.in_mem_catalog.Item;
 import com.fowlart.main.state.BotVisitorService;
+import com.mashape.unirest.http.Unirest;
+import com.mashape.unirest.http.exceptions.UnirestException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpRequest;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.net.http.HttpResponse;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/statistic")
 public class StatisticController {
+
+
+    private final static Logger logger = LoggerFactory.getLogger(StatisticController.class);
 
     private final BotVisitorService botVisitorService;
 
@@ -30,8 +39,26 @@ public class StatisticController {
 
         // get headers from request
          headers.forEach((key, value) -> {
-             System.out.println(key + " " + value);
+             logger.info(key + " " + value);
          });
+
+         // check if the request is from the admin
+        var googleAccessToken = headers.get("x-ms-token-google-access-token");
+            if (StringUtils.hasText(googleAccessToken)) {
+
+                Unirest.setTimeouts(0, 0);
+
+                try {
+                    var response = Unirest.get("https://oauth2.googleapis.com/tokeninfo?access_token=" + googleAccessToken)
+                            .asString();
+
+                    logger.info(response.getBody());
+
+
+                } catch (UnirestException e) {
+                    throw new RuntimeException(e);
+                }
+            }
 
 
         final ObjectMapper mapper = new ObjectMapper()
