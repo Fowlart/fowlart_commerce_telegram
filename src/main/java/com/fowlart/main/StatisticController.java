@@ -48,6 +48,7 @@ public class StatisticController {
 
         // check if the request is from the admin
         var googleAccessToken = headers.get("x-ms-token-google-access-token");
+
         if (StringUtils.hasText(googleAccessToken)) {
 
             Unirest.setTimeouts(0, 0);
@@ -61,11 +62,13 @@ public class StatisticController {
                 var json = new ObjectMapper().readTree(response.getBody());
                 var email = json.get("email").asText();
                 if (!gmailAccName.equals(email)) {
-                    return "You are not admin";
+                    return "You are not admin!";
                 }
             } catch (UnirestException | JsonProcessingException e) {
                 throw new RuntimeException(e);
             }
+        } else {
+            return "You are not admin!";
         }
 
         final ObjectMapper mapper = new ObjectMapper()
