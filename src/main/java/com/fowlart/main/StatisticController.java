@@ -12,14 +12,12 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpRequest;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.ws.rs.core.Response;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -43,9 +41,7 @@ public class StatisticController {
     public String getAllVisitorList(@RequestHeader Map<String, String> headers) {
 
         // get headers from request
-        headers.forEach((key, value) -> {
-            logger.info(key + " " + value);
-        });
+        headers.forEach((key, value) -> logger.info(key + " " + value));
 
         // check if the request is from the admin
         var googleAccessToken = headers.get("x-ms-token-google-access-token");
