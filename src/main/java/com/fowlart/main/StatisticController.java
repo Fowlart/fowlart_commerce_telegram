@@ -32,9 +32,14 @@ public class StatisticController {
 
     private final String gmailAccName;
 
-    public StatisticController(BotVisitorService botVisitorService, @Value("${app.bot.email.gmail.user}") String gmailAccName) {
+    private final String hostName;
+
+    public StatisticController(BotVisitorService botVisitorService,
+                               @Value("${app.bot.email.gmail.user}") String gmailAccName,
+                               @Value("${app.bot.host.url}") String hostName) {
         this.botVisitorService = botVisitorService;
         this.gmailAccName = gmailAccName;
+        this.hostName = hostName;
     }
 
     @GetMapping("/all-visitors")
@@ -66,7 +71,7 @@ public class StatisticController {
             }
         } else {
             return "You are not admin! Please login with Google account! " +
-                    "</br> https://fowlarttgbot.azurewebsites.net/.auth/login/google/callback";
+                    "</br><a href=”hostname/.auth/login/google/callback”>click here to login<a/>".replaceAll("hostname", hostName);
         }
 
         final ObjectMapper mapper = new ObjectMapper()
