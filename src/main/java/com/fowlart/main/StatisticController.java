@@ -43,6 +43,12 @@ public class StatisticController {
         this.hostName = hostName;
     }
 
+    // root mapping
+    @GetMapping("/")
+    String getRoot(@RequestHeader Map<String, String> headers) {
+        return getAllVisitorList(headers);
+    }
+
     @GetMapping("/all-visitors")
     public String getAllVisitorList(@RequestHeader Map<String, String> headers) {
 
