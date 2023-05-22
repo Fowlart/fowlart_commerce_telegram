@@ -46,8 +46,8 @@ public class StatisticController {
     @GetMapping("/all-visitors")
     public String getAllVisitorList(@RequestHeader Map<String, String> headers) {
 
-        var pleaseLogin = "You are not admin! Please login with Google account! " +
-                "</br><a href=”hostname/.auth/login/google/callback”>click here to login<a/>".replaceAll("hostname", hostName);
+        var pleaseLogin = "You are not admin! Please login with Google account!" +
+                "</br> hostname/.auth/login/google/callback”>click here to login".replaceAll("hostname", hostName);
 
         // check if the request is from the admin
         var googleAccessToken = headers.get("x-ms-token-google-access-token");
