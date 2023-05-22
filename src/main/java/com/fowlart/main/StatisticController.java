@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @RestController
@@ -65,7 +66,7 @@ public class StatisticController {
                 var json = new ObjectMapper().readTree(response.getBody());
                 var email = json.get("email");
 
-                if ((!email.isNull()) && !gmailAccName.equals(email.asText())) {
+                if (Objects.isNull(email) || !gmailAccName.equals(email.asText())) {
                     return pleaseLogin;
                 }
             } catch (UnirestException | JsonProcessingException e) {
