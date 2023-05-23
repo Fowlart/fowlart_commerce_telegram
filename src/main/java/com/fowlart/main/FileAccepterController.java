@@ -18,6 +18,7 @@ public class FileAccepterController {
     public String handleFileUpload(@RequestParam("file") MultipartFile file) {
         var filename = file.getOriginalFilename();
         var fileInStore = new File("/botstore/received_files/"+filename);
+
         logger.info("file received: {}", filename);
         try {
             file.transferTo(fileInStore);
