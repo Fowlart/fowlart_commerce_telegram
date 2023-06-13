@@ -157,6 +157,13 @@
             <version>1.4.9</version>
         </dependency>
 
+        <!-- config management  -->
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-data-appconfiguration</artifactId>
+            <version>1.4.5</version>
+        </dependency>
+
     </dependencies>
     <repositories>
         <repository>

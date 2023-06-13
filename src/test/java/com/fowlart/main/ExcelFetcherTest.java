@@ -10,8 +10,7 @@ import java.io.IOException;
 class ExcelFetcherTest {
 
     public static final String DEFAULT_CATALOG_PATH = "src/main/resources/catalog/catalog.xls";
-
-    //@Test
+    // @Test
     void testPriceListItemGroupsRecognition () throws IOException {
         ExcelFetcher excelFetcher = new ExcelFetcher(DEFAULT_CATALOG_PATH);
         var result_1 = excelFetcher.getUnparsedGoodsFromProductGroup("Шампуні");

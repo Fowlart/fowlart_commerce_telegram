@@ -94,7 +94,7 @@ public class StatisticController {
 
 
             try {
-                return mapper.writeValueAsString(new BotVisitorDto(botVisitor.getName(),
+                return mapper.writeValueAsString(new BotVisitorDto(botVisitor.getUserId(),botVisitor.getName(),
                         bucketConverted,
                         botVisitor.getPhoneNumber(), botVisitor.getUser()
                         .getFirstName(), botVisitor.getUser().getLastName()));
