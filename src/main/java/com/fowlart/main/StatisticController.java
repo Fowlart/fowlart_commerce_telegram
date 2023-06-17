@@ -9,6 +9,7 @@ import com.fowlart.main.in_mem_catalog.Item;
 import com.fowlart.main.state.BotVisitorService;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import org.apache.commons.compress.utils.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.*;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -30,8 +32,13 @@ public class StatisticController {
     private final String gmailAccName;
     private final String hostName;
     private final String pleaseLogin;
+    private final String inputForSecretPath;
 
-    public StatisticController(BotVisitorService botVisitorService, @Value("${app.bot.email.gmail.user}") String gmailAccName, @Value("${app.bot.host.url}") String hostName) {
+    public StatisticController(BotVisitorService botVisitorService,
+                               @Value("${app.bot.email.gmail.user}") String gmailAccName,
+                               @Value("${app.bot.host.url}") String hostName,
+                               @Value("${app.bot.secrets.path}")String secretsPath) {
+        this.inputForSecretPath = secretsPath;
         this.botVisitorService = botVisitorService;
         this.gmailAccName = gmailAccName;
         this.hostName = hostName;
@@ -45,21 +52,27 @@ public class StatisticController {
     }
 
     @GetMapping("my-keys")
-    public String getSecrets(@RequestHeader Map<String, String> headers) throws JsonProcessingException {
-
-        if (isAdmin(headers)) return pleaseLogin;
-
+    public String getSecrets(@RequestHeader Map<String, String> headers) throws IOException {
+        if (notAdmin(headers)) return pleaseLogin;
+        final var secretFile = new File(inputForSecretPath + "/secret.txt");
         final ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
+        final BufferedReader reader = new BufferedReader(new FileReader(secretFile));
+        List<KeyDto> secretDTOs =Lists.newArrayList();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            var secretArr = line.split("->");
+            secretDTOs.add(new KeyDto(secretArr[0],secretArr[1]));
+        }
 
-        return mapper.writeValueAsString(List.of(new KeyDto("some name", "some key"), new KeyDto("some name 1", "some key 1")));
 
+        return mapper.writeValueAsString(secretDTOs);
     }
 
     @GetMapping("statistic/all-visitors")
     public String getAllVisitorList(@RequestHeader Map<String, String> headers) throws JsonProcessingException {
 
         // check if the request is from the admin
-        if (isAdmin(headers)) return pleaseLogin;
+        if (notAdmin(headers)) return pleaseLogin;
 
         final ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
 
@@ -77,7 +90,7 @@ public class StatisticController {
         return mapper.writeValueAsString(visitorsDTO);
     }
 
-    private boolean isAdmin(Map<String, String> headers) {
+    private boolean notAdmin(Map<String, String> headers) {
         var googleAccessToken = headers.get("x-ms-token-google-access-token");
         logger.info("googleAccessToken: " + googleAccessToken);
         return !StringUtils.hasText(googleAccessToken) || !gmailAccName.equals(getEmailByToken(googleAccessToken));

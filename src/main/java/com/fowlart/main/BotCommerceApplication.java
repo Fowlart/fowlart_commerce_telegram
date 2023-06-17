@@ -17,10 +17,8 @@ public class BotCommerceApplication {
         private final static Logger logger = LoggerFactory.getLogger(BotCommerceApplication.class);
 
         public static void main(String[] args) {
-        // todo: refactor to switch loggers according to the chosen profile
         var activeProfile = System.getProperty("spring.profiles.active");
         System.out.println("ACTIVE PROFILE: "+activeProfile);
-        // this line somehow switch-on all logs
         SpringApplication.run(BotCommerceApplication.class, args);
         TelegramBotsApi telegramBotsApi;
             logger.info("Registering bot...");
