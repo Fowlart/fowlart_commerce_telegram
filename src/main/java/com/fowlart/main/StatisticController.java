@@ -26,13 +26,9 @@ public class StatisticController {
 
 
     private final static Logger logger = LoggerFactory.getLogger(StatisticController.class);
-
     private final BotVisitorService botVisitorService;
-
     private final String gmailAccName;
-
     private final String hostName;
-
     private final String pleaseLogin;
 
     public StatisticController(BotVisitorService botVisitorService, @Value("${app.bot.email.gmail.user}") String gmailAccName, @Value("${app.bot.host.url}") String hostName) {
@@ -98,7 +94,8 @@ public class StatisticController {
             email = json.get("email").asText();
 
         } catch (UnirestException | JsonProcessingException e) {
-            throw new RuntimeException(e);
+            logger.warn(e.getMessage());
+            email = null;
         }
         return email;
     }
