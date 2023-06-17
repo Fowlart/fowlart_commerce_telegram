@@ -69,7 +69,7 @@ public class StatisticController {
         var googleAccessToken = headers.get("x-ms-token-google-access-token");
         logger.info("googleAccessToken: " + googleAccessToken);
 
-        if (!StringUtils.hasText(googleAccessToken) && !gmailAccName.equals(getEmailByToken(googleAccessToken))) {
+        if (!StringUtils.hasText(googleAccessToken) || !gmailAccName.equals(getEmailByToken(googleAccessToken))) {
             return pleaseLogin;
         }
 
