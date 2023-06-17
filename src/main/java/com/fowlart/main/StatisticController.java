@@ -103,6 +103,6 @@ public class StatisticController {
                 throw new RuntimeException(e);
             }
 
-        }).reduce((s1, s2) -> s1 + "<br/>" + s2).orElse("None");
+        }).reduce((s1, s2) -> s1 + s2).orElse("None");
     }
 }
