@@ -93,7 +93,7 @@ public class StatisticController {
             var json = new ObjectMapper().readTree(response.getBody());
             email = json.get("email").asText();
 
-        } catch (UnirestException | JsonProcessingException e) {
+        } catch (UnirestException | JsonProcessingException | RuntimeException e) {
             logger.warn(e.getMessage());
             email = null;
         }
