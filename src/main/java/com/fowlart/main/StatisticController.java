@@ -1,7 +1,6 @@
 package com.fowlart.main;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fowlart.main.dto.BotVisitorDto;
@@ -16,12 +15,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @RestController
@@ -36,66 +33,58 @@ public class StatisticController {
 
     private final String hostName;
 
-    public StatisticController(BotVisitorService botVisitorService,
-                               @Value("${app.bot.email.gmail.user}") String gmailAccName,
-                               @Value("${app.bot.host.url}") String hostName) {
+    private final String pleaseLogin;
+
+    public StatisticController(BotVisitorService botVisitorService, @Value("${app.bot.email.gmail.user}") String gmailAccName, @Value("${app.bot.host.url}") String hostName) {
         this.botVisitorService = botVisitorService;
         this.gmailAccName = gmailAccName;
         this.hostName = hostName;
+        this.pleaseLogin = "You are not admin! Please login with Google account!" + "  <button onClick=\"javascript:window.location.href='hostname/.auth/login/google/callback'\">Login</button>".replaceAll("hostname", hostName);
     }
 
     // root mapping
     @GetMapping("/")
-    public String getRoot(@RequestHeader Map<String, String> headers) {
+    public String getRoot(@RequestHeader Map<String, String> headers) throws JsonProcessingException {
         return getAllVisitorList(headers);
     }
 
     @GetMapping("my-keys")
     public String getSecrets(@RequestHeader Map<String, String> headers) throws JsonProcessingException {
-        final ObjectMapper mapper = new ObjectMapper()
-                .enable(SerializationFeature.INDENT_OUTPUT);
 
-        return mapper.writeValueAsString(List.of(new KeyDto("some name","some key"),new KeyDto("some name 1","some key 1")));
+        if (isAdmin(headers)) return pleaseLogin;
+
+        final ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
+
+        return mapper.writeValueAsString(List.of(new KeyDto("some name", "some key"), new KeyDto("some name 1", "some key 1")));
 
     }
 
     @GetMapping("statistic/all-visitors")
-    public String getAllVisitorList(@RequestHeader Map<String, String> headers) {
-
-        var pleaseLogin = "You are not admin! Please login with Google account!" +
-                "  <button onClick=\"javascript:window.location.href='hostname/.auth/login/google/callback'\">Login</button>".replaceAll("hostname", hostName);
+    public String getAllVisitorList(@RequestHeader Map<String, String> headers) throws JsonProcessingException {
 
         // check if the request is from the admin
-        var googleAccessToken = headers.get("x-ms-token-google-access-token");
-        logger.info("googleAccessToken: " + googleAccessToken);
+        if (isAdmin(headers)) return pleaseLogin;
 
-        if (!StringUtils.hasText(googleAccessToken) || !gmailAccName.equals(getEmailByToken(googleAccessToken))) {
-            return pleaseLogin;
-        }
-
-        final ObjectMapper mapper = new ObjectMapper()
-                .enable(SerializationFeature.INDENT_OUTPUT);
+        final ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
 
         var visitors = botVisitorService.getAllVisitors();
-        return visitors.stream().map(botVisitor -> {
 
-            var bucketConverted = botVisitor.getBucket()
-                    .stream()
-                    .map(Item::name)
-                    .collect(Collectors.toSet());
+        var visitorsDTO = visitors.stream().map(botVisitor -> {
+
+            var bucketConverted = botVisitor.getBucket().stream().map(Item::name).collect(Collectors.toSet());
+
+            return new BotVisitorDto(botVisitor.getUserId(), botVisitor.getName(), bucketConverted, botVisitor.getPhoneNumber(), botVisitor.getUser().getFirstName(), botVisitor.getUser().getLastName());
 
 
-            try {
-                return mapper.writeValueAsString(new BotVisitorDto(botVisitor.getUserId(),botVisitor.getName(),
-                        bucketConverted,
-                        botVisitor.getPhoneNumber(), botVisitor.getUser()
-                        .getFirstName(), botVisitor.getUser().getLastName()));
+        }).collect(Collectors.toSet());
 
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
-            }
+        return mapper.writeValueAsString(visitorsDTO);
+    }
 
-        }).reduce((s1, s2) -> s1 + s2).orElse("None");
+    private boolean isAdmin(Map<String, String> headers) {
+        var googleAccessToken = headers.get("x-ms-token-google-access-token");
+        logger.info("googleAccessToken: " + googleAccessToken);
+        return !StringUtils.hasText(googleAccessToken) || !gmailAccName.equals(getEmailByToken(googleAccessToken));
     }
 
     private String getEmailByToken(String token) {
