@@ -63,8 +63,7 @@ public class StatisticController {
             var secretArr = line.split("->");
             secretDTOs.add(new KeyDto(secretArr[0],secretArr[1]));
         }
-
-
+        reader.close();
         return mapper.writeValueAsString(secretDTOs);
     }
 
