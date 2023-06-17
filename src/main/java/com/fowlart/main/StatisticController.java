@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fowlart.main.dto.BotVisitorDto;
+import com.fowlart.main.dto.KeyDto;
 import com.fowlart.main.in_mem_catalog.Item;
 import com.fowlart.main.state.BotVisitorService;
 import com.mashape.unirest.http.Unirest;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -44,8 +46,17 @@ public class StatisticController {
 
     // root mapping
     @GetMapping("/")
-    String getRoot(@RequestHeader Map<String, String> headers) {
+    public String getRoot(@RequestHeader Map<String, String> headers) {
         return getAllVisitorList(headers);
+    }
+
+    @GetMapping("my-keys")
+    public String getSecrets(@RequestHeader Map<String, String> headers) throws JsonProcessingException {
+        final ObjectMapper mapper = new ObjectMapper()
+                .enable(SerializationFeature.INDENT_OUTPUT);
+
+        return mapper.writeValueAsString(List.of(new KeyDto("some name","some key"),new KeyDto("some name 1","some key 1")));
+
     }
 
     @GetMapping("statistic/all-visitors")
@@ -58,26 +69,7 @@ public class StatisticController {
         var googleAccessToken = headers.get("x-ms-token-google-access-token");
         logger.info("googleAccessToken: " + googleAccessToken);
 
-        if (StringUtils.hasText(googleAccessToken)) {
-
-            Unirest.setTimeouts(0, 0);
-
-            try {
-                var response = Unirest
-                        .get("https://oauth2.googleapis.com/tokeninfo?access_token=" + googleAccessToken)
-                        .asString();
-                logger.info(response.getBody());
-                // convert body to JSON
-                var json = new ObjectMapper().readTree(response.getBody());
-                var email = json.get("email");
-
-                if (Objects.isNull(email) || !gmailAccName.equals(email.asText())) {
-                    return pleaseLogin;
-                }
-            } catch (UnirestException | JsonProcessingException e) {
-                throw new RuntimeException(e);
-            }
-        } else {
+        if (!StringUtils.hasText(googleAccessToken) && !gmailAccName.equals(getEmailByToken(googleAccessToken))) {
             return pleaseLogin;
         }
 
@@ -104,5 +96,21 @@ public class StatisticController {
             }
 
         }).reduce((s1, s2) -> s1 + s2).orElse("None");
+    }
+
+    private String getEmailByToken(String token) {
+        Unirest.setTimeouts(0, 0);
+        String email;
+        try {
+            var response = Unirest.get("https://oauth2.googleapis.com/tokeninfo?access_token=" + token).asString();
+            logger.info(response.getBody());
+            // convert body to JSON
+            var json = new ObjectMapper().readTree(response.getBody());
+            email = json.get("email").asText();
+
+        } catch (UnirestException | JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        return email;
     }
 }
