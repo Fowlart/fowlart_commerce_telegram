@@ -121,7 +121,6 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         String mbItemId = null;
         if (callBackButtonArr.length > 1) mbItemId = callBackButtonArr[1];
 
-        // todo: add logging HERE
         var answer = switch (callBackButton) {
             case DISCARD_ITEM -> handleItemRemove(visitor, mbItemId);
             case GOODS_QTY_EDIT -> handleGoodsQtyEdit(visitor, mbItemId);
@@ -139,7 +138,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             case BUCKET -> handleBucket(visitor);
 
             default -> {
-                var subGroupItems = scalaHelper.getSubMenuText(this.catalog.getItemList(), callBackButton,this.hostPort);
+                var subGroupItems = scalaHelper.getSubMenuText(this.catalog.getItemList(), callBackButton,this.hostPort, userId);
                 for (String str : subGroupItems) {
                     var lastMessage = subGroupItems[subGroupItems.length - 1];
                     var subCatalogAnswer = SendMessage

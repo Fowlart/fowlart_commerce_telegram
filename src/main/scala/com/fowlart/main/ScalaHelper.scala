@@ -123,7 +123,7 @@ class ScalaHelper {
     pattern.matcher(strNum).matches
   }
 
-  def getSubMenuText(itemList: java.util.List[Item], group: String, hostPort: String): Array[String] = {
+  def getSubMenuText(itemList: java.util.List[Item], group: String, hostPort: String, userId: Long): Array[String] = {
     val maxItemsPerReply = 15
     val itemSeq = itemList.asScala.filter(item=>group.equals(item.group()))
     // ordering for pretty printing
@@ -137,7 +137,7 @@ class ScalaHelper {
            |${item.name.trim}
            |${item.price} грн
            |➡️️<b>/${item.id}</b>
-           |⏩ $hostPort/pdp/${item.id}
+           |<a href='$hostPort/pdp/${item.id}?userId=${userId}'>🛒ЗАМОВИТИ</a>
            |""".stripMargin).reduce((v1, v2) => s"$v1$v2")
     })
     res.toArray
