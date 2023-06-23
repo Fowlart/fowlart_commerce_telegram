@@ -54,12 +54,13 @@ public class PdpController {
         var user = botVisitorService.getBotVisitorByUserId(userID);
         if (item.isPresent() && Objects.nonNull(user)) {
             var actualItem = item.get();
-            actualItem = new Item(actualItem.id(),actualItem.name(),actualItem.price(),actualItem.group(),qty);
+            final var newActualItem = new Item(actualItem.id(),actualItem.name(),actualItem.price(),actualItem.group(),qty);
+            var allItemsInGroup = catalog.getItemList().stream().filter(i -> i.group().equals(newActualItem.group())).map(i -> "<p><a href='/pdp/" + i.id() + "?userId=" + userID + "'>" + i.name() + "</a></p>").reduce((s1, s2) -> s1 + s2).orElse("<p>!от я ніколи не побачу цей аутпут!</p>");
             Set<Item> newBucket = new HashSet<>(user.getBucket());
-            newBucket.add(actualItem);
+            newBucket.add(newActualItem);
             user.setBucket(newBucket);
             botVisitorService.saveBotVisitor(user);
-            response = new ResponseEntity<>("Товар додано в корзину! \n" + actualItem, HttpStatus.ACCEPTED);
+            response = new ResponseEntity<>(allItemsInGroup, HttpStatus.ACCEPTED);
         }
         return response;
     }

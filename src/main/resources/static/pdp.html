@@ -9,6 +9,10 @@
         }
         A{
             color: white;
+            text-decoration: none;
+        }
+        p{
+            color: white;
         }
         A:hover{
             color: green;
@@ -91,7 +95,7 @@
         </form>
         {{dialogItems}}
     </dialog>
-    <button type="button" onclick="d.showModal(); d1.showModal()">Всі товари в категорії _{{groupName}}_</button>
+    <button type="button" onclick="d.showModal();">Всі товари в категорії: {{groupName}}</button>
     <img src="{{productImageUri}}" alt="Product Image">
     <h1>{{productName}}</h1>
     <h2>{{productPrice}} UAH</h2>
@@ -123,7 +127,9 @@
         if (qty==="") qty = 1;
         fetch(`${host}/pdp/accept-item?userID=${userId}&itemID=${itemId}&qty=${qty}`, requestOptions)
             .then(response => response.text())
-            .then(result => alert(result))
+            .then(result =>{
+                alert("Товар було додано! Поверніться у телеграм або продовдуйте навігацію в межах групи.");
+            })
             .catch(error => console.log('error', error));
     });
 
