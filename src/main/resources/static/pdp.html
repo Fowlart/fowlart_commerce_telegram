@@ -95,26 +95,33 @@
     <img src="{{productImageUri}}" alt="Product Image">
     <h1>{{productName}}</h1>
     <h2>{{productPrice}} UAH</h2>
-    <input type="number" placeholder="Кількість">
+    <input id="number_edit" type="number" placeholder="Кількість">
     <button class="submit" type="button">Додати</button>
     <button class="cancel" type="button">Відмінити</button>
 </div>
 <script>
+    function getCookie(cookieName) {
+        let cookie = {};
+        document.cookie.split(';').forEach(function(el) {
+            let [key,value] = el.split('=');
+            cookie[key.trim()] = value;
+        })
+        return cookie[cookieName];
+    }
+
     document.querySelector('.cancel').addEventListener('click', function() {
         window.close();
     });
 
-    const queryString = window.location.search;
-    const urlParams = new URLSearchParams(queryString);
-    console.log(urlParams.get("userId"));
     let pageUrl = window.location.href.split("?")[0];
     let host = pageUrl.split("/pdp/")[0];
     let itemId = pageUrl.split("/pdp/")[1];
-    console.log(host);
-    console.log(itemId);
+    let userId = getCookie("userId");
 
     document.querySelector('.submit').addEventListener('click', function() {
-        fetch(`${host}/pdp/accept-item?userID=${urlParams.get("userId")}&itemID=${itemId}`, requestOptions)
+        let qty = document.getElementById('number_edit').value;
+        if (qty==="") qty = 1;
+        fetch(`${host}/pdp/accept-item?userID=${userId}&itemID=${itemId}&qty=${qty}`, requestOptions)
             .then(response => response.text())
             .then(result => alert(result))
             .catch(error => console.log('error', error));

@@ -137,7 +137,7 @@ class ScalaHelper {
            |${item.name.trim}
            |${item.price} грн
            |➡️️<b>/${item.id}</b>
-           |<a href='$hostPort/pdp/${item.id}?userId=${userId}'>🛒ЗАМОВИТИ</a>
+           |<a href='$hostPort/pdp/${item.id}?userId=$userId'>🛒ЗАМОВИТИ</a>
            |""".stripMargin).reduce((v1, v2) => s"$v1$v2")
     })
     res.toArray
