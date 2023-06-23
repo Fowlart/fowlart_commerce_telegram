@@ -59,7 +59,7 @@ public class PdpController {
             newBucket.add(actualItem);
             user.setBucket(newBucket);
             botVisitorService.saveBotVisitor(user);
-            response = new ResponseEntity<>("Товар додано в корзину! \n" + item.get(), HttpStatus.ACCEPTED);
+            response = new ResponseEntity<>("Товар додано в корзину! \n" + actualItem, HttpStatus.ACCEPTED);
         }
         return response;
     }
