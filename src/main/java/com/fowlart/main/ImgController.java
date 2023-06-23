@@ -15,6 +15,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiPredicate;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/pdp")
@@ -40,9 +41,21 @@ public class ImgController {
 
     @GetMapping(value = "/{id}", produces = "text/html")
     public @ResponseBody String getProductInfo(@PathVariable String id, @RequestHeader Map<String, String> headers) throws IOException {
+
         var item = catalog.getItemList().stream().filter(i -> i.id().equals(id)).findFirst().orElse(null);
 
         if (Objects.isNull(item)) return "No such item";
+
+        var allItemsInGroup = catalog
+                .getItemList()
+                .stream()
+                .filter(i -> i.group().equals(item.group()))
+                .map(i -> {
+
+                    return "<p><a href='/pdp/"+i.id()+"'>"+i.name()+"</a></p>";}
+                )
+                .reduce((s1, s2) -> s1+s2)
+                .orElse("<p>!от я ніколи не побачу цей аутпут!</p>");
 
         // read pdp.html as a string
         var pdpHtml = Files.readString(Path.of(inputForHTMLPath+"/pdp.html"));
@@ -51,7 +64,9 @@ public class ImgController {
 
         return pdpHtml.replace("{{productImageUri}}", productImageUri)
                 .replace("{{productPrice}}", item.price().toString())
-                .replace("{{productName}}", item.name());
+                .replace("{{productName}}", item.name())
+                .replace("{{groupName}}",item.group())
+                .replace("{{dialogItems}}",allItemsInGroup);
 
     }
 

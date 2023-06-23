@@ -7,6 +7,13 @@
         * {
             box-sizing: border-box;
         }
+        A{
+            color: white;
+        }
+        A:hover{
+            color: green;
+            transition: 500ms;
+        }
         body {
             margin: 0;
             padding: 0;
@@ -41,8 +48,18 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            margin: 1em;
+            margin: 4px;
             transition: background-color 0.3s;
+        }
+        dialog {
+            transition: all ease-in-out 4s;
+            border: solid green 2px;
+            border-radius: 4px;
+            background-color: #333333;
+        }
+        dialog::backdrop {
+            transition: all ease-in-out 4s;
+            opacity: 20%;
         }
         button:hover {
             background-color: #3c78d8;
@@ -68,6 +85,13 @@
 </head>
 <body>
 <div class="container">
+    <dialog id="d">
+        <form method="dialog">
+            <button>Закрити</button>
+        </form>
+        {{dialogItems}}
+    </dialog>
+    <button type="button" onclick="d.showModal(); d1.showModal()">Всі товари в категорії _{{groupName}}_</button>
     <img src="{{productImageUri}}" alt="Product Image">
     <h1>{{productName}}</h1>
     <h2>{{productPrice}} UAH</h2>
