@@ -12,7 +12,7 @@
             text-decoration: none;
         }
         p{
-            color: white;
+            color:  #4285f4;
         }
         A:hover{
             color: green;
@@ -22,6 +22,10 @@
             margin: 0;
             padding: 0;
             font-family: Arial, sans-serif;
+        }
+        .container_2{
+            display: flex;
+            flex-direction: row;
         }
         .container {
             max-width: 100%;
@@ -36,6 +40,7 @@
             max-height: 50vh;
             object-fit: contain;
             margin-bottom: 1em;
+            border: 1px solid #ddd;
         }
         input {
             margin: 1em 0;
@@ -77,7 +82,7 @@
             background-color: #bbb;
         }
         h1 {
-            margin: 0;
+            margin: 2px;
             font-size: 2em;
         }
         h2 {
@@ -95,13 +100,14 @@
         </form>
         {{dialogItems}}
     </dialog>
-    <button type="button" onclick="d.showModal();">Всі товари в категорії: {{groupName}}</button>
+    <h2>{{productName}}: {{productPrice}} UAH</h2>
     <img src="{{productImageUri}}" alt="Product Image">
-    <h1>{{productName}}</h1>
-    <h2>{{productPrice}} UAH</h2>
+    <button type="button" onclick="d.showModal();">Всі товари в категорії: {{groupName}}</button>
     <input id="number_edit" type="number" placeholder="Кількість">
+    <div class="container_2">
     <button class="submit" type="button">Додати</button>
-    <button class="cancel" type="button">Відмінити</button>
+        <form action="https://t.me/FowlartCommerceBot"><input class="cancel" type="submit" value="повернутися" /></form>
+    </div>
 </div>
 <script>
     function getCookie(cookieName) {
@@ -112,10 +118,6 @@
         })
         return cookie[cookieName];
     }
-
-    document.querySelector('.cancel').addEventListener('click', function() {
-        window.close();
-    });
 
     let pageUrl = window.location.href.split("?")[0];
     let host = pageUrl.split("/pdp/")[0];
@@ -128,7 +130,7 @@
         fetch(`${host}/pdp/accept-item?userID=${userId}&itemID=${itemId}&qty=${qty}`, requestOptions)
             .then(response => response.text())
             .then(result =>{
-                alert("Товар було додано! Поверніться у телеграм або продовдуйте навігацію в межах групи.");
+                alert("Товар було додано! Поверніться у телеграм або продовжуйте навігацію в межах групи.");
             })
             .catch(error => console.log('error', error));
     });
