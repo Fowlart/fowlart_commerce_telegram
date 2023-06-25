@@ -86,9 +86,9 @@
             font-size: 2em;
         }
         h2 {
-            margin: 0.5em 0;
-            font-size: 1.5em;
-            color: #4285f4;
+            margin-bottom:3px;
+            font-size: 22px;
+            color: black;
         }
     </style>
 </head>
@@ -100,7 +100,8 @@
         </form>
         {{dialogItems}}
     </dialog>
-    <h2>{{productName}}: {{productPrice}} UAH</h2>
+    <h1>{{productName}}</h1>
+    <h2>{{productPrice}} UAH</h2>
     <img src="{{productImageUri}}" alt="Product Image">
     <button type="button" onclick="d.showModal();">Всі товари в категорії: {{groupName}}</button>
     <input id="number_edit" type="number" placeholder="Кількість">

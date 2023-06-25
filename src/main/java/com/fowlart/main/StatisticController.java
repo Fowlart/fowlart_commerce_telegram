@@ -32,13 +32,8 @@ public class StatisticController {
     private final String gmailAccName;
     private final String hostName;
     private final String pleaseLogin;
-    private final String inputForSecretPath;
 
-    public StatisticController(BotVisitorService botVisitorService,
-                               @Value("${app.bot.email.gmail.user}") String gmailAccName,
-                               @Value("${app.bot.host.url}") String hostName,
-                               @Value("${app.bot.secrets.path}")String secretsPath) {
-        this.inputForSecretPath = secretsPath;
+    public StatisticController(BotVisitorService botVisitorService, @Value("${app.bot.email.gmail.user}") String gmailAccName, @Value("${app.bot.host.url}") String hostName) {
         this.botVisitorService = botVisitorService;
         this.gmailAccName = gmailAccName;
         this.hostName = hostName;
@@ -49,22 +44,6 @@ public class StatisticController {
     @GetMapping("/")
     public String getRoot(@RequestHeader Map<String, String> headers) throws JsonProcessingException {
         return getAllVisitorList(headers);
-    }
-
-    @GetMapping("my-keys")
-    public String getSecrets(@RequestHeader Map<String, String> headers) throws IOException {
-        if (notAdmin(headers)) return pleaseLogin;
-        final var secretFile = new File(inputForSecretPath + "/secret.txt");
-        final ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
-        final BufferedReader reader = new BufferedReader(new FileReader(secretFile));
-        List<KeyDto> secretDTOs =Lists.newArrayList();
-        String line;
-        while ((line = reader.readLine()) != null) {
-            var secretArr = line.split("->");
-            secretDTOs.add(new KeyDto(secretArr[0],secretArr[1]));
-        }
-        reader.close();
-        return mapper.writeValueAsString(secretDTOs);
     }
 
     @GetMapping("statistic/all-visitors")
