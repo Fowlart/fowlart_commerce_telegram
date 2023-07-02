@@ -166,6 +166,14 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         }
     }
 
+    public void sendAnswer(SendMessage resp) {
+        try {
+            this.sendApiMethod(resp);
+        } catch (TelegramApiException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private SendMessage handleBucket(BotVisitor visitor) throws TelegramApiException {
         logger.info("handleBucket method, visitorId "+visitor.getUserId());
         if (visitor.getBucket().isEmpty())

@@ -2,7 +2,6 @@ package com.fowlart.main;
 
 import com.fowlart.main.in_mem_catalog.Catalog;
 import com.fowlart.main.in_mem_catalog.Item;
-import com.fowlart.main.state.BotVisitor;
 import com.fowlart.main.state.BotVisitorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +19,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiPredicate;
 
 @RestController
@@ -34,17 +36,22 @@ public class PdpController {
     private final String inputForHTMLPath;
     private final BotVisitorService botVisitorService;
 
+    private final Bot bot;
 
-    public PdpController(@Autowired Catalog catalog, @Autowired BotVisitorService botVisitorService, @Value("${app.bot.items.img.folder}") String inputForImgPath, @Value("${app.bot.host.url}") String hostAndPort, @Value("${app.bot.html.templates}") String inputForHTMLPath) {
+
+    public PdpController(@Autowired Catalog catalog, @Autowired BotVisitorService botVisitorService, @Value("${app.bot.items.img.folder}") String inputForImgPath, @Value("${app.bot.host.url}") String hostAndPort, @Value("${app.bot.html.templates}") String inputForHTMLPath, @Autowired Bot bot) {
         this.botVisitorService = botVisitorService;
         this.catalog = catalog;
         this.inputForImgPath = inputForImgPath;
         this.hostAndPort = hostAndPort;
         this.inputForHTMLPath = inputForHTMLPath;
+        this.bot = bot;
     }
 
     @PostMapping(value = "/accept-item")
-    public @ResponseBody ResponseEntity<String> acceptItem(@RequestParam String userID, @RequestParam String itemID, @RequestParam int qty) {
+    public @ResponseBody ResponseEntity<String> acceptItem(@RequestParam String userID,
+                                                           @RequestParam String itemID,
+                                                           @RequestParam int qty) {
         // Todo: save visitor data, and item qty
         logger.info("userID " + userID);
         logger.info("itemID " + itemID);
@@ -54,12 +61,24 @@ public class PdpController {
         var user = botVisitorService.getBotVisitorByUserId(userID);
         if (item.isPresent() && Objects.nonNull(user)) {
             var actualItem = item.get();
-            final var newActualItem = new Item(actualItem.id(),actualItem.name(),actualItem.price(),actualItem.group(),qty);
+            final var newActualItem = new Item(actualItem.id(), actualItem.name(), actualItem.price(), actualItem.group(), qty);
             var allItemsInGroup = catalog.getItemList().stream().filter(i -> i.group().equals(newActualItem.group())).map(i -> "<p><a href='/pdp/" + i.id() + "?userId=" + userID + "'>" + i.name() + "</a></p>").reduce((s1, s2) -> s1 + s2).orElse("<p>!от я ніколи не побачу цей аутпут!</p>");
             Set<Item> newBucket = new HashSet<>(user.getBucket());
             newBucket.add(newActualItem);
             user.setBucket(newBucket);
             botVisitorService.saveBotVisitor(user);
+
+            var helper = new ScalaHelper();
+
+            var kbhelper = new KeyboardHelper(catalog);
+
+            var resp = helper
+                    .buildSimpleReplyMessage(Long.parseLong(user.getUserId()), "Товар було додано з веб-сторінки. Перегляньте корзину.", kbhelper.buildMainMenuReply());
+
+            resp.setChatId(Long.parseLong(userID));
+
+            bot.sendAnswer(resp);
+
             response = new ResponseEntity<>(allItemsInGroup, HttpStatus.ACCEPTED);
         }
         return response;
