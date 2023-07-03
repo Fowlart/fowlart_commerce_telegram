@@ -73,8 +73,8 @@ public class PdpController {
 
             var resp = scHelper
                     .buildSimpleReplyMessage(Long.parseLong(user.getUserId()),
-                            "Товар було додано з веб-сторінки:" + actualItem,
-                            kbHelper.buildMainMenuReply());
+                            "Товар було додано з веб-сторінки:" + actualItem.name(),
+                            kbHelper.buildBucketReply());
 
             bot.sendAnswer(resp);
 

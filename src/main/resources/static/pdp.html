@@ -146,7 +146,7 @@
             opacity: 20%;
         }
 
-        .cancel {
+        .cancel,.item_adder_button {
             height: 50px;
             margin-top: 20px;
             background-color: #ddd;
@@ -154,7 +154,7 @@
             transition: background-color 0.3s;
         }
 
-        .cancel:hover {
+        .cancel,.item_adder_button:hover {
             background-color: #bbb;
         }
 
@@ -191,7 +191,7 @@
     </div>
     <div class="container_2">
         <input id="number_edit" type="number" placeholder="Кількість">
-        <button class="cancel" type="button">Додати</button>
+        <button class="item_adder_button">Додати</button>
         <form action="https://t.me/FowlartCommerceBot"><input class="cancel" type="submit" value="повернутися"/></form>
     </div>
 </div>
@@ -210,7 +210,7 @@
     let itemId = pageUrl.split("/pdp/")[1];
     let userId = getCookie("userId");
 
-    document.querySelector('.submit').addEventListener('click', function () {
+    document.querySelector('.item_adder_button').addEventListener('click', function () {
         let qty = document.getElementById('number_edit').value;
         if (qty === "") qty = 1;
         fetch(`${host}/pdp/accept-item?userID=${userId}&itemID=${itemId}&qty=${qty}`, requestOptions)
