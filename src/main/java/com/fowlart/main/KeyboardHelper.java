@@ -50,6 +50,15 @@ public class KeyboardHelper {
         return markupInline;
     }
 
+    public InlineKeyboardMarkup buildBucketReply() {
+        InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
+        List<InlineKeyboardButton> rowInline1 = new ArrayList<>();
+        rowInline1.add(buildButton("\uD83D\uDED2 Корзина", "BUCKET"));
+        List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>(List.of(rowInline1));
+        markupInline.setKeyboard(rowsInline);
+        return markupInline;
+    }
+
     public InlineKeyboardMarkup buildMainMenuReply() {
         InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
         List<InlineKeyboardButton> rowInline1 = new ArrayList<>();

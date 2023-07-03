@@ -52,7 +52,6 @@ public class PdpController {
     public @ResponseBody ResponseEntity<String> acceptItem(@RequestParam String userID,
                                                            @RequestParam String itemID,
                                                            @RequestParam int qty) {
-        // Todo: save visitor data, and item qty
         logger.info("userID " + userID);
         logger.info("itemID " + itemID);
         logger.info("qty " + qty);
@@ -68,14 +67,14 @@ public class PdpController {
             user.setBucket(newBucket);
             botVisitorService.saveBotVisitor(user);
 
-            var helper = new ScalaHelper();
+            var scHelper = new ScalaHelper();
 
-            var kbhelper = new KeyboardHelper(catalog);
+            var kbHelper = new KeyboardHelper(catalog);
 
-            var resp = helper
-                    .buildSimpleReplyMessage(Long.parseLong(user.getUserId()), "Товар було додано з веб-сторінки. Перегляньте корзину.", kbhelper.buildMainMenuReply());
-
-            resp.setChatId(Long.parseLong(userID));
+            var resp = scHelper
+                    .buildSimpleReplyMessage(Long.parseLong(user.getUserId()),
+                            "Товар було додано з веб-сторінки:" + actualItem,
+                            kbHelper.buildMainMenuReply());
 
             bot.sendAnswer(resp);
 

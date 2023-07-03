@@ -147,6 +147,8 @@
         }
 
         .cancel {
+            height: 50px;
+            margin-top: 20px;
             background-color: #ddd;
             color: #333;
             transition: background-color 0.3s;
@@ -162,6 +164,7 @@
             text-underline-offset: 10px;
             color: white;
         }
+
         h2 {
             margin-top: 4px;
             font-size: 20px;
@@ -172,17 +175,23 @@
 </head>
 <body>
 <div class="container">
-    <dialog id="d">
-        <A class="darkRedBack" onclick="d.close();">Закрити</A>
+    <dialog id="itemList">
+        <A class="darkRedBack" onclick="document.getElementById('itemList').close();">Закрити</A>
         {{dialogItems}}
+    </dialog>
+    <dialog id="fileDownload">
+        <A class="darkRedBack" onclick="document.getElementById('fileDownload').close();">Закрити</A>
     </dialog>
     <h1>{{productPrice}} UAH</h1>
     <img src="{{productImageUri}}" alt="Product Image">
     <h2>{{productName}}</h2>
-    <button type="button" onclick="d.showModal();">Всі товари в категорії: {{groupName}}</button>
-    <input id="number_edit" type="number" placeholder="Кількість">
     <div class="container_2">
-        <button class="submit" type="button">Додати</button>
+        <button type="button" onclick="document.getElementById('itemList').showModal();">Всі товари в категорії: {{groupName}}</button>
+        <button type="button" onclick="document.getElementById('fileDownload').showModal();">завантажити картинку</button>
+    </div>
+    <div class="container_2">
+        <input id="number_edit" type="number" placeholder="Кількість">
+        <button class="cancel" type="button">Додати</button>
         <form action="https://t.me/FowlartCommerceBot"><input class="cancel" type="submit" value="повернутися"/></form>
     </div>
 </div>
