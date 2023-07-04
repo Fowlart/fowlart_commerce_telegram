@@ -230,14 +230,15 @@
     document.getElementById("fileSaver").addEventListener('submit',(event)=>{
         const form = event.currentTarget;
         const formData = new FormData(form);
-
+        let itemId = pageUrl.split("/pdp/")[1];
+        let userId = getCookie("userId");
         const requestOptions = {
             method: 'POST',
             body: formData,
             redirect: 'follow'
         };
 
-        fetch("https://fowlarttgbot.azurewebsites.net/accept-img", requestOptions)
+        fetch(`https://fowlarttgbot.azurewebsites.net/accept-img?userID=${userId}&itemID=${itemId}`, requestOptions)
             .then(response => response.text())
             .then(result => alert(result))
             .catch(error => alert('error', error));
