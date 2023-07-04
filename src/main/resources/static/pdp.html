@@ -181,6 +181,12 @@
     </dialog>
     <dialog id="fileDownload">
         <A class="darkRedBack" onclick="document.getElementById('fileDownload').close();">Закрити</A>
+        <form action="/api" method="post" enctype="multipart/form-data" id="fileSaver">
+            <h4>Функціонал призначено для власників. Зображення будуть проходити модерацію адміністратора.
+                Все, що не картинка - відфільтровується системою.</h4>
+            <br/><input id="file" name="file" type="file"/>
+            <br/><button>Завантажити</button>
+        </form>
     </dialog>
     <h1>{{productPrice}} UAH</h1>
     <img src="{{productImageUri}}" alt="Product Image">
@@ -210,7 +216,7 @@
     let itemId = pageUrl.split("/pdp/")[1];
     let userId = getCookie("userId");
 
-    document.querySelector('.item_adder_button').addEventListener('click', function () {
+    document.querySelector('.item_adder_button').addEventListener('click', () => {
         let qty = document.getElementById('number_edit').value;
         if (qty === "") qty = 1;
         fetch(`${host}/pdp/accept-item?userID=${userId}&itemID=${itemId}&qty=${qty}`, requestOptions)
@@ -220,6 +226,24 @@
             })
             .catch(error => console.log('error', error));
     });
+
+    document.getElementById("fileSaver").addEventListener('submit',(event)=>{
+        const form = event.currentTarget;
+        const formData = new FormData(form);
+
+        const requestOptions = {
+            method: 'POST',
+            body: formData,
+            redirect: 'follow'
+        };
+
+        fetch("https://fowlarttgbot.azurewebsites.net/accept-img", requestOptions)
+            .then(response => response.text())
+            .then(result => alert(result))
+            .catch(error => alert('error', error));
+
+                event.preventDefault();
+    })
 
     const requestOptions = {
         method: 'POST',

@@ -29,4 +29,22 @@ public class FileAccepterController {
         }
         return "file uploaded successfully";
     }
+
+    @PostMapping("/accept-img")
+    public String handleImageUpload(@RequestParam("file") MultipartFile file) {
+        var filename = file.getOriginalFilename();
+
+        var fileInStore = new File("/botstore/item_imgs/"+filename);
+
+        logger.info("image received: {}", filename);
+
+        logger.info("accepted file content type: "+file.getContentType());
+
+        try {
+            file.transferTo(fileInStore);
+        } catch (IOException e) {
+            return e.getMessage();
+        }
+        return "file uploaded successfully";
+    }
 }
