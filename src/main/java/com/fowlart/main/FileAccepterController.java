@@ -82,7 +82,7 @@ public class FileAccepterController {
             return "Rejected! Not an image.";
         }
 
-        if (!Arrays.stream(botAdminsList.split(",")).allMatch(userID::equals)) {
+        if (!Arrays.stream(botAdminsList.split(",")).anyMatch(userID::equals)) {
             return "Rejected! Not a Administrator.";
         }
 
