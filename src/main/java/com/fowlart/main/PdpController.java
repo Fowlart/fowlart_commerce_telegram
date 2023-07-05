@@ -39,7 +39,12 @@ public class PdpController {
     private final Bot bot;
 
 
-    public PdpController(@Autowired Catalog catalog, @Autowired BotVisitorService botVisitorService, @Value("${app.bot.items.img.folder}") String inputForImgPath, @Value("${app.bot.host.url}") String hostAndPort, @Value("${app.bot.html.templates}") String inputForHTMLPath, @Autowired Bot bot) {
+    public PdpController(@Autowired Catalog catalog,
+                         @Autowired BotVisitorService botVisitorService,
+                         @Value("${app.bot.items.img.folder}") String inputForImgPath,
+                         @Value("${app.bot.host.url}") String hostAndPort,
+                         @Value("${app.bot.html.templates}") String inputForHTMLPath,
+                         @Autowired Bot bot) {
         this.botVisitorService = botVisitorService;
         this.catalog = catalog;
         this.inputForImgPath = inputForImgPath;
