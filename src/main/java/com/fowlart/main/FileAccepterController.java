@@ -1,5 +1,9 @@
 package com.fowlart.main;
 
+import com.azure.storage.blob.BlobClient;
+import com.azure.storage.blob.BlobContainerClient;
+import com.azure.storage.blob.BlobServiceClient;
+import com.azure.storage.blob.BlobServiceClientBuilder;
 import com.fowlart.main.in_mem_catalog.Catalog;
 import com.fowlart.main.in_mem_catalog.Item;
 import org.slf4j.Logger;
@@ -25,10 +29,27 @@ public class FileAccepterController {
 
     private final String botAdminsList;
 
+    private final String containerName;
+
+    private final String connectionString;
+
+    private final BlobContainerClient containerClient;
+
     public FileAccepterController(@Autowired Catalog catalog,
-                                  @Value("${app.bot.admins}") String botAdminsList) {
+                                  @Value("${app.bot.admins}") String botAdminsList,
+                                  @Value("${azure.storage.container.name}") String containerName,
+                                  @Value("${azure.storage.connection.string}") String connectionString) {
         this.catalog = catalog;
         this.botAdminsList = botAdminsList;
+        this.containerName = containerName;
+        this.connectionString = connectionString;
+        this.containerClient = getBlobContainerClient();
+    }
+
+    private BlobContainerClient getBlobContainerClient() {
+        BlobServiceClient blobServiceClient = new BlobServiceClientBuilder().connectionString(Objects.requireNonNull(connectionString)).buildClient();
+        BlobContainerClient containerClient = blobServiceClient.createBlobContainerIfNotExists(containerName);
+        return containerClient;
     }
 
     @PostMapping("/accept-file")
@@ -48,25 +69,17 @@ public class FileAccepterController {
     }
 
     @PostMapping("/accept-img")
-    public String handleImageUpload(@RequestParam("file") MultipartFile file,
+    public String handleImageUpload(@RequestParam("file") MultipartFile receivedFile,
                                     @RequestParam String userID,
                                     @RequestParam String itemID) {
 
+        var fileExtension = Objects.requireNonNull(receivedFile.getOriginalFilename()).split("\\.")[1];
 
+        var itemName = catalog.getItemList().stream().filter(it -> itemID.equals(it.id())).map(Item::name).findFirst().orElse("_none_");
 
-        var fileExtension = Objects.requireNonNull(file.getOriginalFilename()).split("\\.")[1];
+        var fileInContainer = itemName + "." + fileExtension;
 
-        var itemName = catalog
-                .getItemList()
-                .stream()
-                .filter(it->itemID.equals(it.id()))
-                .map(Item::name)
-                .findFirst()
-                .orElse("_none_");
-
-        var fileInStore = new File("/botstore/item_imgs/" + itemName+"."+fileExtension);
-
-        if (!Objects.requireNonNull(file.getContentType()).contains("image")) {
+        if (!Objects.requireNonNull(receivedFile.getContentType()).contains("image")) {
             return "Rejected! Not an image.";
         }
 
@@ -75,10 +88,15 @@ public class FileAccepterController {
         }
 
         try {
-            logger.info("Attempt to store file in storage: {}", fileInStore);
-            file.transferTo(fileInStore);
+            logger.info("Attempt to store file in container {}: {}", this.containerClient.getBlobContainerName(),fileInContainer);
+
+            BlobClient blobClient = this.containerClient.getBlobClient(containerName);
+
+            blobClient.upload(receivedFile.getInputStream(),true);
+
             logger.info("Success!");
         } catch (IOException e) {
+            e.printStackTrace();
             return e.getMessage();
         }
 
