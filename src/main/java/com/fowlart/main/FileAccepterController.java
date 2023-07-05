@@ -48,8 +48,7 @@ public class FileAccepterController {
 
     private BlobContainerClient getBlobContainerClient() {
         BlobServiceClient blobServiceClient = new BlobServiceClientBuilder().connectionString(Objects.requireNonNull(connectionString)).buildClient();
-        BlobContainerClient containerClient = blobServiceClient.createBlobContainerIfNotExists(containerName);
-        return containerClient;
+        return blobServiceClient.createBlobContainerIfNotExists(containerName);
     }
 
     @PostMapping("/accept-file")
@@ -90,7 +89,7 @@ public class FileAccepterController {
         try {
             logger.info("Attempt to store file in container {}: {}", this.containerClient.getBlobContainerName(),fileInContainer);
 
-            BlobClient blobClient = this.containerClient.getBlobClient(containerName);
+            BlobClient blobClient = this.containerClient.getBlobClient(fileInContainer);
 
             blobClient.upload(receivedFile.getInputStream(),true);
 
