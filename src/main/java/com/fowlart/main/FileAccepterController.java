@@ -72,10 +72,8 @@ public class FileAccepterController {
                                     @RequestParam String userID,
                                     @RequestParam String itemID) {
 
-        var fileExtension = Objects.requireNonNull(receivedFile.getOriginalFilename()).split("\\.")[1];
-
+        var fileExtension = receivedFile.getOriginalFilename().substring(Math.max(receivedFile.getOriginalFilename().length() - 3, 0));
         var itemName = catalog.getItemList().stream().filter(it -> itemID.equals(it.id())).map(Item::name).findFirst().orElse("_none_");
-
         var fileInContainer = itemName + "." + fileExtension;
 
         if (!Objects.requireNonNull(receivedFile.getContentType()).contains("image")) {
