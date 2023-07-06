@@ -44,7 +44,7 @@ public class BotVisitorService {
     public Pair<BotVisitor,Boolean> getOrCreateVisitor(User user) {
         BotVisitor botVisitor;
         Optional<Object> userFromDb = rocksDBRepository.find(String.valueOf(user.getId()));
-        var isNew = Boolean.valueOf(false);
+        var isNew = Boolean.FALSE;
         if (userFromDb.isPresent()) {
             // get from RocksDb
             botVisitor = (BotVisitor) userFromDb.get();
@@ -52,10 +52,11 @@ public class BotVisitorService {
             //write to RocksDb
             botVisitor = new BotVisitor(user, user.getId());
             rocksDBRepository.save(String.valueOf(user.getId()), botVisitor);
-            isNew = Boolean.valueOf(true);
+            isNew = Boolean.TRUE;
         }
 
-        return Pair.with(botVisitor,isNew);
+        // Todo: change to isNew
+        return Pair.with(botVisitor,true);
     }
 
 }

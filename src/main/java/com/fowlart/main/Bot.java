@@ -404,7 +404,8 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     private void sendMsgAboutNewUserToAdmins(Pair<BotVisitor, Boolean> botTuple) {
         if (botTuple.getValue1()) {
             logger.info("Registered new user {}", botTuple.getValue0().toString());
-            Arrays.stream(botAdminsList.split(",")).forEach(adminId -> sendAnswer(scalaHelper.buildSimpleReplyMessage(Long.parseLong(adminId), "\uD83D\uDCE1 Додано нового користувача. Дані: \n" + botTuple.getValue0().toString(), null)));
+            Arrays.stream(botAdminsList.split(","))
+                    .forEach(adminId -> sendAnswer(scalaHelper.buildSimpleReplyMessage(Long.parseLong(adminId), "\uD83D\uDCE1 Додано нового користувача. Дані: \n" + botTuple.getValue0().toString(), null)));
         }
     }
 
