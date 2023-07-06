@@ -1,5 +1,6 @@
 package com.fowlart.main;
 
+import com.azure.messaging.eventgrid.EventGridEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -89,8 +90,14 @@ public class AdminController {
     @PostMapping("web-hooks/accept")
     public String acceptEventWebHookPosts(@RequestBody String request) {
 
-        logger.info("Accepted Web-Hook POST: {}",request);
+        logger.info("Accepted Web-Hook POST:");
 
+        var events = EventGridEvent.fromString(request);
+
+        events.forEach(eventGridEvent -> {
+            logger.info("event type: {}", eventGridEvent.getEventType());
+            logger.info("event data(string): {}", eventGridEvent.getData().toObject(String.class));
+        });
 
 
         return "accepted web-hook POST";
@@ -99,8 +106,7 @@ public class AdminController {
     @PutMapping("web-hooks/accept")
     public String acceptEventWebHookPuts(@RequestBody String request) {
 
-        logger.info("Accepted Web-Hook PUT: {}",request);
-
+        logger.info("Accepted Web-Hook PUT: {}", request);
 
 
         return "accepted web-hook PUT";
