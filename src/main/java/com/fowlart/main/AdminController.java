@@ -57,7 +57,6 @@ public class AdminController {
 
             return new BotVisitorDto(botVisitor.getUserId(), botVisitor.getName(), bucketConverted, botVisitor.getPhoneNumber(), botVisitor.getUser().getFirstName(), botVisitor.getUser().getLastName());
 
-
         }).collect(Collectors.toSet());
 
         return mapper.writeValueAsString(visitorsDTO);
@@ -96,7 +95,7 @@ public class AdminController {
 
         events.forEach(eventGridEvent -> {
             logger.info("event type: {}", eventGridEvent.getEventType());
-            logger.info("event data(string): {}", eventGridEvent.getData().toObject(String.class));
+            logger.info("event data(string): {}", eventGridEvent.getData().toString());
         });
 
 
