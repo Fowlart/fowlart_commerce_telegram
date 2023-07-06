@@ -55,8 +55,7 @@ public class BotVisitorService {
             isNew = Boolean.TRUE;
         }
 
-        // Todo: change to isNew
-        return Pair.with(botVisitor,true);
+        return Pair.with(botVisitor,isNew);
     }
 
 }
