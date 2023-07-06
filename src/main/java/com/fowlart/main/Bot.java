@@ -9,6 +9,7 @@ import com.fowlart.main.messages.ResponseWithSendMessageAndScalaBotVisitor;
 import com.fowlart.main.state.BotVisitor;
 import com.fowlart.main.state.BotVisitorService;
 import com.fowlart.main.state.OrderService;
+import org.javatuples.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -24,10 +25,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import javax.mail.MessagingException;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
@@ -59,7 +57,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     private final GmailSender gmailSender;
     private final String inputForImgPath;
     private final String hostPort;
-
+    private final String botAdminsList;
     private final static Logger logger = LoggerFactory.getLogger(Bot.class);
     public Bot(@Autowired GmailSender gmailSender,
                @Autowired BotVisitorService botVisitorService,
@@ -71,7 +69,8 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                @Value("${app.bot.userName.token}") String token,
                @Value("${app.bot.order.output.folder}") String outputForOrderPath,
                @Value("${app.bot.items.img.folder}") String inputForImgPath,
-               @Value("${app.bot.host.url}")String hostPort) {
+               @Value("${app.bot.host.url}")String hostPort,
+               @Value("${app.bot.admins}") String botAdminsList) {
         this.inputForImgPath = inputForImgPath;
         this.gmailSender = gmailSender;
         this.outputForOrderPath = outputForOrderPath;
@@ -82,6 +81,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         this.userName = userName;
         this.token = token;
         this.catalog = catalog;
+        this.botAdminsList = botAdminsList;
         this.scalaHelper = new ScalaHelper();
         this.hostPort = hostPort;
     }
@@ -386,18 +386,25 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             if (update.hasCallbackQuery()) {
                 CallbackQuery callbackQuery = update.getCallbackQuery();
                 User user = callbackQuery.getFrom();
-                this.botVisitorService.getOrCreateVisitor(user);
+                sendMsgAboutNewUserToAdmins(this.botVisitorService.getOrCreateVisitor(user));
 
                 handleInlineButtonClicks(callbackQuery);
 
             } else {
                 User user = update.getMessage().getFrom();
-                this.botVisitorService.getOrCreateVisitor(user);
+                sendMsgAboutNewUserToAdmins(this.botVisitorService.getOrCreateVisitor(user));
 
                 handleInputMsgOrCommand(update);
             }
         } catch (TelegramApiException ex) {
             throw new RuntimeException(ex);
+        }
+    }
+
+    private void sendMsgAboutNewUserToAdmins(Pair<BotVisitor, Boolean> botTuple) {
+        if (botTuple.getValue1()) {
+            logger.info("Registered new user {}", botTuple.getValue0().toString());
+            Arrays.stream(botAdminsList.split(",")).forEach(adminId -> sendAnswer(scalaHelper.buildSimpleReplyMessage(Long.parseLong(adminId), "\uD83D\uDCE1 Додано нового користувача. Дані: \n" + botTuple.getValue0().toString(), null)));
         }
     }
 

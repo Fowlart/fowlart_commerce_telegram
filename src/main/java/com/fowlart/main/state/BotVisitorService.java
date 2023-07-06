@@ -1,6 +1,7 @@
 package com.fowlart.main.state;
 
 import com.fowlart.main.state.rocks_db.RocksDBRepository;
+import org.javatuples.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.User;
@@ -40,9 +41,10 @@ public class BotVisitorService {
         return res;
     }
 
-    public BotVisitor getOrCreateVisitor(User user) {
+    public Pair<BotVisitor,Boolean> getOrCreateVisitor(User user) {
         BotVisitor botVisitor;
         Optional<Object> userFromDb = rocksDBRepository.find(String.valueOf(user.getId()));
+        var isNew = Boolean.valueOf(false);
         if (userFromDb.isPresent()) {
             // get from RocksDb
             botVisitor = (BotVisitor) userFromDb.get();
@@ -50,9 +52,10 @@ public class BotVisitorService {
             //write to RocksDb
             botVisitor = new BotVisitor(user, user.getId());
             rocksDBRepository.save(String.valueOf(user.getId()), botVisitor);
+            isNew = Boolean.valueOf(true);
         }
 
-        return botVisitor;
+        return Pair.with(botVisitor,isNew);
     }
 
 }
