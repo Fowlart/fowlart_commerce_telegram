@@ -87,12 +87,22 @@ public class AdminController {
 
     // todo: design web-hook event-listener
     @PostMapping("web-hooks/accept")
-    public String acceptEventWebHook(@RequestBody String request) {
+    public String acceptEventWebHookPosts(@RequestBody String request) {
 
-        logger.info("Accepted Web-Hook: {}",request);
+        logger.info("Accepted Web-Hook POST: {}",request);
 
 
 
-        return "accepted web-hook";
+        return "accepted web-hook POST";
+    }
+
+    @PutMapping("web-hooks/accept")
+    public String acceptEventWebHookPuts(@RequestBody String request) {
+
+        logger.info("Accepted Web-Hook PUT: {}",request);
+
+
+
+        return "accepted web-hook PUT";
     }
 }
