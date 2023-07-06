@@ -12,24 +12,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
-public class StatisticController {
+public class AdminController {
 
 
-    private final static Logger logger = LoggerFactory.getLogger(StatisticController.class);
+    private final static Logger logger = LoggerFactory.getLogger(AdminController.class);
     private final BotVisitorService botVisitorService;
     private final String gmailAccName;
     private final String hostName;
     private final String pleaseLogin;
 
-    public StatisticController(BotVisitorService botVisitorService, @Value("${app.bot.email.gmail.user}") String gmailAccName, @Value("${app.bot.host.url}") String hostName) {
+    public AdminController(BotVisitorService botVisitorService, @Value("${app.bot.email.gmail.user}") String gmailAccName, @Value("${app.bot.host.url}") String hostName) {
         this.botVisitorService = botVisitorService;
         this.gmailAccName = gmailAccName;
         this.hostName = hostName;
@@ -85,5 +83,16 @@ public class StatisticController {
             email = null;
         }
         return email;
+    }
+
+    // todo: design web-hook event-listener
+    @PostMapping("web-hooks/accept")
+    public String acceptEventWebHook(@RequestBody String request) {
+
+        logger.info("Accepted Web-Hook: {}",request);
+
+
+
+        return "accepted web-hook";
     }
 }
