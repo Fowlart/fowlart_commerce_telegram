@@ -72,7 +72,7 @@ public class PdpController {
 
         if (Objects.isNull(user)) return new ResponseEntity<>("Користувач з id "+userID+" не існує.", HttpStatus.BAD_REQUEST);
 
-        if (items.isEmpty()) return new ResponseEntity<>("За заданим запитом "+searchQuery+" результатів не знайдено.", HttpStatus.OK);
+        if (items.isEmpty()) return new ResponseEntity<>("За заданим запитом '"+searchQuery+"' результатів не знайдено.", HttpStatus.OK);
 
         var searchItemsResponse = items.stream().map(i -> "<p><a href='/pdp/" + i.id() + "?userId=" + userID + "'>" + i.name() + "</a></p>")
                 .reduce((s1, s2) -> s1 + s2)
