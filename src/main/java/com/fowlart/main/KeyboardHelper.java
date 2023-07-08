@@ -68,6 +68,7 @@ public class KeyboardHelper {
 
         List<InlineKeyboardButton> rowInline2 = new ArrayList<>();
         rowInline2.add(buildButton("\uD83D\uDC64 Мої данні", "MYDATA"));
+        rowInline2.add(buildButton("🔎 Пошук", "SEARCH"));
 
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>(List.of(rowInline1, rowInline2));
         // Add it to the message

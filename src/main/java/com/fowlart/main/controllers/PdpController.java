@@ -22,7 +22,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 
@@ -57,11 +60,11 @@ public class PdpController {
         this.kbHelper = new KeyboardHelper(this.catalog);
     }
 
-        @PostMapping(value = "/search-items")
+    @PostMapping(value = "/search-items")
     public @ResponseBody ResponseEntity<String> searchItems(@RequestParam String userID,
                                                             @RequestParam String searchQuery) {
 
-        logger.info("Searching items by query {}, performed by user {}",searchQuery,userID);
+        logger.info("Searching items by query {}, performed by user {}", searchQuery, userID);
 
         Set<Item> items = catalog.getItemList()
                 .stream()
@@ -70,15 +73,17 @@ public class PdpController {
 
         var user = botVisitorService.getBotVisitorByUserId(userID);
 
-        if (Objects.isNull(user)) return new ResponseEntity<>("Користувач з id "+userID+" не існує.", HttpStatus.BAD_REQUEST);
+        if (Objects.isNull(user))
+            return new ResponseEntity<>("Користувач з id " + userID + " не існує.", HttpStatus.BAD_REQUEST);
 
-        if (items.isEmpty()) return new ResponseEntity<>("За заданим запитом '"+searchQuery+"' результатів не знайдено.", HttpStatus.OK);
+        if (items.isEmpty())
+            return new ResponseEntity<>("За заданим запитом '" + searchQuery + "' результатів не знайдено.", HttpStatus.OK);
 
         var searchItemsResponse = items.stream().map(i -> "<p><a href='/pdp/" + i.id() + "?userId=" + userID + "'>" + i.name() + "</a></p>")
                 .reduce((s1, s2) -> s1 + s2)
                 .orElse("<p>!от я ніколи не побачу цей аутпут!</p>");
 
-        return new ResponseEntity<>(searchItemsResponse,HttpStatus.OK);
+        return new ResponseEntity<>(searchItemsResponse, HttpStatus.OK);
     }
 
     @PostMapping(value = "/accept-item")
@@ -102,7 +107,7 @@ public class PdpController {
 
             var resp = scHelper
                     .buildSimpleReplyMessage(Long.parseLong(user.getUserId()),
-                             actualItem.name()+" було додано з веб сторінки!",
+                            actualItem.name() + " було додано з веб сторінки!",
                             kbHelper.buildBucketReply());
 
             bot.sendAnswer(resp);

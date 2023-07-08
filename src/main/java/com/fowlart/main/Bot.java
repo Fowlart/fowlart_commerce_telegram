@@ -44,6 +44,8 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     private static final String MAIN_SCREEN = "MAIN_SCREEN";
     private static final String SUBMIT = "SUBMIT";
     private static final String DISCARD = "DISCARD";
+
+    private static final String SEARCH = "SEARCH";
     private static Bot instance;
     private final BotVisitorService botVisitorService;
     private final ExcelFetcher excelFetcher;
@@ -136,6 +138,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             case SUBMIT -> handleOrderSubmit(visitor);
             case DISCARD -> handleDiscard(visitor);
             case BUCKET -> handleBucket(visitor);
+            case SEARCH -> handleSearch(visitor);
 
             default -> {
                 var subGroupItems = scalaHelper.getSubMenuText(this.catalog.getItemList(), callBackButton,this.hostPort, userId);
@@ -250,6 +253,14 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         visitor.setNameEditingMode(false);
         return scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(), "\uD83D\uDD0E Обирай з товарних груп:",
                 keyboardHelper.buildCatalogItemsMenu());
+    }
+
+    private SendMessage handleSearch(BotVisitor visitor) {
+        logger.info("handleSearch method, visitorId "+visitor.getUserId());
+        visitor.setNameEditingMode(false);
+
+        return scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(), "\uD83D\uDD0E [в розробці]Введи текст для пошуку по всіх товарних группах:",
+                null);
     }
 
     private SendMessage handleContacts(BotVisitor visitor) {
