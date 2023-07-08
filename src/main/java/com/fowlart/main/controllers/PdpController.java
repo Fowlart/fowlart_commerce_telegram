@@ -22,11 +22,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiPredicate;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/pdp")
@@ -38,8 +36,11 @@ public class PdpController {
     private final String hostAndPort;
     private final String inputForHTMLPath;
     private final BotVisitorService botVisitorService;
-
     private final Bot bot;
+
+    private final ScalaHelper scHelper;
+
+    private final KeyboardHelper kbHelper;
 
 
     public PdpController(@Autowired Catalog catalog,
@@ -54,6 +55,32 @@ public class PdpController {
         this.hostAndPort = hostAndPort;
         this.inputForHTMLPath = inputForHTMLPath;
         this.bot = bot;
+        this.scHelper = new ScalaHelper();
+        this.kbHelper = new KeyboardHelper(this.catalog);
+    }
+
+    @PostMapping(value = "/search-items")
+    public @ResponseBody ResponseEntity<String> searchItems(@RequestParam String userID,
+                                                            @RequestParam String searchQuery) {
+
+        logger.info("Searching items by query {}, performed by user {}",searchQuery,userID);
+
+        Set<Item> items = catalog.getItemList()
+                .stream()
+                .filter(it -> it.name().toLowerCase().contains(searchQuery.toLowerCase()))
+                .collect(Collectors.toSet());
+
+        var user = botVisitorService.getBotVisitorByUserId(userID);
+
+        if (Objects.isNull(user)) return new ResponseEntity<>("Користувач з id "+userID+" не існує.", HttpStatus.BAD_REQUEST);
+
+        if (items.isEmpty()) return new ResponseEntity<>("За заданим запитом "+searchQuery+" результатів не знайдено.", HttpStatus.NO_CONTENT);
+
+        var searchItemsResponse = items.stream().map(i -> "<p><a href='/pdp/" + i.id() + "?userId=" + userID + "'>" + i.name() + "</a></p>")
+                .reduce((s1, s2) -> s1 + s2)
+                .orElse("<p>!от я ніколи не побачу цей аутпут!</p>");
+
+        return new ResponseEntity<>(searchItemsResponse,HttpStatus.OK);
     }
 
     @PostMapping(value = "/accept-item")
@@ -75,10 +102,6 @@ public class PdpController {
             user.setBucket(newBucket);
             botVisitorService.saveBotVisitor(user);
 
-            var scHelper = new ScalaHelper();
-
-            var kbHelper = new KeyboardHelper(catalog);
-
             var resp = scHelper
                     .buildSimpleReplyMessage(Long.parseLong(user.getUserId()),
                              actualItem.name()+" було додано з веб сторінки!",
@@ -97,7 +120,13 @@ public class PdpController {
         var item = catalog.getItemList().stream().filter(i -> i.id().equals(id)).findFirst().orElse(null);
 
         if (Objects.isNull(item)) return "No such item";
-        var allItemsInGroup = catalog.getItemList().stream().filter(i -> i.group().equals(item.group())).map(i -> "<p><a href='/pdp/" + i.id() + "?userId=" + userId + "'>" + i.name() + "</a></p>").reduce((s1, s2) -> s1 + s2).orElse("<p>!от я ніколи не побачу цей аутпут!</p>");
+
+        var allItemsInGroup = catalog.getItemList()
+                .stream()
+                .filter(i -> i.group().equals(item.group()))
+                .map(i -> "<p><a href='/pdp/" + i.id() + "?userId=" + userId + "'>" + i.name() + "</a></p>")
+                .reduce((s1, s2) -> s1 + s2)
+                .orElse("<p>!от я ніколи не побачу цей аутпут!</p>");
 
         // read pdp.html as a string
         var pdpHtml = Files.readString(Path.of(inputForHTMLPath + "/pdp.html"));
@@ -106,7 +135,11 @@ public class PdpController {
 
         servletResponse.addCookie(new Cookie("userId", userId));
 
-        return pdpHtml.replace("{{productImageUri}}", productImageUri).replace("{{productPrice}}", item.price().toString()).replace("{{productName}}", item.name()).replace("{{groupName}}", item.group()).replace("{{dialogItems}}", allItemsInGroup);
+        return pdpHtml.replace("{{productImageUri}}", productImageUri)
+                .replace("{{productPrice}}", item.price().toString())
+                .replace("{{productName}}", item.name())
+                .replace("{{groupName}}", item.group())
+                .replace("{{dialogItems}}", allItemsInGroup);
     }
 
     @GetMapping(value = "/img/{id}", produces = "image/png")
