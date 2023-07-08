@@ -153,7 +153,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                             .chatId(userId)
                             .build();
                     if (str.equals(lastMessage)) {
-                        subCatalogAnswer.setReplyMarkup(this.keyboardHelper.buildMainMenuReply());
+                        subCatalogAnswer.setReplyMarkup(this.keyboardHelper.buildMainMenuReply(userId));
                     }
                     this.sendApiMethod(subCatalogAnswer);
                 }
@@ -245,7 +245,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         var newBucket = visitor.getBucket().stream().filter(it -> !itemId.equals(it.id())).collect(Collectors.toSet());
         visitor.setItemToEditQty(null);
         visitor.setBucket(newBucket);
-        return SendMessage.builder().chatId(visitor.getUserId()).text(" Товар видалено. Корзину збережено. Не забудьте відправити замовлення.").replyMarkup(keyboardHelper.buildMainMenuReply()).build();
+        return SendMessage.builder().chatId(visitor.getUserId()).text(" Товар видалено. Корзину збережено. Не забудьте відправити замовлення.").replyMarkup(keyboardHelper.buildMainMenuReply(Long.parseLong(visitor.getUserId()))).build();
     }
 
     private SendMessage handleCatalog(BotVisitor visitor) {
@@ -259,19 +259,19 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         logger.info("handleSearch method, visitorId "+visitor.getUserId());
         visitor.setNameEditingMode(false);
 
-        return scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(), "\uD83D\uDD0E [в розробці]Введи текст для пошуку по всіх товарних группах:",
+        return scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(), "\uD83D\uDD0E [в розробці ]Введи текст для пошуку по всіх товарних группах:",
                 null);
     }
 
     private SendMessage handleContacts(BotVisitor visitor) {
         logger.info("handleContacts method, visitorId "+visitor.getUserId());
         visitor.setNameEditingMode(false);
-        return scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(), scalaHelper.getContactsMsg(), keyboardHelper.buildMainMenuReply());
+        return scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(), scalaHelper.getContactsMsg(), keyboardHelper.buildMainMenuReply(Long.parseLong(visitor.getUserId())));
     }
 
     private SendMessage handleMainScreen(BotVisitor visitor) {
         logger.info("handleMainScreen method, visitorId "+visitor.getUserId());
-        var msg = scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(), scalaHelper.getMainMenuText(visitor), keyboardHelper.buildMainMenuReply());
+        var msg = scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(), scalaHelper.getMainMenuText(visitor), keyboardHelper.buildMainMenuReply(Long.parseLong(visitor.getUserId())));
         visitor.setNameEditingMode(false);
         return msg;
     }
@@ -283,7 +283,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
 
         return scalaHelper
                 .buildSimpleReplyMessage(visitor.getUser().getId(), "Корзину очищено!",
-                        keyboardHelper.buildMainMenuReply());
+                        keyboardHelper.buildMainMenuReply(Long.parseLong(visitor.getUserId())));
     }
 
     private SendMessage handleOrderSubmit(BotVisitor visitor) {
@@ -291,7 +291,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         logger.info("handleOrderSubmit method, visitorId "+visitor.getUserId());
         var order = OrderHandler.handleOrder(BotVisitorToScalaBotVisitorConverter.convertBotVisitorToScalaBotVisitor(visitor));
 
-        var orderSubmitReply = scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(), "Замовлення прийнято!", keyboardHelper.buildMainMenuReply());
+        var orderSubmitReply = scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(), "Замовлення прийнято!", keyboardHelper.buildMainMenuReply(Long.parseLong(visitor.getUserId())));
 
         if (order.orderBucket().isEmpty()) {
             orderSubmitReply.setText("Ви намагаєтеся відправити в обробку порожню корзину! Будь ласка, замовте бодай щось!");
@@ -326,7 +326,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                                             BotVisitor visitor) throws TelegramApiException {
 
         if (Objects.isNull(visitor.getItemToEditQty())) {
-            var noSuchItemInBasket = scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(), "Такого товару вже немає у корзині.", keyboardHelper.buildMainMenuReply());
+            var noSuchItemInBasket = scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(), "Такого товару вже немає у корзині.", keyboardHelper.buildMainMenuReply(Long.parseLong(visitor.getUserId())));
             this.sendApiMethod(noSuchItemInBasket);
         }
 

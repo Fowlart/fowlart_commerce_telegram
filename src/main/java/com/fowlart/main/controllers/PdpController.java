@@ -49,7 +49,8 @@ public class PdpController {
                          @Value("${app.bot.items.img.folder}") String inputForImgPath,
                          @Value("${app.bot.host.url}") String hostAndPort,
                          @Value("${app.bot.html.templates}") String inputForHTMLPath,
-                         @Autowired Bot bot) {
+                         @Autowired Bot bot,
+                         @Autowired KeyboardHelper keyboardHelper) {
         this.botVisitorService = botVisitorService;
         this.catalog = catalog;
         this.inputForImgPath = inputForImgPath;
@@ -57,7 +58,7 @@ public class PdpController {
         this.inputForHTMLPath = inputForHTMLPath;
         this.bot = bot;
         this.scHelper = new ScalaHelper();
-        this.kbHelper = new KeyboardHelper(this.catalog);
+        this.kbHelper = keyboardHelper;
     }
 
     @PostMapping(value = "/search-items")

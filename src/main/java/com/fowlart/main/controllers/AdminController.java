@@ -15,6 +15,7 @@ import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
@@ -38,7 +39,12 @@ public class AdminController {
 
     private final String botAdminsList;
 
-    public AdminController(BotVisitorService botVisitorService, @Value("${app.bot.email.gmail.user}") String gmailAccName, @Value("${app.bot.host.url}") String hostName, @Value("${app.bot.admins}") String botAdminsList, Bot bot, Catalog catalog) {
+    public AdminController(BotVisitorService botVisitorService,
+                           @Value("${app.bot.email.gmail.user}") String gmailAccName,
+                           @Value("${app.bot.host.url}") String hostName,
+                           @Value("${app.bot.admins}") String botAdminsList,
+                           @Autowired KeyboardHelper keyboardHelper,
+                           Bot bot, Catalog catalog) {
 
         this.botVisitorService = botVisitorService;
         this.gmailAccName = gmailAccName;
@@ -47,7 +53,7 @@ public class AdminController {
         this.bot = bot;
         this.catalog = catalog;
         this.scHelper = new ScalaHelper();
-        this.kbHelper = new KeyboardHelper(this.catalog);
+        this.kbHelper = keyboardHelper;
         this.botAdminsList = botAdminsList;
     }
 

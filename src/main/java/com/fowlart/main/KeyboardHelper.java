@@ -2,6 +2,7 @@ package com.fowlart.main;
 
 import com.fowlart.main.in_mem_catalog.Catalog;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -14,8 +15,11 @@ public class KeyboardHelper {
 
     private final Catalog catalog;
 
-    public KeyboardHelper(@Autowired Catalog catalog) {
+    private final String host;
+
+    public KeyboardHelper(@Autowired Catalog catalog, @Value("${app.bot.host.url}") String host) {
         this.catalog = catalog;
+        this.host = host;
     }
 
     private InlineKeyboardButton buildButton(String text, String callBackText) {
@@ -24,6 +28,14 @@ public class KeyboardHelper {
         button.setCallbackData(callBackText);
         return button;
     }
+
+    private InlineKeyboardButton buildUrlButton(String text, String url) {
+        InlineKeyboardButton button = new InlineKeyboardButton();
+        button.setText(text);
+        button.setUrl(url);
+        return button;
+    }
+
 
     public InlineKeyboardMarkup buildInPhoneEditingModeMenu() {
         var markupInline = new InlineKeyboardMarkup();
@@ -59,7 +71,7 @@ public class KeyboardHelper {
         return markupInline;
     }
 
-    public InlineKeyboardMarkup buildMainMenuReply() {
+    public InlineKeyboardMarkup buildMainMenuReply(long userId) {
         InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
         List<InlineKeyboardButton> rowInline1 = new ArrayList<>();
         rowInline1.add(buildButton("\uD83D\uDCD7 Каталог", "CATALOG"));
@@ -68,7 +80,7 @@ public class KeyboardHelper {
 
         List<InlineKeyboardButton> rowInline2 = new ArrayList<>();
         rowInline2.add(buildButton("\uD83D\uDC64 Мої данні", "MYDATA"));
-        rowInline2.add(buildButton("🔎 Пошук", "SEARCH"));
+        rowInline2.add(buildUrlButton("🔎 Пошук", host+"/search?userId="+userId));
 
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>(List.of(rowInline1, rowInline2));
         // Add it to the message

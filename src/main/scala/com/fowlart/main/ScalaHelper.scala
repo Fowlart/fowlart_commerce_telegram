@@ -108,7 +108,7 @@ class ScalaHelper {
 
     SendMessage.builder.chatId(userId)
       .text( "Корзина порожня. Додайте товар.")
-      .replyMarkup(keyboardHelper.buildMainMenuReply()).build
+      .replyMarkup(keyboardHelper.buildMainMenuReply(userId)).build
   }
 
   def isNumeric(strNum: String): Boolean = {

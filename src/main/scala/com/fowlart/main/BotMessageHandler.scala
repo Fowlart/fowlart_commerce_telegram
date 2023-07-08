@@ -52,7 +52,7 @@ object BotMessageHandler {
       // default
       case (visitor, _) =>
         logger.info(s"some not recognized message from visitor: ${visitor.userId}")
-        val sendMessage = SendMessage.builder.chatId(chatId).text(scalaHelper.getMainMenuText(visitor)).replyMarkup(keyboardHelper.buildMainMenuReply).build
+        val sendMessage = SendMessage.builder.chatId(chatId).text(scalaHelper.getMainMenuText(visitor)).replyMarkup(keyboardHelper.buildMainMenuReply(chatId)).build
         ResponseWithSendMessageAndScalaBotVisitor(sendMessage, visitor)
     }
   }
@@ -106,7 +106,7 @@ object BotMessageHandler {
     val qty = textFromUser.toInt
     val toAdd = new Item(itemToEditQty.id, itemToEditQty.name, itemToEditQty.price, itemToEditQty.group, qty)
     val updateScalaBotVisitor = state.ScalaBotVisitor(name, isNameEditingMode, phoneNumber, false, null, user, userId, bucket - itemToEditQty + toAdd)
-    val message = SendMessage.builder.chatId(chatId).text("Кількість прийнята. Корзину збережено. Не забудьте відправити замовлення.").replyMarkup(keyboardHelper.buildMainMenuReply).build
+    val message = SendMessage.builder.chatId(chatId).text("Кількість прийнята. Корзину збережено. Не забудьте відправити замовлення.").replyMarkup(keyboardHelper.buildMainMenuReply(chatId)).build
     ResponseWithSendMessageAndScalaBotVisitor(message, updateScalaBotVisitor)
   }
 
@@ -119,14 +119,14 @@ object BotMessageHandler {
 
   private def handleUserEnteredCorrectPhoneNumber(scalaBotVisitor: ScalaBotVisitor, msg: String, keyboardHelper: KeyboardHelper, chatId: Long) = {
     logger.info(s"handleUserEnteredCorrectPhoneNumber method, userID: ${scalaBotVisitor.userId}")
-    val sendMessage = SendMessage.builder.chatId(chatId).text(scalaHelper.getPhoneNumberReceivedText()).replyMarkup(keyboardHelper.buildMainMenuReply).build
+    val sendMessage = SendMessage.builder.chatId(chatId).text(scalaHelper.getPhoneNumberReceivedText()).replyMarkup(keyboardHelper.buildMainMenuReply(chatId)).build
     val updatedBotVisitor = scalaBotVisitor.copy(phoneNumber = msg, isPhoneNumberFillingMode = false)
     ResponseWithSendMessageAndScalaBotVisitor(sendMessage, updatedBotVisitor)
   }
 
   private def handleUserInNameEditMode(scalaBotVisitor: ScalaBotVisitor, msg: String, keyboardHelper: KeyboardHelper, chatId: Long) = {
     logger.info(s"handleUserInNameEditMode method, userID: ${scalaBotVisitor.userId}")
-    val sendMessage = SendMessage.builder.chatId(chatId).text(scalaHelper.getFullNameReceivedText()).replyMarkup(keyboardHelper.buildMainMenuReply).build
+    val sendMessage = SendMessage.builder.chatId(chatId).text(scalaHelper.getFullNameReceivedText()).replyMarkup(keyboardHelper.buildMainMenuReply(chatId)).build
     val updatedBotVisitor = scalaBotVisitor.copy(name = msg, isNameEditingMode = false)
     ResponseWithSendMessageAndScalaBotVisitor(sendMessage, updatedBotVisitor)
   }
