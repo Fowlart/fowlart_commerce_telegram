@@ -37,9 +37,7 @@ public class PdpController {
     private final String inputForHTMLPath;
     private final BotVisitorService botVisitorService;
     private final Bot bot;
-
     private final ScalaHelper scHelper;
-
     private final KeyboardHelper kbHelper;
 
 
@@ -59,7 +57,7 @@ public class PdpController {
         this.kbHelper = new KeyboardHelper(this.catalog);
     }
 
-    @PostMapping(value = "/search-items")
+        @PostMapping(value = "/search-items")
     public @ResponseBody ResponseEntity<String> searchItems(@RequestParam String userID,
                                                             @RequestParam String searchQuery) {
 
@@ -74,7 +72,7 @@ public class PdpController {
 
         if (Objects.isNull(user)) return new ResponseEntity<>("Користувач з id "+userID+" не існує.", HttpStatus.BAD_REQUEST);
 
-        if (items.isEmpty()) return new ResponseEntity<>("За заданим запитом "+searchQuery+" результатів не знайдено.", HttpStatus.NO_CONTENT);
+        if (items.isEmpty()) return new ResponseEntity<>("За заданим запитом "+searchQuery+" результатів не знайдено.", HttpStatus.OK);
 
         var searchItemsResponse = items.stream().map(i -> "<p><a href='/pdp/" + i.id() + "?userId=" + userID + "'>" + i.name() + "</a></p>")
                 .reduce((s1, s2) -> s1 + s2)

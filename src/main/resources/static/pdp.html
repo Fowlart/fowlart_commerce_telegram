@@ -262,7 +262,7 @@
 
         document.getElementById('search-input').value = "";
 
-        fetch(`${host}/pdp/accept-item?userID=${userId}&searchQuery=${query}`, requestOptions)
+        fetch(`${host}/pdp/search-items?userID=${userId}&searchQuery=${query}`, requestOptions)
             .then(response => response.text())
             .then(result => document.getElementById('search-results').innerHTML = result)
             .catch(error => console.log('error', error));
