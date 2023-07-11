@@ -10,7 +10,7 @@ public final class Item implements Serializable {
     private final String id;
     private final String name;
     private final Double price;
-    private final String group;
+    private String group;
     private final Integer qty;
 
     private String imgBaseFolder = "src/main/resources/imgsForTGbot/";
@@ -21,6 +21,10 @@ public final class Item implements Serializable {
         this.price = price;
         this.group = group;
         this.qty = qty;
+    }
+
+    public void setGroup(String group) {
+        this.group = group;
     }
 
     @Override
@@ -49,6 +53,7 @@ public final class Item implements Serializable {
     public String name() {
         return name;
     }
+
 
     public Double price() {
         return price;
