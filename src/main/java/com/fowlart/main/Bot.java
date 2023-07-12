@@ -155,9 +155,8 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
 
                     service
                             .streamChatCompletion(chatCompletionRequest)
-                            .retry(3)
-                            .doOnError(Throwable::printStackTrace)
-                            .blockingForEach(chatCompletionChunk -> answer.add(chatCompletionChunk.getChoices().get(0).getMessage().getContent()));
+                            .doOnError(it-> logger.warn("Exception from OpenAiService {} for item {}",it.getMessage(),item.name()))
+                            .forEach(chatCompletionChunk -> answer.add(chatCompletionChunk.getChoices().get(0).getMessage().getContent()));
 
                     String groupName = String.join("", answer).replaceAll("null", "").toLowerCase();
 
