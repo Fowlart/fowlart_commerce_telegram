@@ -68,7 +68,6 @@ public class AdminController {
 
     @GetMapping("statistic/all-visitors")
     public String getAllVisitorList(@RequestHeader Map<String, String> headers) throws JsonProcessingException {
-        // check if the request is from the admin
         if (notAdmin(headers)) return pleaseLogin;
         final ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
         var visitors = botVisitorService.getAllVisitors();
@@ -77,6 +76,13 @@ public class AdminController {
             return new BotVisitorDto(botVisitor.getUserId(), botVisitor.getName(), bucketConverted, botVisitor.getPhoneNumber(), botVisitor.getUser().getFirstName(), botVisitor.getUser().getLastName());
         }).collect(Collectors.toSet());
         return mapper.writeValueAsString(visitorsDTO);
+    }
+
+    @GetMapping("catalog/restore")
+    public String catalogRestore(@RequestHeader Map<String, String> headers){
+        if (notAdmin(headers)) return pleaseLogin;
+        catalogEnhancer.catalogRestore();
+        return "<p>Completed process of catalog restoring.</p>";
     }
 
     @GetMapping("catalog/enhance")

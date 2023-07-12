@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -41,6 +42,11 @@ public class CatalogEnhancer implements InitializingBean {
         return internalLogger;
     }
 
+    public void catalogRestore(){
+        this.catalog.setItemList(this.excelFetcher.getCatalogItems());
+        this.catalog.setGroupList(this.excelFetcher.getCatalogItems().stream().map(Item::group).collect(Collectors.toSet()).stream().toList());
+    }
+
     public void enhanceCatalog() {
         String token = openAiAuthToken;
         internalLogger.add(new Date() + ": розпочато процес покращення каталогу з допомогою моделі 'gpt-3.5-turbo'.");
@@ -58,29 +64,37 @@ public class CatalogEnhancer implements InitializingBean {
                                     "Відповідь має бути лаконічною і має містити ТІЛЬКИ назву товарної группи і нічого іншого." +
                                     "Якщо товарну группу тяжко визначити то поверни 'інше'.");
 
-                    final List<String> answer = new ArrayList<>();
                     messages.add(systemMessage);
                     final ChatMessage userMessage = new ChatMessage(ChatMessageRole.USER.value(), item.name());
                     messages.add(userMessage);
 
-                    ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest.builder().model("gpt-3.5-turbo").messages(messages).topP(1d).temperature(0d).logitBias(new HashMap<>()).build();
+                    ChatCompletionRequest chatCompletionRequest =
+                            ChatCompletionRequest
+                                    .builder()
+                                    .model("gpt-3.5-turbo")
+                                    .messages(messages)
+                                    .topP(1d).
+                                    temperature(0d)
+                                    .logitBias(new HashMap<>())
+                                    .build();
 
-                    service.streamChatCompletion(chatCompletionRequest).doOnError(exception -> {
-                        internalLogger.add(new Date() + ": помилка звязку на етапі оброблення позиції: " + item.name());
-                        internalLogger.add(exception.getMessage());
-                        service.shutdownExecutor();
-                    }).blockingForEach(chatCompletionChunk -> answer.add(chatCompletionChunk.getChoices().get(0).getMessage().getContent()));
-
-                    String groupName = String.join("", answer).replaceAll("null", "");
-
-                    internalLogger.add(new Date() + ": " + item.name() + "->" + groupName);
-                    item.setGroup(groupName);
-                    service.shutdownExecutor();
+                    String groupName="";
 
                     try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
+
+                        groupName = service
+                                .createChatCompletion(chatCompletionRequest)
+                                .getChoices().get(0).getMessage().getContent().replaceAll("null", "");
+
+                    }
+                    catch (RuntimeException ex){
+                        internalLogger.add(new Date() + ": помилка при ідентифікації группи для " + item.name());
+                        groupName = item.group();
+                    }
+                    finally {
+                        internalLogger.add(new Date() + ": " + item.name() + "->" + groupName);
+                        item.setGroup(groupName);
+                        service.shutdownExecutor();
                     }
                 });
 
