@@ -106,7 +106,9 @@ public class ExcelFetcher {
         if (rowNumberWhereWeShouldStop>=rowNumberFromWhereWeShouldCollectItems) {
            items = IntStream.range(rowNumberFromWhereWeShouldCollectItems+1,rowNumberWhereWeShouldStop)
                     .mapToObj(sheet::getRow)
-                    .map(row->row.getCell(0).getRichStringCellValue().getString().trim()+"|"+row.getCell(1).getNumericCellValue())
+                    .map(row->row.getCell(0)
+                            .getRichStringCellValue()
+                            .getString().trim()+"|"+row.getCell(1).getNumericCellValue())
                     .collect(Collectors.toList());
         }
 

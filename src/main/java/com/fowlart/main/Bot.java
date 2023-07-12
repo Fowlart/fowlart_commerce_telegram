@@ -164,6 +164,12 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                     item.setGroup(groupName);
                     service.shutdownExecutor();
                 });
+
+        this.catalog
+                .setGroupList(this.excelFetcher.getCatalogItems()
+                        .stream()
+                        .map(Item::group)
+                        .collect(Collectors.toList()));
     }
 
     private void handleInlineButtonClicks(CallbackQuery callbackQuery) throws TelegramApiException {
