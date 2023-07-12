@@ -81,14 +81,14 @@ public class AdminController {
 
     @GetMapping("catalog/enhance")
     public String startCatalogEnhancing(@RequestHeader Map<String, String> headers){
-       // if (notAdmin(headers)) return pleaseLogin;
+        if (notAdmin(headers)) return pleaseLogin;
         catalogEnhancer.enhanceCatalog();
         return "<p>Completed process of catalog enhancing. </p>";
     }
 
     @GetMapping("catalog/enhance-status")
     public String getCatalogEnhancingStatus(@RequestHeader Map<String, String> headers){
-        // if (notAdmin(headers)) return pleaseLogin;
+        if (notAdmin(headers)) return pleaseLogin;
         return catalogEnhancer.getInternalLogger().stream().map(str->"<p>"+str+"</p>").collect(Collectors.joining());
     }
 
