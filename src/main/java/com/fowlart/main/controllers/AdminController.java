@@ -10,6 +10,7 @@ import com.fowlart.main.ScalaHelper;
 import com.fowlart.main.dto.BotVisitorDto;
 import com.fowlart.main.in_mem_catalog.Catalog;
 import com.fowlart.main.in_mem_catalog.Item;
+import com.fowlart.main.open_ai.CatalogEnhancer;
 import com.fowlart.main.state.BotVisitorService;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
@@ -37,15 +38,15 @@ public class AdminController {
     private final Catalog catalog;
     private final ScalaHelper scHelper;
     private final KeyboardHelper kbHelper;
-
     private final String botAdminsList;
+    private final CatalogEnhancer catalogEnhancer;
 
     public AdminController(BotVisitorService botVisitorService,
                            @Value("${app.bot.email.gmail.user}") String gmailAccName,
                            @Value("${app.bot.host.url}") String hostName,
                            @Value("${app.bot.admins}") String botAdminsList,
                            @Autowired KeyboardHelper keyboardHelper,
-                           Bot bot, Catalog catalog) {
+                           Bot bot, Catalog catalog, CatalogEnhancer catalogEnhancer) {
 
         this.botVisitorService = botVisitorService;
         this.gmailAccName = gmailAccName;
@@ -53,6 +54,7 @@ public class AdminController {
         this.pleaseLogin = "You are not admin! Please login with Google account!" + "  <button onClick=\"javascript:window.location.href='hostname/.auth/login/google/callback'\">Login</button>".replaceAll("hostname", hostName);
         this.bot = bot;
         this.catalog = catalog;
+        this.catalogEnhancer = catalogEnhancer;
         this.scHelper = new ScalaHelper();
         this.kbHelper = keyboardHelper;
         this.botAdminsList = botAdminsList;
@@ -77,8 +79,21 @@ public class AdminController {
         return mapper.writeValueAsString(visitorsDTO);
     }
 
+    @GetMapping("catalog/enhance")
+    public String startCatalogEnhancing(@RequestHeader Map<String, String> headers){
+       // if (notAdmin(headers)) return pleaseLogin;
+        catalogEnhancer.enhanceCatalog();
+        return "<p>Completed process of catalog enhancing. </p>";
+    }
+
+    @GetMapping("catalog/enhance-status")
+    public String getCatalogEnhancingStatus(@RequestHeader Map<String, String> headers){
+        // if (notAdmin(headers)) return pleaseLogin;
+        return catalogEnhancer.getInternalLogger().stream().map(str->"<p>"+str+"</p>").collect(Collectors.joining());
+    }
+
     @GetMapping("statistic/all-items")
-    public String getItemList(@RequestHeader Map<String, String> headers) throws JsonProcessingException {
+    public String getItemList(@RequestHeader Map<String, String> headers) {
         if (notAdmin(headers)) return pleaseLogin;
 
         var response = new ArrayList<String>();

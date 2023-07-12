@@ -6,13 +6,10 @@ import com.fowlart.main.in_mem_catalog.Catalog;
 import com.fowlart.main.in_mem_catalog.Item;
 import com.fowlart.main.messages.ResponseWithPhotoMessageAndScalaBotVisitor;
 import com.fowlart.main.messages.ResponseWithSendMessageAndScalaBotVisitor;
+import com.fowlart.main.open_ai.CatalogEnhancer;
 import com.fowlart.main.state.BotVisitor;
 import com.fowlart.main.state.BotVisitorService;
 import com.fowlart.main.state.OrderService;
-import com.theokanning.openai.completion.chat.ChatCompletionRequest;
-import com.theokanning.openai.completion.chat.ChatMessage;
-import com.theokanning.openai.completion.chat.ChatMessageRole;
-import com.theokanning.openai.service.OpenAiService;
 import org.javatuples.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,7 +62,6 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     private final String inputForImgPath;
     private final String hostPort;
     private final String botAdminsList;
-    private final String openAiAuthToken;
 
     public Bot(@Autowired GmailSender gmailSender,
                @Autowired BotVisitorService botVisitorService,
@@ -78,9 +74,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                @Value("${app.bot.order.output.folder}") String outputForOrderPath,
                @Value("${app.bot.items.img.folder}") String inputForImgPath,
                @Value("${app.bot.host.url}") String hostPort,
-               @Value("${app.bot.admins}") String botAdminsList,
-               @Value("${openai.token}") String openAiAuthToken
-    ) {
+               @Value("${app.bot.admins}") String botAdminsList) {
         this.inputForImgPath = inputForImgPath;
         this.gmailSender = gmailSender;
         this.outputForOrderPath = outputForOrderPath;
@@ -94,7 +88,6 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         this.botAdminsList = botAdminsList;
         this.scalaHelper = new ScalaHelper();
         this.hostPort = hostPort;
-        this.openAiAuthToken = openAiAuthToken;
     }
 
     public static Bot getInstance() {
@@ -120,61 +113,6 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     public void onRegister() {
         this.catalog.setGroupList(this.excelFetcher.getProductGroupsFromPrice());
         this.catalog.setItemList(this.excelFetcher.getCatalogItems());
-        if (!openAiAuthToken.isEmpty()) enhanceCatalogWithOpenIA();
-    }
-    private void enhanceCatalogWithOpenIA() {
-
-        String token = openAiAuthToken;
-        logger.info("Нижче приведений список товар-группа. Группу сгенерувала модель 'gpt-3.5-turbo':");
-        this.catalog
-                .getItemList()
-                .forEach(item -> {
-                    OpenAiService service = new OpenAiService(token);
-                    final List<ChatMessage> messages = new ArrayList<>();
-                    final ChatMessage systemMessage = new ChatMessage(ChatMessageRole.SYSTEM.value(),
-                            "Користувач вводить назву товарної позиції. " +
-                                    "Наша ціль - повернути максимально узагальнену назву товарної группи для цієї позиції.\n" +
-                                    "Уникай деталізації, наприклад батарейка CAMELION LR14 - це просто 'батарейки', без вказання бренду. " +
-                                    "Засіб для прибирання пилу Dust 0,5л - це побутова хімія." +
-                                    "Відповідь має бути лаконічною і має містити ТІЛЬКИ назву товарної группи і нічого іншого." +
-                                    "Якщо товарну группу тяжко визначити то поверни 'інше'.");
-
-                    final List<String> answer = new ArrayList<>();
-                    messages.add(systemMessage);
-                    final ChatMessage userMessage = new ChatMessage(ChatMessageRole.USER.value(), item.name());
-                    messages.add(userMessage);
-
-                    ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest
-                            .builder()
-                            .model("gpt-3.5-turbo")
-                            .messages(messages)
-                            .topP(1d)
-                            .temperature(0d)
-                            .logitBias(new HashMap<>())
-                            .build();
-
-                    service
-                            .streamChatCompletion(chatCompletionRequest)
-                            .doOnError(it-> logger.warn("Exception from OpenAiService {} for item {}",it.getMessage(),item.name()))
-                            .blockingForEach(chatCompletionChunk -> answer.add(chatCompletionChunk.getChoices().get(0).getMessage().getContent()));
-
-                    String groupName = String.join("", answer).replaceAll("null", "").toLowerCase();
-
-                    logger.info("{}: {}", item.name(),groupName);
-                    try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                    item.setGroup(groupName);
-                    service.shutdownExecutor();
-                });
-
-        this.catalog
-                .setGroupList(this.excelFetcher.getCatalogItems()
-                        .stream()
-                        .map(Item::group)
-                        .collect(Collectors.toList()));
     }
 
     private void handleInlineButtonClicks(CallbackQuery callbackQuery) throws TelegramApiException {
@@ -202,7 +140,6 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             case SUBMIT -> handleOrderSubmit(visitor);
             case DISCARD -> handleDiscard(visitor);
             case BUCKET -> handleBucket(visitor);
-            case SEARCH -> handleSearch(visitor);
 
             default -> {
                 var subGroupItems = scalaHelper.getSubMenuText(this.catalog.getItemList(), callBackButton, this.hostPort, userId);
@@ -317,15 +254,6 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         visitor.setNameEditingMode(false);
         return scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(), "\uD83D\uDD0E Обирай з товарних груп:",
                 keyboardHelper.buildCatalogItemsMenu());
-    }
-
-    //Todo: rebuild search in the telegram?
-    private SendMessage handleSearch(BotVisitor visitor) {
-        logger.info("handleSearch method, visitorId " + visitor.getUserId());
-        visitor.setNameEditingMode(false);
-
-        return scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(), "\uD83D\uDD0E [в розробці ]Введи текст для пошуку по всіх товарних группах:",
-                null);
     }
 
     private SendMessage handleContacts(BotVisitor visitor) {
