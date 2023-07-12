@@ -149,18 +149,23 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                             .model("gpt-3.5-turbo")
                             .messages(messages)
                             .topP(1d)
-                            .temperature(1d)
+                            .temperature(0d)
                             .logitBias(new HashMap<>())
                             .build();
 
                     service
                             .streamChatCompletion(chatCompletionRequest)
                             .doOnError(it-> logger.warn("Exception from OpenAiService {} for item {}",it.getMessage(),item.name()))
-                            .forEach(chatCompletionChunk -> answer.add(chatCompletionChunk.getChoices().get(0).getMessage().getContent()));
+                            .blockingForEach(chatCompletionChunk -> answer.add(chatCompletionChunk.getChoices().get(0).getMessage().getContent()));
 
                     String groupName = String.join("", answer).replaceAll("null", "").toLowerCase();
 
                     logger.info("{}: {}", item.name(),groupName);
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
                     item.setGroup(groupName);
                     service.shutdownExecutor();
                 });

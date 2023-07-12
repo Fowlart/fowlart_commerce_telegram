@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -74,6 +75,22 @@ public class AdminController {
             return new BotVisitorDto(botVisitor.getUserId(), botVisitor.getName(), bucketConverted, botVisitor.getPhoneNumber(), botVisitor.getUser().getFirstName(), botVisitor.getUser().getLastName());
         }).collect(Collectors.toSet());
         return mapper.writeValueAsString(visitorsDTO);
+    }
+
+    @GetMapping("statistic/all-items")
+    public String getItemList(@RequestHeader Map<String, String> headers) throws JsonProcessingException {
+        if (notAdmin(headers)) return pleaseLogin;
+
+        var response = new ArrayList<String>();
+
+        var groupItemsMap = this.catalog.getItemList().stream().collect(Collectors.groupingBy(Item::group));
+
+        groupItemsMap.forEach((key, value) -> {
+            response.add("<h4>"+key+"</h4>");
+            value.forEach(item -> response.add("<p>" + item.name() + "</p>"));
+        });
+
+        return String.join("", response);
     }
 
     @PostMapping("web-hooks/accept")
