@@ -1,6 +1,7 @@
 package com.fowlart.main;
 
 import com.fowlart.main.in_mem_catalog.Catalog;
+import com.fowlart.main.in_mem_catalog.Item;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -9,6 +10,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class KeyboardHelper {
@@ -93,7 +95,11 @@ public class KeyboardHelper {
         InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
         List<InlineKeyboardButton> rowInline = new ArrayList<>();
-        for (String groupItem : catalog.getGroupList()) {
+        for (String groupItem : catalog
+                .getItemList()
+                .stream()
+                .map(Item::group)
+                .collect(Collectors.toSet())) {
             rowInline.add(buildButton(groupItem+"⬇️️", groupItem));
             rowsInline.add(rowInline);
             rowInline = new ArrayList<>();

@@ -83,7 +83,7 @@ public class AdminController {
     public String startCatalogEnhancing(@RequestHeader Map<String, String> headers){
         if (notAdmin(headers)) return pleaseLogin;
         catalogEnhancer.enhanceCatalog();
-        return "<p>Completed process of catalog enhancing. </p>";
+        return "<p>Completed process of catalog enhancing.</p>";
     }
 
     @GetMapping("catalog/enhance-status")

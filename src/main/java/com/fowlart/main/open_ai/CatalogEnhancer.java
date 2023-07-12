@@ -63,28 +63,25 @@ public class CatalogEnhancer implements InitializingBean {
                     final ChatMessage userMessage = new ChatMessage(ChatMessageRole.USER.value(), item.name());
                     messages.add(userMessage);
 
-                    ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest
-                            .builder()
-                            .model("gpt-3.5-turbo")
-                            .messages(messages)
-                            .topP(1d)
-                            .temperature(0d)
-                            .logitBias(new HashMap<>())
-                            .build();
+                    ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest.builder().model("gpt-3.5-turbo").messages(messages).topP(1d).temperature(0d).logitBias(new HashMap<>()).build();
 
-                    service
-                            .streamChatCompletion(chatCompletionRequest)
-                            .doOnError(exception -> {
-                                internalLogger.add(new Date() + ": помилка звязку на етапі оброблення позиції: " + item.name());
-                                internalLogger.add(exception.getMessage());
-                            })
-                            .blockingForEach(chatCompletionChunk -> answer.add(chatCompletionChunk.getChoices().get(0).getMessage().getContent()));
+                    service.streamChatCompletion(chatCompletionRequest).doOnError(exception -> {
+                        internalLogger.add(new Date() + ": помилка звязку на етапі оброблення позиції: " + item.name());
+                        internalLogger.add(exception.getMessage());
+                        service.shutdownExecutor();
+                    }).blockingForEach(chatCompletionChunk -> answer.add(chatCompletionChunk.getChoices().get(0).getMessage().getContent()));
 
-                    String groupName = String.join("", answer).replaceAll("null", "").toLowerCase();
+                    String groupName = String.join("", answer).replaceAll("null", "");
 
                     internalLogger.add(new Date() + ": " + item.name() + "->" + groupName);
                     item.setGroup(groupName);
                     service.shutdownExecutor();
+
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
                 });
 
         this.catalog
