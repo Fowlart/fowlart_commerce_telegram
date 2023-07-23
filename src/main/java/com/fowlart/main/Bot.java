@@ -46,7 +46,6 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     private static final String SUBMIT = "SUBMIT";
     private static final String DISCARD = "DISCARD";
 
-    private static final String SEARCH = "SEARCH";
     private final static Logger logger = LoggerFactory.getLogger(Bot.class);
     private static Bot instance;
     private final BotVisitorService botVisitorService;
@@ -323,8 +322,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             this.sendApiMethod(noSuchItemInBasket);
         }
 
-        String itemId = visitor.getItemToEditQty().id();
-        final String finalItemId = itemId;
+        final String finalItemId = visitor.getItemToEditQty().id();
         var item = visitor.getBucket().stream().filter(i -> finalItemId.equals(i.id())).findFirst().get();
         visitor.setItemToEditQty(item);
 

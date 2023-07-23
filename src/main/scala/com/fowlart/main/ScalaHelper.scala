@@ -30,7 +30,8 @@ class ScalaHelper {
        val theFile = path.toFile
        val mimetype = new MimetypesFileTypeMap().getContentType(theFile)
        val theType = mimetype.split("/")(0)
-       path.getFileName.toString.toLowerCase.contains(item.name.toLowerCase) && theType == "image"
+
+       path.getFileName.toString.toLowerCase.contains(item.name.toLowerCase.replaceAll("/","_")) && theType == "image"
      }
 
      val itemImgOp = Files.find(Path.of(s"$inputForImgPath/"), 1, biPredicate).findFirst()
