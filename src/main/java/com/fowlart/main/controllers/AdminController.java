@@ -20,10 +20,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @RestController
@@ -41,12 +43,7 @@ public class AdminController {
     private final String botAdminsList;
     private final CatalogEnhancer catalogEnhancer;
 
-    public AdminController(BotVisitorService botVisitorService,
-                           @Value("${app.bot.email.gmail.user}") String gmailAccName,
-                           @Value("${app.bot.host.url}") String hostName,
-                           @Value("${app.bot.admins}") String botAdminsList,
-                           @Autowired KeyboardHelper keyboardHelper,
-                           Bot bot, Catalog catalog, CatalogEnhancer catalogEnhancer) {
+    public AdminController(BotVisitorService botVisitorService, @Value("${app.bot.email.gmail.user}") String gmailAccName, @Value("${app.bot.host.url}") String hostName, @Value("${app.bot.admins}") String botAdminsList, @Autowired KeyboardHelper keyboardHelper, Bot bot, Catalog catalog, CatalogEnhancer catalogEnhancer) {
 
         this.botVisitorService = botVisitorService;
         this.gmailAccName = gmailAccName;
@@ -66,6 +63,32 @@ public class AdminController {
         return getAllVisitorList(headers);
     }
 
+    @GetMapping("/send-message")
+    public String sendMessage(@RequestHeader Map<String, String> headers, @RequestParam("userId") String userId, @RequestParam("text") String text) {
+
+        if (notAdmin(headers)) return pleaseLogin;
+
+        var botVisitor = botVisitorService.getBotVisitorByUserId(userId);
+
+        if (Objects.nonNull(botVisitor)) {
+            try {
+                var msg = this.scHelper.buildSimpleReplyMessage(Long.parseLong(userId), "\uD83D\uDCE9 Повідомлення від адміністратора:\n\n"+text, null);
+                bot.execute(msg);
+
+                final ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
+                var output = mapper.writeValueAsString(new BotVisitorDto(botVisitor.getUserId(), botVisitor.getName(), botVisitor.getBucket().stream().map(Item::name).collect(Collectors.toSet()), botVisitor.getPhoneNumber(), botVisitor.getUser().getFirstName(), botVisitor.getUser().getLastName()));
+
+                return "<h1>Повідомлення:<h3>msg</h3> <h1>надіслано користувачу:</h1><pre id=\"json\">user</pre>".replaceAll("msg", text).replaceAll("user", output);
+
+            } catch (TelegramApiException | JsonProcessingException e) {
+                logger.error("Failed to send message to user: " + botVisitor.getUserId());
+                return "<h1>Помилка. Повідомлення не надіслано.</h1>";
+            }
+        }
+
+        return "<h1>Користувача не знайдено</h1>";
+    }
+
     @GetMapping("statistic/all-visitors")
     public String getAllVisitorList(@RequestHeader Map<String, String> headers) throws JsonProcessingException {
         if (notAdmin(headers)) return pleaseLogin;
@@ -79,23 +102,23 @@ public class AdminController {
     }
 
     @GetMapping("catalog/restore")
-    public String catalogRestore(@RequestHeader Map<String, String> headers){
+    public String catalogRestore(@RequestHeader Map<String, String> headers) {
         if (notAdmin(headers)) return pleaseLogin;
         catalogEnhancer.catalogRestore();
         return "<p>Completed process of catalog restoring.</p>";
     }
 
     @GetMapping("catalog/enhance")
-    public String startCatalogEnhancing(@RequestHeader Map<String, String> headers){
+    public String startCatalogEnhancing(@RequestHeader Map<String, String> headers) {
         if (notAdmin(headers)) return pleaseLogin;
         catalogEnhancer.enhanceCatalog();
         return "<p>Completed process of catalog enhancing.</p>";
     }
 
     @GetMapping("catalog/enhance-status")
-    public String getCatalogEnhancingStatus(@RequestHeader Map<String, String> headers){
+    public String getCatalogEnhancingStatus(@RequestHeader Map<String, String> headers) {
         if (notAdmin(headers)) return pleaseLogin;
-        return catalogEnhancer.getInternalLogger().stream().map(str->"<p>"+str+"</p>").collect(Collectors.joining());
+        return catalogEnhancer.getInternalLogger().stream().map(str -> "<p>" + str + "</p>").collect(Collectors.joining());
     }
 
     @GetMapping("statistic/all-items")
@@ -107,7 +130,7 @@ public class AdminController {
         var groupItemsMap = this.catalog.getItemList().stream().collect(Collectors.groupingBy(Item::group));
 
         groupItemsMap.forEach((key, value) -> {
-            response.add("<h4>"+key+"</h4>");
+            response.add("<h4>" + key + "</h4>");
             value.forEach(item -> response.add("<p>" + item.name() + "</p>"));
         });
 
@@ -122,12 +145,7 @@ public class AdminController {
             logger.info("event type: {}", eventGridEvent.getEventType());
             logger.info("event data(string): {}", eventGridEvent.getData().toString());
             Arrays.stream(botAdminsList.split(",")).forEach(adminId -> {
-                String textToBot = "\uD83D\uDCE1 Відбулася подія в сховищі картинок.\n" +
-                        "тип: " +
-                        eventGridEvent.getEventType() +
-                        "\n" +
-                        "уточнені данні: " +
-                        eventGridEvent.getData().toString();
+                String textToBot = "\uD83D\uDCE1 Відбулася подія в сховищі картинок.\n" + "тип: " + eventGridEvent.getEventType() + "\n" + "уточнені данні: " + eventGridEvent.getData().toString();
                 var resp = scHelper.buildSimpleReplyMessage(Long.parseLong(adminId), textToBot, null);
                 bot.sendAnswer(resp);
             });

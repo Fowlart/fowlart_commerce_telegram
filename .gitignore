@@ -19,3 +19,5 @@ src/main/resources/application.properties
 *.iws
 *.iml
 *.ipr
+/src/main/resources/application-azure.properties
+/src/main/resources/application-dev.properties

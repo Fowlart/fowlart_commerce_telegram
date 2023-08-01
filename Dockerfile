@@ -4,7 +4,7 @@ FROM maven:3.8.6-amazoncorretto-18 as BUILD
 COPY src/ /usr/src/app/src
 COPY pom.xml /usr/src/app
 WORKDIR /usr/src/app
-RUN mvn clean scala:compile package spring-boot:repackage && jar tf target/app-1.jar
+RUN mvn clean scala:compile package spring-boot:repackage
 
 # USING PREVIOUS STAGE
 FROM amazoncorretto:18
