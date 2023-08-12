@@ -1,3 +1,0 @@
-{
-  "connectionString": "InstrumentationKey=3e0ce15e-9eb8-44b6-b6bc-f09b3d975f36;IngestionEndpoint=https://polandcentral-0.in.applicationinsights.azure.com/;LiveEndpoint=https://polandcentral.livediagnostics.monitor.azure.com/"
-}

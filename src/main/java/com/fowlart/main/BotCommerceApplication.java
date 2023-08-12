@@ -18,6 +18,7 @@ public class BotCommerceApplication {
     private final static Logger logger = LoggerFactory.getLogger(BotCommerceApplication.class);
 
     public static void main(String[] args) {
+        // add this line to your code, it will start app insights
         ApplicationInsights.attach();
         var activeProfile = System.getProperty("spring.profiles.active");
         System.out.println("ACTIVE PROFILE: " + activeProfile);
