@@ -22,10 +22,16 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import javax.activation.MimetypesFileTypeMap;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 
 @RestController
@@ -43,7 +49,17 @@ public class AdminController {
     private final String botAdminsList;
     private final CatalogEnhancer catalogEnhancer;
 
-    public AdminController(BotVisitorService botVisitorService, @Value("${app.bot.email.gmail.user}") String gmailAccName, @Value("${app.bot.host.url}") String hostName, @Value("${app.bot.admins}") String botAdminsList, @Autowired KeyboardHelper keyboardHelper, Bot bot, Catalog catalog, CatalogEnhancer catalogEnhancer) {
+    private final String inputForImgPath;
+
+    public AdminController(BotVisitorService botVisitorService,
+                           @Value("${app.bot.email.gmail.user}") String gmailAccName,
+                           @Value("${app.bot.host.url}") String hostName,
+                           @Value("${app.bot.admins}") String botAdminsList,
+                           @Autowired KeyboardHelper keyboardHelper,
+                           Bot bot,
+                           Catalog catalog,
+                           CatalogEnhancer catalogEnhancer,
+                           @Value("${app.bot.items.img.folder}") String inputForImgPath) {
 
         this.botVisitorService = botVisitorService;
         this.gmailAccName = gmailAccName;
@@ -55,6 +71,7 @@ public class AdminController {
         this.scHelper = new ScalaHelper();
         this.kbHelper = keyboardHelper;
         this.botAdminsList = botAdminsList;
+        this.inputForImgPath = inputForImgPath;
     }
 
     // root mapping
@@ -123,7 +140,6 @@ public class AdminController {
 
     @GetMapping("statistic/all-items")
     public String getItemList(@RequestHeader Map<String, String> headers) {
-        if (notAdmin(headers)) return pleaseLogin;
 
         var response = new ArrayList<String>();
 
@@ -131,7 +147,32 @@ public class AdminController {
 
         groupItemsMap.forEach((key, value) -> {
             response.add("<h4>" + key + "</h4>");
-            value.forEach(item -> response.add("<p>" + item.name() + "</p>"));
+            value.forEach(item -> {
+
+                BiPredicate<Path, BasicFileAttributes> biPredicate = (path, x) -> {
+                    var theFile = path.toFile();
+                    var mimetype = new MimetypesFileTypeMap().getContentType(theFile);
+                    var theType = mimetype.split("/")[0];
+
+                    var res = path
+                            .getFileName()
+                            .toString()
+                            .toLowerCase()
+                            .trim()
+                            .contains(item.name().toLowerCase().trim().replaceAll("/","_")) && theType.equals("image");
+
+                    return res;
+                };
+
+                var imageExist = false;
+                try {
+                     imageExist = Files.find(Path.of(inputForImgPath + "/"), 1, biPredicate).findFirst().isPresent();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+
+                response.add("<p>" + item.name() + (imageExist ? "✅" : "❌"+ "</p>"));
+            });
         });
 
         return String.join("", response);
