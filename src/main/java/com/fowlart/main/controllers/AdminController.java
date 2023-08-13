@@ -1,6 +1,10 @@
 package com.fowlart.main.controllers;
 
 import com.azure.messaging.eventgrid.EventGridEvent;
+import com.azure.storage.blob.BlobContainerClient;
+import com.azure.storage.blob.BlobServiceClient;
+import com.azure.storage.blob.BlobServiceClientBuilder;
+import com.azure.storage.blob.models.BlobItem;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -49,7 +53,11 @@ public class AdminController {
     private final String botAdminsList;
     private final CatalogEnhancer catalogEnhancer;
 
-    private final String inputForImgPath;
+    private final String containerName;
+
+    private final String connectionString;
+
+    private final BlobContainerClient containerClient;
 
     public AdminController(BotVisitorService botVisitorService,
                            @Value("${app.bot.email.gmail.user}") String gmailAccName,
@@ -59,7 +67,9 @@ public class AdminController {
                            Bot bot,
                            Catalog catalog,
                            CatalogEnhancer catalogEnhancer,
-                           @Value("${app.bot.items.img.folder}") String inputForImgPath) {
+                           @Value("${azure.storage.container.name}") String containerName,
+                           @Value("${azure.storage.connection.string}") String connectionString
+    ) {
 
         this.botVisitorService = botVisitorService;
         this.gmailAccName = gmailAccName;
@@ -71,8 +81,12 @@ public class AdminController {
         this.scHelper = new ScalaHelper();
         this.kbHelper = keyboardHelper;
         this.botAdminsList = botAdminsList;
-        this.inputForImgPath = inputForImgPath;
+        this.containerName = containerName;
+        this.connectionString = connectionString;
+        this.containerClient = getBlobContainerClient();
     }
+
+
 
     // root mapping
     @GetMapping("/")
@@ -138,40 +152,22 @@ public class AdminController {
         return catalogEnhancer.getInternalLogger().stream().map(str -> "<p>" + str + "</p>").collect(Collectors.joining());
     }
 
+    private BlobContainerClient getBlobContainerClient() {
+        BlobServiceClient blobServiceClient = new BlobServiceClientBuilder().connectionString(Objects.requireNonNull(connectionString)).buildClient();
+        return blobServiceClient.createBlobContainerIfNotExists(containerName);
+    }
+
     @GetMapping("statistic/all-items")
     public String getItemList(@RequestHeader Map<String, String> headers) {
-
         var response = new ArrayList<String>();
-
         var groupItemsMap = this.catalog.getItemList().stream().collect(Collectors.groupingBy(Item::group));
-
+        var containerItemsList = this.containerClient.listBlobs().stream().map(BlobItem::getName).toList();
         groupItemsMap.forEach((key, value) -> {
             response.add("<h4>" + key + "</h4>");
             value.forEach(item -> {
-
-                BiPredicate<Path, BasicFileAttributes> biPredicate = (path, x) -> {
-                    var theFile = path.toFile();
-                    var mimetype = new MimetypesFileTypeMap().getContentType(theFile);
-                    var theType = mimetype.split("/")[0];
-
-                    var res = path
-                            .getFileName()
-                            .toString()
-                            .toLowerCase()
-                            .trim()
-                            .contains(item.name().toLowerCase().trim().replaceAll("/","_")) && theType.equals("image");
-
-                    return res;
-                };
-
-                var imageExist = false;
-                try {
-                     imageExist = Files.find(Path.of(inputForImgPath + "/"), 1, biPredicate).findFirst().isPresent();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-
-                response.add("<p>" + item.name() + (imageExist ? "✅" : "❌"+ "</p>"));
+                // check if image exists using Azure blob api
+                var imageExist = containerItemsList.stream().anyMatch(blobItemName -> blobItemName.toLowerCase().contains(item.name().toLowerCase().trim().replaceAll("/","_")));
+                response.add("<p style='font-size: 10px; margin: 1px'>" + item.name() + (imageExist ? "✅" : "❌"+ "</p>"));
             });
         });
 
