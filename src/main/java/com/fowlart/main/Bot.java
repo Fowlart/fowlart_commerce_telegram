@@ -6,10 +6,11 @@ import com.fowlart.main.in_mem_catalog.Catalog;
 import com.fowlart.main.in_mem_catalog.Item;
 import com.fowlart.main.messages.ResponseWithPhotoMessageAndScalaBotVisitor;
 import com.fowlart.main.messages.ResponseWithSendMessageAndScalaBotVisitor;
-import com.fowlart.main.open_ai.CatalogEnhancer;
 import com.fowlart.main.state.BotVisitor;
 import com.fowlart.main.state.BotVisitorService;
+import com.fowlart.main.state.rocks_db.BotVisitorSimplified;
 import com.fowlart.main.state.OrderService;
+import com.fowlart.main.state.postgresql.BotVisitorRepo;
 import org.javatuples.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,6 +63,8 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     private final String hostPort;
     private final String botAdminsList;
 
+    private BotVisitorRepo botVisitorRepo;
+
     public Bot(@Autowired GmailSender gmailSender,
                @Autowired BotVisitorService botVisitorService,
                @Autowired ExcelFetcher excelFetcher,
@@ -73,7 +76,9 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                @Value("${app.bot.order.output.folder}") String outputForOrderPath,
                @Value("${app.bot.items.img.folder}") String inputForImgPath,
                @Value("${app.bot.host.url}") String hostPort,
-               @Value("${app.bot.admins}") String botAdminsList) {
+               @Value("${app.bot.admins}") String botAdminsList,
+               @Autowired BotVisitorRepo botVisitorRepo) {
+        this.botVisitorRepo = botVisitorRepo;
         this.inputForImgPath = inputForImgPath;
         this.gmailSender = gmailSender;
         this.outputForOrderPath = outputForOrderPath;
@@ -112,6 +117,17 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     public void onRegister() {
         this.catalog.setGroupList(this.excelFetcher.getProductGroupsFromPrice());
         this.catalog.setItemList(this.excelFetcher.getCatalogItems());
+
+        var simplifiedVisitors = this.botVisitorService.getAllVisitors().stream().map(botVisitor -> {
+            var botVisitorSimple = new BotVisitorSimplified();
+            botVisitorSimple.setUserId(Long.parseLong(botVisitor.getUserId()));
+            botVisitorSimple.setName(botVisitor.getName());
+            botVisitorSimple.setPhoneNumber(botVisitor.getPhoneNumber());
+            botVisitorSimple.setUserJSON(botVisitor.getUser());
+            return botVisitorSimple;
+        }).collect(Collectors.toList());
+
+        this.botVisitorRepo.saveAll(simplifiedVisitors);
     }
 
     private void handleInlineButtonClicks(CallbackQuery callbackQuery) throws TelegramApiException {
