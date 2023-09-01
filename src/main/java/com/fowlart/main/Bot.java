@@ -405,8 +405,10 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
      */
     @Override
     public void onUpdateReceived(Update update) {
-        //todo: find a better place for this method
-        this.updateInsertAllVisitorsToTheDB();
+
+        //fork tread for updating DB
+        new Thread(this::updateInsertAllVisitorsToTheDB).start();
+
         try {
             if (update.hasCallbackQuery()) {
                 CallbackQuery callbackQuery = update.getCallbackQuery();
