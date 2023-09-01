@@ -1,26 +1,35 @@
 package com.fowlart.main.state.rocks_db;
 
-import com.azure.json.implementation.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fowlart.main.in_mem_catalog.Item;
 import org.hibernate.annotations.ColumnTransformer;
-import org.hibernate.annotations.Type;
 import org.telegram.telegrambots.meta.api.objects.User;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import java.io.IOException;
+import java.util.Set;
 
 @Entity(name = "bot_visitor")
 public class BotVisitorSimplified {
     private String phoneNumber;
     private String name;
+
     @Id
     private long userId;
 
     @Column(columnDefinition = "json")
     @ColumnTransformer(write = "?::json")
     private String userJSON;
+    private String bucket;
+
+    public String getBucket() {
+        return bucket;
+    }
+
+    public void setBucket(Set<Item> bucket) {
+        this.bucket = bucket.stream().map(Item::toString).reduce("", (a, b) -> a + b);
+    }
 
     // Getters and setters
 

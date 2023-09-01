@@ -113,10 +113,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         return token;
     }
 
-    @Override
-    public void onRegister() {
-        this.catalog.setGroupList(this.excelFetcher.getProductGroupsFromPrice());
-        this.catalog.setItemList(this.excelFetcher.getCatalogItems());
+    private void updateInsertAllVisitorsToTheDB(){
 
         var simplifiedVisitors = this.botVisitorService.getAllVisitors().stream().map(botVisitor -> {
             var botVisitorSimple = new BotVisitorSimplified();
@@ -124,10 +121,18 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             botVisitorSimple.setName(botVisitor.getName());
             botVisitorSimple.setPhoneNumber(botVisitor.getPhoneNumber());
             botVisitorSimple.setUserJSON(botVisitor.getUser());
+            botVisitorSimple.setBucket(botVisitor.getBucket());
             return botVisitorSimple;
         }).collect(Collectors.toList());
 
         this.botVisitorRepo.saveAll(simplifiedVisitors);
+
+    }
+
+    @Override
+    public void onRegister() {
+        this.catalog.setGroupList(this.excelFetcher.getProductGroupsFromPrice());
+        this.catalog.setItemList(this.excelFetcher.getCatalogItems());
     }
 
     private void handleInlineButtonClicks(CallbackQuery callbackQuery) throws TelegramApiException {
@@ -400,6 +405,8 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
      */
     @Override
     public void onUpdateReceived(Update update) {
+        //todo: find a better place for this method
+        this.updateInsertAllVisitorsToTheDB();
         try {
             if (update.hasCallbackQuery()) {
                 CallbackQuery callbackQuery = update.getCallbackQuery();
