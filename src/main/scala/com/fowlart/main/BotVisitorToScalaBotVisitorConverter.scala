@@ -1,6 +1,7 @@
 package com.fowlart.main
 
-import com.fowlart.main.state.{BotVisitor, ScalaBotVisitor}
+import com.fowlart.main.state.cosmos.BotVisitor
+import com.fowlart.main.state.{ScalaBotVisitor}
 
 import scala.collection.JavaConverters._
 

@@ -1,7 +1,7 @@
 package com.fowlart.main.state.rocks_db;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fowlart.main.in_mem_catalog.Item;
+import com.fowlart.main.state.cosmos.Item;
 import org.hibernate.annotations.ColumnTransformer;
 import org.telegram.telegrambots.meta.api.objects.User;
 

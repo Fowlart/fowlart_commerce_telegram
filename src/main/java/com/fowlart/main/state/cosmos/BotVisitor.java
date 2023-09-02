@@ -1,7 +1,9 @@
-package com.fowlart.main.state;
+package com.fowlart.main.state.cosmos;
 
-import com.fowlart.main.in_mem_catalog.Item;
+import com.fowlart.main.state.cosmos.Item;
+import org.springframework.data.annotation.Id;
 import org.telegram.telegrambots.meta.api.objects.User;
+
 
 import java.io.Serializable;
 import java.util.HashSet;
@@ -17,34 +19,37 @@ public class BotVisitor implements Serializable {
 
     private boolean isNameEditingMode;
 
-    private Item itemToEditQty;
+    private com.fowlart.main.state.cosmos.Item itemToEditQty;
 
     private User user;
 
+    @Id
     private long userId;
 
-    private Set<Item> bucket = new HashSet<>();
+    private Set<com.fowlart.main.state.cosmos.Item> bucket = new HashSet<>();
 
     private LinkedList<String> orders;
+
+    public BotVisitor() {}
 
     public BotVisitor(User user, long userId) {
         this.user = user;
         this.userId = userId;
     }
 
-    public Set<Item> getBucket() {
+    public Set<com.fowlart.main.state.cosmos.Item> getBucket() {
         return bucket;
     }
 
-    public void setBucket(Set<Item> bucket) {
+    public void setBucket(Set<com.fowlart.main.state.cosmos.Item> bucket) {
         this.bucket = bucket;
     }
 
-    public Item getItemToEditQty() {
+    public com.fowlart.main.state.cosmos.Item getItemToEditQty() {
         return itemToEditQty;
     }
 
-    public void setItemToEditQty(Item itemToEditQty) {
+    public void setItemToEditQty(com.fowlart.main.state.cosmos.Item itemToEditQty) {
         this.itemToEditQty = itemToEditQty;
     }
 

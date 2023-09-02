@@ -1,6 +1,6 @@
 package com.fowlart.main.state
 
-import com.fowlart.main.in_mem_catalog.Item
+import com.fowlart.main.state.cosmos.Item
 
 case class Order (orderId:String,
                   date: String,

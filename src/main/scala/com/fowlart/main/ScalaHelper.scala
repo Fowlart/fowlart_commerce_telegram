@@ -1,7 +1,7 @@
 package com.fowlart.main
 
-import com.fowlart.main.in_mem_catalog.Item
-import com.fowlart.main.state.{BotVisitor, Order, ScalaBotVisitor}
+import com.fowlart.main.state.cosmos.{BotVisitor, Item}
+import com.fowlart.main.state.{Order, ScalaBotVisitor}
 import org.telegram.telegrambots.meta.api.methods.send.{SendMessage, SendPhoto}
 import org.telegram.telegrambots.meta.api.objects.InputFile
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup

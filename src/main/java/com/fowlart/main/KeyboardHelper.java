@@ -1,12 +1,12 @@
 package com.fowlart.main;
 
-import com.fowlart.main.in_mem_catalog.Catalog;
-import com.fowlart.main.in_mem_catalog.Item;
+import com.fowlart.main.state.Catalog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import com.fowlart.main.state.cosmos.Item;
 
 import java.util.ArrayList;
 import java.util.List;

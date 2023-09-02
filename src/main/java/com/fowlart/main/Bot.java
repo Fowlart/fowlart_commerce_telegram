@@ -2,12 +2,13 @@ package com.fowlart.main;
 
 import com.fowlart.main.catalog_fetching.ExcelFetcher;
 import com.fowlart.main.email.GmailSender;
-import com.fowlart.main.in_mem_catalog.Catalog;
-import com.fowlart.main.in_mem_catalog.Item;
+import com.fowlart.main.state.Catalog;
+import com.fowlart.main.state.cosmos.Item;
 import com.fowlart.main.messages.ResponseWithPhotoMessageAndScalaBotVisitor;
 import com.fowlart.main.messages.ResponseWithSendMessageAndScalaBotVisitor;
-import com.fowlart.main.state.BotVisitor;
+import com.fowlart.main.state.cosmos.BotVisitor;
 import com.fowlart.main.state.BotVisitorService;
+import com.fowlart.main.state.cosmos.BotVisitorRepository;
 import com.fowlart.main.state.rocks_db.BotVisitorSimplified;
 import com.fowlart.main.state.OrderService;
 import com.fowlart.main.state.postgresql.BotVisitorRepo;
@@ -63,7 +64,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     private final String hostPort;
     private final String botAdminsList;
 
-    private BotVisitorRepo botVisitorRepo;
+    private final BotVisitorRepo botVisitorRepo;
 
     public Bot(@Autowired GmailSender gmailSender,
                @Autowired BotVisitorService botVisitorService,
@@ -137,7 +138,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
 
     private void handleInlineButtonClicks(CallbackQuery callbackQuery) throws TelegramApiException {
         Long userId = callbackQuery.getFrom().getId();
-        BotVisitor visitor = this.botVisitorService.getBotVisitorByUserId(userId.toString());
+        BotVisitor visitor = this.botVisitorService.getBotVisitorByUserId(userId);
         var scalaBotVisitor = BotVisitorToScalaBotVisitorConverter.convertBotVisitorToScalaBotVisitor(visitor);
         logger.info("handleInlineButtonClicks method, visitor: " + scalaBotVisitor);
         var callBackButtonArr = callbackQuery.getData().split("__");
@@ -362,7 +363,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         if (update.hasMessage() && update.getMessage().hasText()) {
 
             String textFromUser = update.getMessage().getText();
-            String userId = update.getMessage().getFrom().getId().toString();
+            Long userId = update.getMessage().getFrom().getId();
             Long chatId = update.getMessage().getChatId();
             BotVisitor botVisitor = this.botVisitorService.getBotVisitorByUserId(userId);
             var scalaBotVisitor = BotVisitorToScalaBotVisitorConverter.convertBotVisitorToScalaBotVisitor(botVisitor);
@@ -407,7 +408,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     public void onUpdateReceived(Update update) {
 
         //fork tread for updating DB
-        new Thread(this::updateInsertAllVisitorsToTheDB).start();
+        //new Thread(this::updateInsertAllVisitorsToTheDB).start();
 
         try {
             if (update.hasCallbackQuery()) {

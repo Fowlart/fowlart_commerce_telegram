@@ -3,7 +3,7 @@ package com.fowlart.main.controllers;
 import com.fowlart.main.Bot;
 import com.fowlart.main.KeyboardHelper;
 import com.fowlart.main.ScalaHelper;
-import com.fowlart.main.in_mem_catalog.Catalog;
+import com.fowlart.main.state.Catalog;
 import com.fowlart.main.state.BotVisitorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

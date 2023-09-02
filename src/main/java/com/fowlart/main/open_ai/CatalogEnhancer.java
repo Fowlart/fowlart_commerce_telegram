@@ -1,8 +1,8 @@
 package com.fowlart.main.open_ai;
 
 import com.fowlart.main.catalog_fetching.ExcelFetcher;
-import com.fowlart.main.in_mem_catalog.Catalog;
-import com.fowlart.main.in_mem_catalog.Item;
+import com.fowlart.main.state.Catalog;
+import com.fowlart.main.state.cosmos.Item;
 import com.theokanning.openai.completion.chat.ChatCompletionRequest;
 import com.theokanning.openai.completion.chat.ChatMessage;
 import com.theokanning.openai.completion.chat.ChatMessageRole;
@@ -14,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;

@@ -3,8 +3,8 @@ package com.fowlart.main.controllers;
 import com.fowlart.main.Bot;
 import com.fowlart.main.KeyboardHelper;
 import com.fowlart.main.ScalaHelper;
-import com.fowlart.main.in_mem_catalog.Catalog;
-import com.fowlart.main.in_mem_catalog.Item;
+import com.fowlart.main.state.Catalog;
+import com.fowlart.main.state.cosmos.Item;
 import com.fowlart.main.state.BotVisitorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,7 +72,7 @@ public class PdpController {
                 .filter(it -> it.name().toLowerCase().contains(searchQuery.toLowerCase()))
                 .collect(Collectors.toSet());
 
-        var user = botVisitorService.getBotVisitorByUserId(userID);
+        var user = botVisitorService.getBotVisitorByUserId(Long.parseLong(userID));
 
         if (Objects.isNull(user))
             return new ResponseEntity<>("Користувач з id " + userID + " не існує.", HttpStatus.BAD_REQUEST);
@@ -96,7 +96,7 @@ public class PdpController {
         logger.info("qty " + qty);
         Optional<Item> item = catalog.getItemList().stream().filter(it -> itemID.equals(it.id())).findFirst();
         ResponseEntity<String> response = new ResponseEntity<>("Щось пішло не так!", HttpStatus.BAD_REQUEST);
-        var user = botVisitorService.getBotVisitorByUserId(userID);
+        var user = botVisitorService.getBotVisitorByUserId(Long.parseLong(userID));
         if (item.isPresent() && Objects.nonNull(user)) {
             var actualItem = item.get();
             final var newActualItem = new Item(actualItem.id(), actualItem.name(), actualItem.price(), actualItem.group(), qty);

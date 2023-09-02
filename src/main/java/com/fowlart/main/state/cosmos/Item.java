@@ -1,20 +1,20 @@
-package com.fowlart.main.in_mem_catalog;
+package com.fowlart.main.state.cosmos;
 
-import java.io.Serial;
+import org.springframework.data.annotation.Id;
+
 import java.io.Serializable;
 import java.util.Objects;
 
 public final class Item implements Serializable {
-    @Serial
-    private static final long serialVersionUID = 0L;
-    private final String id;
-    private final String name;
-    private final Double price;
+
+    @Id
+    private  String id;
+    private  String name;
+    private  Double price;
     private String group;
-    private final Integer qty;
+    private  Integer qty;
 
-    private String imgBaseFolder = "src/main/resources/imgsForTGbot/";
-
+    public Item(){}
     public Item(String id, String name, Double price, String group, Integer qty) {
         this.id = id;
         this.name = name;
@@ -23,8 +23,44 @@ public final class Item implements Serializable {
         this.qty = qty;
     }
 
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Double getPrice() {
+        return price;
+    }
+
+    public void setPrice(Double price) {
+        this.price = price;
+    }
+
+    public String getGroup() {
+        return group;
+    }
+
     public void setGroup(String group) {
         this.group = group;
+    }
+
+    public Integer getQty() {
+        return qty;
+    }
+
+    public void setQty(Integer qty) {
+        this.qty = qty;
     }
 
     @Override

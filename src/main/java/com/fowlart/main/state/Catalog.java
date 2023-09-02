@@ -1,5 +1,6 @@
-package com.fowlart.main.in_mem_catalog;
+package com.fowlart.main.state;
 
+import com.fowlart.main.state.cosmos.Item;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

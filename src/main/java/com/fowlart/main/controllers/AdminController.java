@@ -12,10 +12,10 @@ import com.fowlart.main.Bot;
 import com.fowlart.main.KeyboardHelper;
 import com.fowlart.main.ScalaHelper;
 import com.fowlart.main.dto.BotVisitorDto;
-import com.fowlart.main.in_mem_catalog.Catalog;
-import com.fowlart.main.in_mem_catalog.Item;
+import com.fowlart.main.state.Catalog;
 import com.fowlart.main.open_ai.CatalogEnhancer;
 import com.fowlart.main.state.BotVisitorService;
+import com.fowlart.main.state.cosmos.Item;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import org.slf4j.Logger;
@@ -26,16 +26,10 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import javax.activation.MimetypesFileTypeMap;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 
 @RestController
@@ -59,17 +53,7 @@ public class AdminController {
 
     private final BlobContainerClient containerClient;
 
-    public AdminController(BotVisitorService botVisitorService,
-                           @Value("${app.bot.email.gmail.user}") String gmailAccName,
-                           @Value("${app.bot.host.url}") String hostName,
-                           @Value("${app.bot.admins}") String botAdminsList,
-                           @Autowired KeyboardHelper keyboardHelper,
-                           Bot bot,
-                           Catalog catalog,
-                           CatalogEnhancer catalogEnhancer,
-                           @Value("${azure.storage.container.name}") String containerName,
-                           @Value("${azure.storage.connection.string}") String connectionString
-    ) {
+    public AdminController(BotVisitorService botVisitorService, @Value("${app.bot.email.gmail.user}") String gmailAccName, @Value("${app.bot.host.url}") String hostName, @Value("${app.bot.admins}") String botAdminsList, @Autowired KeyboardHelper keyboardHelper, Bot bot, Catalog catalog, CatalogEnhancer catalogEnhancer, @Value("${azure.storage.container.name}") String containerName, @Value("${azure.storage.connection.string}") String connectionString) {
 
         this.botVisitorService = botVisitorService;
         this.gmailAccName = gmailAccName;
@@ -87,7 +71,6 @@ public class AdminController {
     }
 
 
-
     // root mapping
     @GetMapping("/")
     public String getRoot(@RequestHeader Map<String, String> headers) throws JsonProcessingException {
@@ -99,11 +82,11 @@ public class AdminController {
 
         if (notAdmin(headers)) return pleaseLogin;
 
-        var botVisitor = botVisitorService.getBotVisitorByUserId(userId);
+        var botVisitor = botVisitorService.getBotVisitorByUserId(Long.parseLong(userId));
 
         if (Objects.nonNull(botVisitor)) {
             try {
-                var msg = this.scHelper.buildSimpleReplyMessage(Long.parseLong(userId), "\uD83D\uDCE9 Повідомлення від адміністратора:\n\n"+text, null);
+                var msg = this.scHelper.buildSimpleReplyMessage(Long.parseLong(userId), "\uD83D\uDCE9 Повідомлення від адміністратора:\n\n" + text, null);
                 bot.execute(msg);
 
                 final ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
@@ -166,8 +149,8 @@ public class AdminController {
             response.add("<h4>" + key + "</h4>");
             value.forEach(item -> {
                 // check if image exists using Azure blob api
-                var imageExist = containerItemsList.stream().anyMatch(blobItemName -> blobItemName.toLowerCase().contains(item.name().toLowerCase().trim().replaceAll("/","_")));
-                response.add("<p style='font-size: 10px; margin: 1px'>" + item.name() + (imageExist ? "✅" : "❌"+ "</p>"));
+                var imageExist = containerItemsList.stream().anyMatch(blobItemName -> blobItemName.toLowerCase().contains(item.name().toLowerCase().trim().replaceAll("/", "_")));
+                response.add("<p style='font-size: 10px; margin: 1px'>" + item.name() + (imageExist ? "✅" : "❌" + "</p>"));
             });
         });
 

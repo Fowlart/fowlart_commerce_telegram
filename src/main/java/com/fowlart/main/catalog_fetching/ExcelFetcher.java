@@ -1,6 +1,6 @@
 package com.fowlart.main.catalog_fetching;
 
-import com.fowlart.main.in_mem_catalog.Item;
+import com.fowlart.main.state.cosmos.Item;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.springframework.beans.factory.annotation.Value;

@@ -1,7 +1,7 @@
 package com.fowlart.main
-import com.fowlart.main.in_mem_catalog.{Catalog, Item}
 import com.fowlart.main.messages._
-import com.fowlart.main.state.ScalaBotVisitor
+import com.fowlart.main.state.{Catalog, ScalaBotVisitor}
+import com.fowlart.main.state.cosmos.Item
 import com.google.gson.Gson
 import org.slf4j.{Logger, LoggerFactory}
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage

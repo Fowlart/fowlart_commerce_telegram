@@ -1,6 +1,7 @@
 package com.fowlart.main.state
 
-import com.fowlart.main.in_mem_catalog.Item
+
+import com.fowlart.main.state.cosmos.Item
 import org.telegram.telegrambots.meta.api.objects.User
 
 case class ScalaBotVisitor(
