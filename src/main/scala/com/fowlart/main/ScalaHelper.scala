@@ -1,102 +1,79 @@
 package com.fowlart.main
 
-import com.fowlart.main.state.cosmos.{BotVisitor, Item}
-import com.fowlart.main.state.{Order, ScalaBotVisitor}
+import com.fowlart.main.state.ScalaBotVisitor
+import com.fowlart.main.state.cosmos.{BotVisitor, Item, Order}
 import org.telegram.telegrambots.meta.api.methods.send.{SendMessage, SendPhoto}
 import org.telegram.telegrambots.meta.api.objects.InputFile
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup
 
-import java.io.{File, IOException}
+import java.io.File
 import java.nio.file.attribute.BasicFileAttributes
 import java.nio.file.{Files, Path}
-import java.util
 import java.util.function.BiPredicate
-import java.util.{List, Optional}
 import java.util.regex.Pattern
-import java.util.stream.{Collectors, Stream}
 import javax.activation.MimetypesFileTypeMap
 import scala.collection.JavaConverters._
 
 class ScalaHelper {
 
+  def getItemMessageWithPhotoWithDeleteButtonOnly(
+      chatId: Long,
+      item: Item,
+      itemNotFoundImgPath: String,
+      inputForImgPath: String,
+      keyboardHelper: KeyboardHelper
+  ) = {
 
-   def getItemMessageWithPhoto(chatId: Long,
-                               item: Item,
-                               itemNotFoundImgPath: String,
-                               inputForImgPath: String,
-                               keyboardHelper: KeyboardHelper) = {
-
-     val biPredicate: BiPredicate[Path,BasicFileAttributes] = (path, _) => {
-       val theFile = path.toFile
-       val mimetype = new MimetypesFileTypeMap().getContentType(theFile)
-       val theType = mimetype.split("/")(0)
-
-       path.getFileName.toString.toLowerCase.contains(item.name.toLowerCase.replaceAll("/","_")) && theType == "image"
-     }
-
-     val itemImgOp = Files.find(Path.of(s"$inputForImgPath/"), 1, biPredicate).findFirst()
-
-     val noImageImg = new File(itemNotFoundImgPath)
-
-     val response = SendPhoto
-       .builder
-       .caption(getEditItemQtyMsg(item))
-       .replyMarkup(keyboardHelper.buildBucketItemKeyboardMenu(item.id))
-       .chatId(chatId)
-       .parseMode("html")
-       .photo(new InputFile(noImageImg)).build
-
-     if (itemImgOp.isPresent && itemImgOp.get.toFile.exists) {
-       response.setPhoto(new InputFile(itemImgOp.get.toFile))
-     }
-
-     response
-   }
-
-  def getItemMessageWithPhotoWithDeleteButtonOnly(chatId: Long,
-                                                  item: Item,
-                                                  itemNotFoundImgPath: String,
-                                                  inputForImgPath: String,
-                                                  keyboardHelper: KeyboardHelper) = {
-
-    val response = getItemMessageWithPhoto(chatId,item,itemNotFoundImgPath,inputForImgPath,keyboardHelper)
-    response.setReplyMarkup(keyboardHelper.buildAddToBucketItemKeyboardMenu(item.id()))
+    val response = getItemMessageWithPhoto(
+      chatId,
+      item,
+      itemNotFoundImgPath,
+      inputForImgPath,
+      keyboardHelper
+    )
+    response.setReplyMarkup(
+      keyboardHelper.buildAddToBucketItemKeyboardMenu(item.id())
+    )
     response
   }
 
-  def getItemMessageWithPhotoInBucket(chatId: Long, item: Item, itemNotFoundImgPath: String, inputForImgPath: String, keyboardHelper: KeyboardHelper) = {
+  def getItemMessageWithPhoto(
+      chatId: Long,
+      item: Item,
+      itemNotFoundImgPath: String,
+      inputForImgPath: String,
+      keyboardHelper: KeyboardHelper
+  ) = {
 
-    val response = getItemMessageWithPhoto(chatId, item, itemNotFoundImgPath, inputForImgPath, keyboardHelper)
-    response.setCaption(getItemBucketMessage(item))
-    response
-  }
+    val biPredicate: BiPredicate[Path, BasicFileAttributes] = (path, _) => {
+      val theFile = path.toFile
+      val mimetype = new MimetypesFileTypeMap().getContentType(theFile)
+      val theType = mimetype.split("/")(0)
 
+      path.getFileName.toString.toLowerCase.contains(
+        item.name.toLowerCase.replaceAll("/", "_")
+      ) && theType == "image"
+    }
 
-  def buildSimpleReplyMessage(userId: Long, text: String, markUp: InlineKeyboardMarkup): SendMessage = {
+    val itemImgOp =
+      Files.find(Path.of(s"$inputForImgPath/"), 1, biPredicate).findFirst()
 
-    SendMessage
-      .builder
-      .chatId(userId)
-      .text(text)
-      .replyMarkup(markUp)
+    val noImageImg = new File(itemNotFoundImgPath)
+
+    val response = SendPhoto.builder
+      .caption(getEditItemQtyMsg(item))
+      .replyMarkup(keyboardHelper.buildBucketItemKeyboardMenu(item.id))
+      .chatId(chatId)
+      .parseMode("html")
+      .photo(new InputFile(noImageImg))
       .build
-  }
 
-  def getItemBucketIntroMessage(userId: String,keyboardHelper: KeyboardHelper): SendMessage = {
-    SendMessage.builder.chatId(userId)
-      .replyMarkup(keyboardHelper.buildBucketKeyboardMenu())
-      .text(
-        s"""
-           |🛒
-           | Нижче, список товарів у корзині.
-           | Будь ласка, переглядайте та керуйте кількістю товарів.
-           |""".stripMargin).build
-  }
+    if (itemImgOp.isPresent && itemImgOp.get.toFile.exists) {
+      response.setPhoto(new InputFile(itemImgOp.get.toFile))
+    }
 
-  def getItemBucketMessage(item: Item): String =
-    s"""
-       |${item.toString2}
-       |""".stripMargin
+    response
+  }
 
   def getEditItemQtyMsg(item: Item): String =
     s"""
@@ -105,11 +82,68 @@ class ScalaHelper {
        |${item.toString3}
        |""".stripMargin
 
-  def getEmptyBucketMessage(keyboardHelper: KeyboardHelper, userId: Long): SendMessage = {
+  def getItemMessageWithPhotoInBucket(
+      chatId: Long,
+      item: Item,
+      itemNotFoundImgPath: String,
+      inputForImgPath: String,
+      keyboardHelper: KeyboardHelper
+  ) = {
 
-    SendMessage.builder.chatId(userId)
-      .text( "Корзина порожня. Додайте товар.")
-      .replyMarkup(keyboardHelper.buildMainMenuReply(userId)).build
+    val response = getItemMessageWithPhoto(
+      chatId,
+      item,
+      itemNotFoundImgPath,
+      inputForImgPath,
+      keyboardHelper
+    )
+    response.setCaption(getItemBucketMessage(item))
+    response
+  }
+
+  def getItemBucketMessage(item: Item): String =
+    s"""
+       |${item.toString2}
+       |""".stripMargin
+
+  def buildSimpleReplyMessage(
+      userId: Long,
+      text: String,
+      markUp: InlineKeyboardMarkup
+  ): SendMessage = {
+
+    SendMessage.builder
+      .chatId(userId)
+      .text(text)
+      .replyMarkup(markUp)
+      .build
+  }
+
+  def getItemBucketIntroMessage(
+      userId: String,
+      keyboardHelper: KeyboardHelper
+  ): SendMessage = {
+    SendMessage.builder
+      .chatId(userId)
+      .replyMarkup(keyboardHelper.buildBucketKeyboardMenu())
+      .text(s"""
+           |🛒
+           | Нижче, список товарів у корзині.
+           | Будь ласка, переглядайте та керуйте кількістю товарів.
+           |""".stripMargin)
+      .build
+  }
+
+  def getEmptyBucketMessage(
+      keyboardHelper: KeyboardHelper,
+      userId: Long
+  ): SendMessage = {
+
+    SendMessage.builder
+      .chatId(userId)
+      .text("Корзина порожня. Додайте товар.")
+      .replyMarkup(keyboardHelper.buildMainMenuReply(userId))
+      .build
   }
 
   def isNumeric(strNum: String): Boolean = {
@@ -124,44 +158,54 @@ class ScalaHelper {
     pattern.matcher(strNum).matches
   }
 
-  def getSubMenuText(itemList: java.util.List[Item], group: String, hostPort: String, userId: Long): Array[String] = {
+  def getSubMenuText(
+      itemList: java.util.List[Item],
+      group: String,
+      hostPort: String,
+      userId: Long
+  ): Array[String] = {
     val maxItemsPerReply = 15
-    val itemSeq = itemList.asScala.filter(item=>group.equals(item.group()))
+    val itemSeq = itemList.asScala.filter(item => group.equals(item.group()))
     // ordering for pretty printing
     implicit val orderingForItem: Ordering[Item] = (x: Item, y: Item) =>
       x.name().trim.length.compareTo(y.name().trim.length)
     val reOrderedList = itemSeq.sorted
     val grouped = reOrderedList.grouped(maxItemsPerReply)
-    val res = grouped.toList.filter(it => it.nonEmpty).map(it => {
-      it.map(item =>
-        s"""
+    val res = grouped.toList
+      .filter(it => it.nonEmpty)
+      .map(it => {
+        it.map(item => s"""
            |${item.name.trim}
            |${item.price} грн
            |➡️️<b>/${item.id}</b>
            |<a href='$hostPort/pdp/${item.id}?userId=$userId'>🛒ЗАМОВИТИ</a>
-           |""".stripMargin).reduce((v1, v2) => s"$v1$v2")
-    })
+           |""".stripMargin)
+          .reduce((v1, v2) => s"$v1$v2")
+      })
     res.toArray
   }
 
   def getEmailOrderText(order: Order): String =
     s"""
        |<H3 style="color: green">Дані користувача:</H3>
-       |<b>Дата:</b> ${order.date}
+       |<b>Дата:</b> ${order.getDate}
        |
-       |<br/><b>ID користувача:</b> ${order.userId}
+       |<br/><b>ID користувача:</b> ${order.getUserId}
        |
-       |<br/><b>ID замовлення:</b> ${order.orderId}
+       |<br/><b>ID замовлення:</b> ${order.getOrderId}
        |
-       |<br/><b>Ім'я:</b> ${order.userName}
+       |<br/><b>Ім'я:</b> ${order.getUserName}
        |
-       |<br/><b>Номер телефону:</b> ${if (order.userPhoneNumber!=null) order.userPhoneNumber else "[номер не вказаний/вказаний не вірно]"}
+       |<br/><b>Номер телефону:</b> ${if (order.getUserPhoneNumber != null)
+      order.getUserPhoneNumber
+    else "[номер не вказаний/вказаний не вірно]"}
        |
        |<H3 style="color: green">Замовлення:</H3>
-       |   ${order.orderBucket.map(it=>s"""${it.toString}""").reduce((s1,s2)=>s"$s1<br/>$s2")}
+       |   ${order.getOrderBucket.asScala
+      .map(it => s"""${it.toString}""")
+      .reduce((s1, s2) => s"$s1<br/>$s2")}
        |
        |""".stripMargin
-
 
   def getNameEditingText(userId: Long): String =
     s"""|🚹🚺
@@ -171,7 +215,6 @@ class ScalaHelper {
         |Прізвище Ім'я.
         |Увага, ми не будемо намагатися валідувати введений текст.
         |""".stripMargin
-
 
   def getPhoneEditingText(userId: Long): String = {
     s"""|🚹🚺
@@ -184,13 +227,15 @@ class ScalaHelper {
   }
   def getPersonalDataEditingSectionText(botVisitor: BotVisitor): String = {
 
-    val phoneNumber = if (botVisitor.getPhoneNumber==null) "" else botVisitor.getPhoneNumber
+    val phoneNumber =
+      if (botVisitor.getPhoneNumber == null) "" else botVisitor.getPhoneNumber
 
     s"""|💾ID користувача:
         |${botVisitor.getUserId}
         |
         |🚹🚺Ім'я/Прізвище:
-        |${if (botVisitor.getName!=null) botVisitor.getName else botVisitor.getUser.getFirstName}
+        |${if (botVisitor.getName != null) botVisitor.getName
+    else botVisitor.getUser.getFirstName}
         |
         |☎️Телфон:
         |$phoneNumber
@@ -198,23 +243,29 @@ class ScalaHelper {
   }
 
   def getMainMenuText(botVisitor: BotVisitor): String = {
-    getMainMenuText(BotVisitorToScalaBotVisitorConverter.convertBotVisitorToScalaBotVisitor(botVisitor))
+    getMainMenuText(
+      BotVisitorToScalaBotVisitorConverter.convertBotVisitorToScalaBotVisitor(
+        botVisitor
+      )
+    )
   }
-  
-  def getMainMenuText(botVisitor: ScalaBotVisitor): String ={
-    val name = if (botVisitor.name!=null) botVisitor.name else botVisitor.user.getFirstName
+
+  def getMainMenuText(botVisitor: ScalaBotVisitor): String = {
+    val name =
+      if (botVisitor.name != null) botVisitor.name
+      else botVisitor.user.getFirstName
     s"""|Привіт, $name!
         |
         |Це бот для замовлення товарів, натискай кнопки для навігації по меню.
         |Або продовжуйте навігацію по каталогу, чи замовляйте товари, натискаючи
         |їх ID номер.
         |
-        |Редагування кількостей відбувається в корзині.""".stripMargin}
+        |Редагування кількостей відбувається в корзині.""".stripMargin
+  }
 
   def getPhoneNumberReceivedText(): String =
     s"""|💾
         |Дякуємо. Номер збережено в особистий профіль.""".stripMargin
-
 
   def getFullNameReceivedText(): String =
     s"""|💾

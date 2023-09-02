@@ -8,10 +8,7 @@ import com.fowlart.main.messages.ResponseWithPhotoMessageAndScalaBotVisitor;
 import com.fowlart.main.messages.ResponseWithSendMessageAndScalaBotVisitor;
 import com.fowlart.main.state.cosmos.BotVisitor;
 import com.fowlart.main.state.BotVisitorService;
-import com.fowlart.main.state.cosmos.BotVisitorRepository;
-import com.fowlart.main.state.rocks_db.BotVisitorSimplified;
 import com.fowlart.main.state.OrderService;
-import com.fowlart.main.state.postgresql.BotVisitorRepo;
 import org.javatuples.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,7 +61,6 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     private final String hostPort;
     private final String botAdminsList;
 
-    private final BotVisitorRepo botVisitorRepo;
 
     public Bot(@Autowired GmailSender gmailSender,
                @Autowired BotVisitorService botVisitorService,
@@ -77,9 +73,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                @Value("${app.bot.order.output.folder}") String outputForOrderPath,
                @Value("${app.bot.items.img.folder}") String inputForImgPath,
                @Value("${app.bot.host.url}") String hostPort,
-               @Value("${app.bot.admins}") String botAdminsList,
-               @Autowired BotVisitorRepo botVisitorRepo) {
-        this.botVisitorRepo = botVisitorRepo;
+               @Value("${app.bot.admins}") String botAdminsList) {
         this.inputForImgPath = inputForImgPath;
         this.gmailSender = gmailSender;
         this.outputForOrderPath = outputForOrderPath;
@@ -114,21 +108,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         return token;
     }
 
-    private void updateInsertAllVisitorsToTheDB(){
 
-        var simplifiedVisitors = this.botVisitorService.getAllVisitors().stream().map(botVisitor -> {
-            var botVisitorSimple = new BotVisitorSimplified();
-            botVisitorSimple.setUserId(Long.parseLong(botVisitor.getUserId()));
-            botVisitorSimple.setName(botVisitor.getName());
-            botVisitorSimple.setPhoneNumber(botVisitor.getPhoneNumber());
-            botVisitorSimple.setUserJSON(botVisitor.getUser());
-            botVisitorSimple.setBucket(botVisitor.getBucket());
-            return botVisitorSimple;
-        }).collect(Collectors.toList());
-
-        this.botVisitorRepo.saveAll(simplifiedVisitors);
-
-    }
 
     @Override
     public void onRegister() {
@@ -307,7 +287,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
 
         var orderSubmitReply = scalaHelper.buildSimpleReplyMessage(visitor.getUser().getId(), "Замовлення прийнято!", keyboardHelper.buildMainMenuReply(Long.parseLong(visitor.getUserId())));
 
-        if (order.orderBucket().isEmpty()) {
+        if (order.getOrderBucket().isEmpty()) {
             orderSubmitReply.setText("Ви намагаєтеся відправити в обробку порожню корзину! Будь ласка, замовте бодай щось!");
             return orderSubmitReply;
         }
@@ -315,11 +295,11 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         orderService.saveOrder(order);
         var orderList = visitor.getOrders();
         if (Objects.nonNull(orderList)) {
-            orderList.addLast(order.orderId());
+            orderList.addLast(order.getOrderId());
         } else {
             visitor.setOrders(new LinkedList<>());
         }
-        var orderFileName = ("/" + order.userName() + "_" + order.orderId() + "_" + order.date() + ".csv")
+        var orderFileName = ("/" + order.getUserName() + "_" + order.getOrderId() + "_" + order.getDate() + ".csv")
                 .replaceAll(" ", "_")
                 .replaceAll("-", "_");
         // send email, save order on the disk

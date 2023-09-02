@@ -7,7 +7,6 @@ import org.rocksdb.RocksIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Repository;
 import org.springframework.util.SerializationUtils;
 
 import javax.annotation.PostConstruct;
@@ -16,7 +15,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Optional;
 
-@Repository
 public class RocksDBRepository implements KVRepository<String, Object> {
 
     private static final Logger log = LoggerFactory.getLogger(RocksDBRepository.class);
