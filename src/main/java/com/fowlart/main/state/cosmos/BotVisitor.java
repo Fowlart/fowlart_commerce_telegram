@@ -22,7 +22,7 @@ public class BotVisitor implements Serializable {
 
     private com.fowlart.main.state.cosmos.Item itemToEditQty;
 
-    private Date lastVisit;
+    private String lastVisit;
 
     private User user;
 
@@ -40,11 +40,11 @@ public class BotVisitor implements Serializable {
         this.userId = userId;
     }
 
-    public Date getLastVisit() {
+    public String getLastVisit() {
         return lastVisit;
     }
 
-    public void setLastVisit(Date lastVisit) {
+    public void setLastVisit(String lastVisit) {
         this.lastVisit = lastVisit;
     }
 
