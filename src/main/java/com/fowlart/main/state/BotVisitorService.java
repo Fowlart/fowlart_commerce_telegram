@@ -50,6 +50,7 @@ public class BotVisitorService {
         }
 
         botVisitor.setLastVisit(new java.util.Date().toString());
+        botVisitorCosmosRepository.save(botVisitor);
         return Pair.with(botVisitor,isNew);
     }
 
