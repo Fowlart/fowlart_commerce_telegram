@@ -49,6 +49,7 @@ public class BotVisitorService {
             isNew = Boolean.TRUE;
         }
 
+        botVisitor.setLastVisit(new java.util.Date());
         return Pair.with(botVisitor,isNew);
     }
 

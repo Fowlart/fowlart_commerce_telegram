@@ -6,6 +6,7 @@ import org.telegram.telegrambots.meta.api.objects.User;
 
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
@@ -21,6 +22,8 @@ public class BotVisitor implements Serializable {
 
     private com.fowlart.main.state.cosmos.Item itemToEditQty;
 
+    private Date lastVisit;
+
     private User user;
 
     @Id
@@ -35,6 +38,14 @@ public class BotVisitor implements Serializable {
     public BotVisitor(User user, long userId) {
         this.user = user;
         this.userId = userId;
+    }
+
+    public Date getLastVisit() {
+        return lastVisit;
+    }
+
+    public void setLastVisit(Date lastVisit) {
+        this.lastVisit = lastVisit;
     }
 
     public Set<com.fowlart.main.state.cosmos.Item> getBucket() {
