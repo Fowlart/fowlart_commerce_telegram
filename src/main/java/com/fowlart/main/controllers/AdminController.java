@@ -110,8 +110,8 @@ public class AdminController {
         return "<h1>Користувача не знайдено</h1>";
     }
 
-    @GetMapping("/send-admin-report")
-    public ResponseEntity<String> sendAdminReport(@RequestHeader Map<String, String> headers, @RequestParam("text") String text) {
+    @PostMapping("/send-admin-report")
+    public ResponseEntity<String> sendAdminReport(@RequestHeader Map<String, String> headers, @RequestBody String text) {
 
         if (notAdminApiCall(headers)) return new ResponseEntity<>("You are not admin!", HttpStatus.UNAUTHORIZED);
 
