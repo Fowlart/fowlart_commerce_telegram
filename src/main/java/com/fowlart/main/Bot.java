@@ -386,6 +386,12 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         }
     }
 
+    private void trackUserActivity(User user){
+        if (!Arrays.stream(this.botAdminsList.split(",")).toList().contains(user.getId().toString())) {
+            this.visitorActivityTracker.sendMessage(user.toString());
+        }
+    }
+
     /**
      * <h3 style='color:red'>Main method for handling input messages</h3>
      */
@@ -399,16 +405,13 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             if (update.hasCallbackQuery()) {
                 CallbackQuery callbackQuery = update.getCallbackQuery();
                 User user = callbackQuery.getFrom();
-                this.visitorActivityTracker.sendMessage("Користувач U звернувся до бота.".replaceAll("U", user.toString()));
+                trackUserActivity(user);
                 sendMsgAboutNewUserToAdmins(this.botVisitorService.getOrCreateVisitor(user));
-
                 handleInlineButtonClicks(callbackQuery);
 
             } else {
                 User user = update.getMessage().getFrom();
-                this.visitorActivityTracker.sendMessage("Користувач U звернувся до бота.".replaceAll("U", user.toString()));
-                sendMsgAboutNewUserToAdmins(this.botVisitorService.getOrCreateVisitor(user));
-
+                trackUserActivity(user);
                 handleInputMsgOrCommand(update);
             }
         } catch (TelegramApiException ex) {
