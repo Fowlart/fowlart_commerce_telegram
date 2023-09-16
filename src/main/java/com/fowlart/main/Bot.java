@@ -1,5 +1,6 @@
 package com.fowlart.main;
 
+import com.fowlart.main.az_service_bus.VisitorActivityTracker;
 import com.fowlart.main.catalog_fetching.ExcelFetcher;
 import com.fowlart.main.email.GmailSender;
 import com.fowlart.main.state.Catalog;
@@ -61,6 +62,8 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     private final String hostPort;
     private final String botAdminsList;
 
+    private final VisitorActivityTracker visitorActivityTracker;
+
 
     public Bot(@Autowired GmailSender gmailSender,
                @Autowired BotVisitorService botVisitorService,
@@ -73,7 +76,9 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                @Value("${app.bot.order.output.folder}") String outputForOrderPath,
                @Value("${app.bot.items.img.folder}") String inputForImgPath,
                @Value("${app.bot.host.url}") String hostPort,
-               @Value("${app.bot.admins}") String botAdminsList) {
+               @Value("${app.bot.admins}") String botAdminsList,
+               @Autowired VisitorActivityTracker visitorActivityTracker) {
+        this.visitorActivityTracker = visitorActivityTracker;
         this.inputForImgPath = inputForImgPath;
         this.gmailSender = gmailSender;
         this.outputForOrderPath = outputForOrderPath;
@@ -394,12 +399,14 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
             if (update.hasCallbackQuery()) {
                 CallbackQuery callbackQuery = update.getCallbackQuery();
                 User user = callbackQuery.getFrom();
+                this.visitorActivityTracker.sendMessage("Користувач U звернувся до бота.".replaceAll("U", user.toString()));
                 sendMsgAboutNewUserToAdmins(this.botVisitorService.getOrCreateVisitor(user));
 
                 handleInlineButtonClicks(callbackQuery);
 
             } else {
                 User user = update.getMessage().getFrom();
+                this.visitorActivityTracker.sendMessage("Користувач U звернувся до бота.".replaceAll("U", user.toString()));
                 sendMsgAboutNewUserToAdmins(this.botVisitorService.getOrCreateVisitor(user));
 
                 handleInputMsgOrCommand(update);
@@ -411,6 +418,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
 
     private void sendMsgAboutNewUserToAdmins(Pair<BotVisitor, Boolean> botTuple) {
         if (botTuple.getValue1()) {
+            this.visitorActivityTracker.sendMessage("Новий користувач! ID: "+ botTuple.getValue0().getUserId());
             logger.info("Registered new user {}", botTuple.getValue0().toString());
             Arrays.stream(botAdminsList.split(","))
                     .forEach(adminId -> sendAnswer(scalaHelper.buildSimpleReplyMessage(Long.parseLong(adminId), "\uD83D\uDCE1 Додано нового користувача. Дані: \n" + botTuple.getValue0().toString(), null)));

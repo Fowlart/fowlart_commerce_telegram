@@ -22,6 +22,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -53,8 +55,13 @@ public class AdminController {
 
     private final BlobContainerClient containerClient;
 
-    public AdminController(BotVisitorService botVisitorService, @Value("${app.bot.email.gmail.user}") String gmailAccName, @Value("${app.bot.host.url}") String hostName, @Value("${app.bot.admins}") String botAdminsList, @Autowired KeyboardHelper keyboardHelper, Bot bot, Catalog catalog, CatalogEnhancer catalogEnhancer, @Value("${azure.storage.container.name}") String containerName, @Value("${azure.storage.connection.string}") String connectionString) {
+    private final String adminSecretFromEnv;
 
+    public AdminController(BotVisitorService botVisitorService,
+                           @Value("${app.bot.admin.secret}") String adminSecretFromEnv,
+                           @Value("${app.bot.email.gmail.user}") String gmailAccName,
+                           @Value("${app.bot.host.url}") String hostName, @Value("${app.bot.admins}") String botAdminsList, @Autowired KeyboardHelper keyboardHelper, Bot bot, Catalog catalog, CatalogEnhancer catalogEnhancer, @Value("${azure.storage.container.name}") String containerName, @Value("${azure.storage.connection.string}") String connectionString) {
+        this.adminSecretFromEnv = adminSecretFromEnv;
         this.botVisitorService = botVisitorService;
         this.gmailAccName = gmailAccName;
         this.hostName = hostName;
@@ -101,6 +108,20 @@ public class AdminController {
         }
 
         return "<h1>Користувача не знайдено</h1>";
+    }
+
+    @GetMapping("/send-admin-report")
+    public ResponseEntity<String> sendAdminReport(@RequestHeader Map<String, String> headers, @RequestParam("text") String text) {
+
+        if (notAdminApiCall(headers)) return new ResponseEntity<>("You are not admin!", HttpStatus.UNAUTHORIZED);
+
+        Arrays.stream(this.botAdminsList.split(",")).forEach(adminId -> {
+            String textToBot = "\uD83D\uDCE1 Звіт активності юзерів:\n" + text + "\n";
+            var resp = scHelper.buildSimpleReplyMessage(Long.parseLong(adminId), textToBot, null);
+            bot.sendAnswer(resp);
+        });
+
+        return new ResponseEntity<>("Report sent to admins", HttpStatus.OK);
     }
 
     @GetMapping("statistic/all-visitors")
@@ -184,6 +205,12 @@ public class AdminController {
         var googleAccessToken = headers.get("x-ms-token-google-access-token");
         logger.info("googleAccessToken: " + googleAccessToken);
         return !StringUtils.hasText(googleAccessToken) || !gmailAccName.equals(getEmailByToken(googleAccessToken));
+    }
+
+    private boolean notAdminApiCall(Map<String, String> headers) {
+        var adminSecret = headers.get("admin-secret");
+        logger.info("adminSecret: " + adminSecret);
+        return !adminSecretFromEnv.equals(adminSecret);
     }
 
     private String getEmailByToken(String token) {
