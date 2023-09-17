@@ -113,8 +113,6 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         return token;
     }
 
-
-
     @Override
     public void onRegister() {
         this.catalog.setGroupList(this.excelFetcher.getProductGroupsFromPrice());
@@ -423,8 +421,6 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
         if (botTuple.getValue1()) {
             this.visitorActivityTracker.sendMessage("Новий користувач! ID: "+ botTuple.getValue0().getUserId());
             logger.info("Registered new user {}", botTuple.getValue0().toString());
-            Arrays.stream(botAdminsList.split(","))
-                    .forEach(adminId -> sendAnswer(scalaHelper.buildSimpleReplyMessage(Long.parseLong(adminId), "\uD83D\uDCE1 Додано нового користувача. Дані: \n" + botTuple.getValue0().toString(), null)));
         }
     }
 
