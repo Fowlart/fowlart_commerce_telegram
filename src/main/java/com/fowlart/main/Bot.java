@@ -1,6 +1,6 @@
 package com.fowlart.main;
 
-import com.fowlart.main.az_service_bus.VisitorActivityTracker;
+import com.fowlart.main.az_service_bus.ActivityTracker;
 import com.fowlart.main.catalog_fetching.ExcelFetcher;
 import com.fowlart.main.email.GmailSender;
 import com.fowlart.main.state.Catalog;
@@ -62,7 +62,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
     private final String hostPort;
     private final String botAdminsList;
 
-    private final VisitorActivityTracker visitorActivityTracker;
+    private final ActivityTracker activityTracker;
 
 
     public Bot(@Autowired GmailSender gmailSender,
@@ -77,8 +77,8 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
                @Value("${app.bot.items.img.folder}") String inputForImgPath,
                @Value("${app.bot.host.url}") String hostPort,
                @Value("${app.bot.admins}") String botAdminsList,
-               @Autowired VisitorActivityTracker visitorActivityTracker) {
-        this.visitorActivityTracker = visitorActivityTracker;
+               @Autowired ActivityTracker activityTracker) {
+        this.activityTracker = activityTracker;
         this.inputForImgPath = inputForImgPath;
         this.gmailSender = gmailSender;
         this.outputForOrderPath = outputForOrderPath;
@@ -386,7 +386,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
 
     private void trackUserActivity(User user){
         if (!Arrays.stream(this.botAdminsList.split(",")).toList().contains(user.getId().toString())) {
-            this.visitorActivityTracker.sendMessage(user.toString());
+            this.activityTracker.sendMessage(user.toString());
         }
     }
 
@@ -419,7 +419,7 @@ public class Bot extends TelegramLongPollingBot implements InitializingBean {
 
     private void sendMsgAboutNewUserToAdmins(Pair<BotVisitor, Boolean> botTuple) {
         if (botTuple.getValue1()) {
-            this.visitorActivityTracker.sendMessage("Новий користувач! ID: "+ botTuple.getValue0().getUserId());
+            this.activityTracker.sendMessage("Новий користувач! ID: "+ botTuple.getValue0().getUserId());
             logger.info("Registered new user {}", botTuple.getValue0().toString());
         }
     }

@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fowlart.main.Bot;
 import com.fowlart.main.KeyboardHelper;
 import com.fowlart.main.ScalaHelper;
+import com.fowlart.main.az_service_bus.ActivityTracker;
 import com.fowlart.main.dto.BotVisitorDto;
 import com.fowlart.main.state.Catalog;
 import com.fowlart.main.open_ai.CatalogEnhancer;
@@ -57,10 +58,20 @@ public class AdminController {
 
     private final String adminSecretFromEnv;
 
+    private final ActivityTracker activityTracker;
+
     public AdminController(BotVisitorService botVisitorService,
                            @Value("${app.bot.admin.secret}") String adminSecretFromEnv,
                            @Value("${app.bot.email.gmail.user}") String gmailAccName,
-                           @Value("${app.bot.host.url}") String hostName, @Value("${app.bot.admins}") String botAdminsList, @Autowired KeyboardHelper keyboardHelper, Bot bot, Catalog catalog, CatalogEnhancer catalogEnhancer, @Value("${azure.storage.container.name}") String containerName, @Value("${azure.storage.connection.string}") String connectionString) {
+                           @Value("${app.bot.host.url}") String hostName, @Value("${app.bot.admins}") String botAdminsList,
+                           @Autowired KeyboardHelper keyboardHelper,
+                           Bot bot,
+                           Catalog catalog,
+                           CatalogEnhancer catalogEnhancer,
+                           @Value("${azure.storage.container.name}") String containerName,
+                           @Value("${azure.storage.connection.string}") String connectionString,
+                           @Autowired ActivityTracker activityTracker) {
+        this.activityTracker = activityTracker;
         this.adminSecretFromEnv = adminSecretFromEnv;
         this.botVisitorService = botVisitorService;
         this.gmailAccName = gmailAccName;
@@ -185,11 +196,8 @@ public class AdminController {
         events.forEach(eventGridEvent -> {
             logger.info("event type: {}", eventGridEvent.getEventType());
             logger.info("event data(string): {}", eventGridEvent.getData().toString());
-            Arrays.stream(botAdminsList.split(",")).forEach(adminId -> {
-                String textToBot = "\uD83D\uDCE1 Відбулася подія в сховищі картинок.\n" + "тип: " + eventGridEvent.getEventType() + "\n" + "уточнені данні: " + eventGridEvent.getData().toString();
-                var resp = scHelper.buildSimpleReplyMessage(Long.parseLong(adminId), textToBot, null);
-                bot.sendAnswer(resp);
-            });
+            String event = "Подія у сховищі. Тип: " + eventGridEvent.getEventType() + "\n" + "Уточнені данні: " + eventGridEvent.getData().toString();
+            activityTracker.sendMessage(event);
         });
 
         return "accepted web-hook POST";
