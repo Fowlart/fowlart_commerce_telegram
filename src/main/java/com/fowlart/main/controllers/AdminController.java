@@ -88,13 +88,6 @@ public class AdminController {
         this.containerClient = getBlobContainerClient();
     }
 
-
-    // root mapping
-    @GetMapping("/")
-    public String getRoot(@RequestHeader Map<String, String> headers) throws JsonProcessingException {
-        return getAllVisitorList(headers);
-    }
-
     @GetMapping("/send-message")
     public String sendMessage(@RequestHeader Map<String, String> headers, @RequestParam("userId") String userId, @RequestParam("text") String text) {
 
@@ -135,18 +128,6 @@ public class AdminController {
         return new ResponseEntity<>("Report sent to admins", HttpStatus.OK);
     }
 
-    @GetMapping("statistic/all-visitors")
-    public String getAllVisitorList(@RequestHeader Map<String, String> headers) throws JsonProcessingException {
-        if (notAdmin(headers)) return pleaseLogin;
-        final ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
-        var visitors = botVisitorService.getAllVisitors();
-        var visitorsDTO = visitors.stream().map(botVisitor -> {
-            var bucketConverted = botVisitor.getBucket().stream().map(Item::name).collect(Collectors.toSet());
-            return new BotVisitorDto(botVisitor.getUserId(), botVisitor.getName(), bucketConverted, botVisitor.getPhoneNumber(), botVisitor.getUser().getFirstName(), botVisitor.getUser().getLastName());
-        }).collect(Collectors.toSet());
-        return mapper.writeValueAsString(visitorsDTO);
-    }
-
     @GetMapping("catalog/restore")
     public String catalogRestore(@RequestHeader Map<String, String> headers) {
         if (notAdmin(headers)) return pleaseLogin;
@@ -173,7 +154,7 @@ public class AdminController {
     }
 
     @GetMapping("statistic/all-items")
-    public String getItemList(@RequestHeader Map<String, String> headers) {
+    public String getItemList(@RequestHeader Map<String) {
         var response = new ArrayList<String>();
         var groupItemsMap = this.catalog.getItemList().stream().collect(Collectors.groupingBy(Item::group));
         var containerItemsList = this.containerClient.listBlobs().stream().map(BlobItem::getName).toList();
@@ -210,9 +191,10 @@ public class AdminController {
     }
 
     private boolean notAdmin(Map<String, String> headers) {
-        var googleAccessToken = headers.get("x-ms-token-google-access-token");
-        logger.info("googleAccessToken: " + googleAccessToken);
-        return !StringUtils.hasText(googleAccessToken) || !gmailAccName.equals(getEmailByToken(googleAccessToken));
+       // var googleAccessToken = headers.get("x-ms-token-google-access-token");
+       // logger.info("googleAccessToken: " + googleAccessToken);
+       // return !StringUtils.hasText(googleAccessToken) || !gmailAccName.equals(getEmailByToken(googleAccessToken));
+        return false;
     }
 
     private boolean notAdminApiCall(Map<String, String> headers) {
