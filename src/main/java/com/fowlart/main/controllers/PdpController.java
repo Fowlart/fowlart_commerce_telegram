@@ -135,7 +135,7 @@ public class PdpController {
         // read pdp.html as a string
         var pdpHtml = Files.readString(Path.of(inputForHTMLPath + "/pdp.html"));
         var productId = item.id();
-        var productImageUri = hostAndPort + "/pdp/img/" + productId;
+        var productImageUri = "/pdp/img/" + productId;
 
         servletResponse.addCookie(new Cookie("userId", userId));
 
