@@ -1,4 +1,5 @@
 #BUILDING STAGE
+#this jdk allowing not specify sturtup command in Azure App Service
 FROM maven:3.8.4-openjdk-17-slim AS build
 #ADD repository.tar.gz /usr/share/maven/ref/
 WORKDIR /build
