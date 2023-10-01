@@ -292,7 +292,7 @@
             redirect: 'follow'
         };
 
-        fetch(`https://fowlarttgbot.azurewebsites.net/accept-img?userID=${userId}&itemID=${itemId}`, requestOptions)
+        fetch(`https://fowlart-tg-bot.azurewebsites.net/accept-img?userID=${userId}&itemID=${itemId}`, requestOptions)
             .then(response => response.text())
             .then(result => alert(result))
             .catch(error => alert('error', error));
