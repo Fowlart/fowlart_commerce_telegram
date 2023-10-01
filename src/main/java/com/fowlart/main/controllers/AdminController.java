@@ -88,6 +88,8 @@ public class AdminController {
         this.containerClient = getBlobContainerClient();
     }
 
+
+
     @GetMapping("/send-message")
     public String sendMessage(@RequestHeader Map<String, String> headers, @RequestParam("userId") String userId, @RequestParam("text") String text) {
 
@@ -154,7 +156,7 @@ public class AdminController {
     }
 
     @GetMapping("statistic/all-items")
-    public String getItemList(@RequestHeader Map<String) {
+    public String getItemList() {
         var response = new ArrayList<String>();
         var groupItemsMap = this.catalog.getItemList().stream().collect(Collectors.groupingBy(Item::group));
         var containerItemsList = this.containerClient.listBlobs().stream().map(BlobItem::getName).toList();
