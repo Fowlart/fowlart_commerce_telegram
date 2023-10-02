@@ -24,3 +24,4 @@ src/main/resources/application.properties
 /src/main/resources/applicationinsights.json
 /src/main/resources/rocks_db/
 /azure_iaac/azure_app_service_deploy_cmd/2_set_app_setting.sh
+/azure_iaac/azure_app_service_deploy_cmd/export_secrets.sh

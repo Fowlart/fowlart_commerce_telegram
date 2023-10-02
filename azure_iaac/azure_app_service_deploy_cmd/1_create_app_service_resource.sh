@@ -37,3 +37,5 @@ sleep 20
 # Assign file share to web app, mount path is /botstore
 az webapp config storage-account add --resource-group $RG_NAME --name $APP_NAME --custom-id botstore --storage-type AzureFiles --share-name botstore --account-name $STORAGE_ACCOUNT_NAME --access-key $(az storage account keys list -g $RG_NAME -n $STORAGE_ACCOUNT_NAME --query '[0].value' -o tsv) --mount-path /botstore
 
+
+

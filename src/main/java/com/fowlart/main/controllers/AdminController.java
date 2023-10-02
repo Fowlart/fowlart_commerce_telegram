@@ -155,23 +155,6 @@ public class AdminController {
         return blobServiceClient.createBlobContainerIfNotExists(containerName);
     }
 
-    @GetMapping("statistic/all-items")
-    public String getItemList() {
-        var response = new ArrayList<String>();
-        var groupItemsMap = this.catalog.getItemList().stream().collect(Collectors.groupingBy(Item::group));
-        var containerItemsList = this.containerClient.listBlobs().stream().map(BlobItem::getName).toList();
-        groupItemsMap.forEach((key, value) -> {
-            response.add("<h4>" + key + "</h4>");
-            value.forEach(item -> {
-                // check if image exists using Azure blob api
-                var imageExist = containerItemsList.stream().anyMatch(blobItemName -> blobItemName.toLowerCase().contains(item.name().toLowerCase().trim().replaceAll("/", "_")));
-                response.add("<p style='font-size: 10px; margin: 1px'>" + item.name() + (imageExist ? "✅" : "❌" + "</p>"));
-            });
-        });
-
-        return String.join("", response);
-    }
-
     @PostMapping("web-hooks/accept")
     public String acceptEventWebHookPosts(@RequestBody String request) {
         logger.info("Accepted Web-Hook POST:");

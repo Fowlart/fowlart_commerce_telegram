@@ -3,9 +3,10 @@ package com.fowlart.main.controllers;
 import com.fowlart.main.Bot;
 import com.fowlart.main.KeyboardHelper;
 import com.fowlart.main.ScalaHelper;
+import com.fowlart.main.state.BotVisitorService;
 import com.fowlart.main.state.Catalog;
 import com.fowlart.main.state.cosmos.Item;
-import com.fowlart.main.state.BotVisitorService;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,10 +23,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 
@@ -59,6 +57,59 @@ public class PdpController {
         this.bot = bot;
         this.scHelper = new ScalaHelper();
         this.kbHelper = keyboardHelper;
+    }
+
+    @GetMapping("/public_catalog")
+    public String getItemList(@RequestParam(required = false) String group) {
+
+        group = StringUtils.isAllBlank(group) ? catalog.getGroupList().get(0) : group;
+        String firstImageId = null;
+        String pdpHtml = null;
+        String groupLinks = null;
+        String itemList = null;
+        String productImageUri = null;
+
+        try {
+
+            pdpHtml = Files.readString(Path.of(inputForHTMLPath + "/public_catalog.html"));
+
+            final String finalGroup = group;
+
+            firstImageId = this.catalog
+                    .getItemList()
+                    .stream()
+                    .filter(i -> i.group().equals(finalGroup))
+                    .findFirst()
+                    .map(Item::id).orElse("ID0");
+
+            itemList = this.catalog
+                    .getItemList()
+                    .stream()
+                    .filter(i -> i.group().equals(finalGroup))
+                    // <button imglink="" class="w3-button w3-block w3-black" >Button</button>
+                    .map(i -> "<button class=\"w3-button w3-block w3-black\" onclick=\"changeImage("+"'/pdp/img/"+i.id()+"','" +i.name()+" "+i.price()+ " UAH');\">" + i.name()+ " \uD83D\uDCB2" +i.price() + " UAH" + "</button>")
+                    .collect(Collectors.joining("\n"));
+
+            groupLinks = this.catalog
+                    .getGroupList()
+                    .stream()
+                    .map(gr -> "<a href=\"LINK\" class=\"w3-bar-item w3-button\">NAME</a>"
+                            .replaceAll("NAME", gr)
+                            .replaceAll("LINK", "/pdp/public_catalog?group=" + gr))
+                    .collect(Collectors.joining("\n"));
+
+            productImageUri = "/pdp/img/"+firstImageId;
+
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        return pdpHtml.replace("{{productImageUri}}", productImageUri)
+                .replace("{{groupLinks}}", groupLinks)
+                .replace("{{nameAndPrice}}", group)
+                .replace("{{itemList}}",itemList);
+
     }
 
     @PostMapping(value = "/search-items")
@@ -163,7 +214,7 @@ public class PdpController {
                     .toString()
                     .toLowerCase()
                     .trim()
-                    .contains(item.name().toLowerCase().trim().replaceAll("/","_")) && theType.equals("image");
+                    .contains(item.name().toLowerCase().trim().replaceAll("/", "_")) && theType.equals("image");
 
             return res;
         };

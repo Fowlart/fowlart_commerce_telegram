@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<title>W3.CSS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<style>
+  img {
+    margin-top: 5px;
+    max-width: 100%;
+    max-height: 50vh;
+    object-fit: contain;
+    margin-bottom: 1em;
+    border-radius: 7px;
+  }
+</style>
+<body>
+
+<!-- Sidebar -->
+<div class="w3-sidebar w3-bar-block w3-border-right" style="display:none" id="mySidebar">
+  <button onclick="w3_close()" class="w3-bar-item w3-large">закрити &times;</button>
+  <!--<a href="#" class="w3-bar-item w3-button">Link 1</a>-->
+  {{groupLinks}}
+</div>
+
+<!-- Page Content -->
+<div class="w3-teal">
+  <div class="w3-container">
+    <h1>Каталог товарів </h1>
+  </div>
+  <button class="w3-button w3-teal w3-xlarge" onclick="w3_open()"> ☰ </button>
+</div>
+ <h2 id="nameAndPrice">{{nameAndPrice}}</h2>
+<img id="itemImage" src="{{productImageUri}}" alt="item image" style="width:100%">
+
+<div class="w3-container">
+  {{itemList}}
+  <!--<button imglink="" class="w3-button w3-block w3-black" >Button</button> -->
+</div>
+
+<script>
+  function changeImage(url,nameAndPrice) {
+    document.getElementById("itemImage").src = url;
+    document.getElementById("nameAndPrice").innerHTML = nameAndPrice;
+  }
+  function w3_open() {
+    document.getElementById("mySidebar").style.display = "block";
+  }
+
+  function w3_close() {
+    document.getElementById("mySidebar").style.display = "none";
+  }
+</script>
+
+</body>
+</html>
