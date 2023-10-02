@@ -1,8 +1,6 @@
 package com.fowlart.main;
 
 import com.fowlart.main.catalog_fetching.ExcelFetcher;
-import net.bytebuddy.implementation.bind.annotation.IgnoreForBinding;
-import org.junit.jupiter.api.Test;
 import org.springframework.util.Assert;
 
 import java.io.IOException;

@@ -3,7 +3,6 @@ package com.fowlart.main;
 import com.azure.data.appconfiguration.ConfigurationClient;
 import com.azure.data.appconfiguration.ConfigurationClientBuilder;
 import com.azure.data.appconfiguration.models.ConfigurationSetting;
-import org.junit.jupiter.api.Test;
 import org.springframework.util.Assert;
 
 public class AzureConfigurationReaderTest {
