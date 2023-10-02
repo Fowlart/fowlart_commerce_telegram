@@ -4,6 +4,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
 <style>
+  .w3-button{
+    top: 1px;
+    white-space: normal;
+  }
   img {
     margin-top: 5px;
     max-width: 100%;
@@ -11,6 +15,10 @@
     object-fit: contain;
     margin-bottom: 1em;
     border-radius: 7px;
+    -webkit-transition: all 300ms ease-in 200ms;
+    -moz-transition: all 300ms ease-in 200ms;
+    -o-transition: all 300ms ease-in 200ms;
+    transition: all 300ms ease-in 200ms;
   }
 </style>
 <body>
@@ -41,6 +49,9 @@
   function changeImage(url,nameAndPrice) {
     document.getElementById("itemImage").src = url;
     document.getElementById("nameAndPrice").innerHTML = nameAndPrice;
+
+    var top = document.getElementById("mySidebar").offsetTop; //Getting Y of target element
+    window.scrollTo(0, top);
   }
   function w3_open() {
     document.getElementById("mySidebar").style.display = "block";

@@ -87,7 +87,7 @@ public class PdpController {
                     .stream()
                     .filter(i -> i.group().equals(finalGroup))
                     // <button imglink="" class="w3-button w3-block w3-black" >Button</button>
-                    .map(i -> "<button class=\"w3-button w3-block w3-black\" onclick=\"changeImage("+"'/pdp/img/"+i.id()+"','" +i.name()+" "+i.price()+ " UAH');\">" + i.name()+ " \uD83D\uDCB2" +i.price() + " UAH" + "</button>")
+                    .map(i -> "<button class=\"w3-button w3-block w3-black\" onclick=\"changeImage("+"'/pdp/img/"+i.id()+"',`" +i.name().replaceAll("\"","'")+" "+i.price()+ " UAH`);\">" + i.name()+ " \uD83D\uDCB2" +i.price() + " UAH" + "</button>")
                     .collect(Collectors.joining("\n"));
 
             groupLinks = this.catalog
