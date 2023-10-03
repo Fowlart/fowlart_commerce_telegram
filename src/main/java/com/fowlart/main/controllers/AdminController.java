@@ -4,19 +4,15 @@ import com.azure.messaging.eventgrid.EventGridEvent;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
-import com.azure.storage.blob.models.BlobItem;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fowlart.main.Bot;
 import com.fowlart.main.KeyboardHelper;
 import com.fowlart.main.ScalaHelper;
 import com.fowlart.main.az_service_bus.ActivityTracker;
-import com.fowlart.main.dto.BotVisitorDto;
-import com.fowlart.main.state.Catalog;
 import com.fowlart.main.open_ai.CatalogEnhancer;
 import com.fowlart.main.state.BotVisitorService;
-import com.fowlart.main.state.cosmos.Item;
+import com.fowlart.main.state.Catalog;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import org.slf4j.Logger;
@@ -25,11 +21,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
@@ -60,17 +53,7 @@ public class AdminController {
 
     private final ActivityTracker activityTracker;
 
-    public AdminController(BotVisitorService botVisitorService,
-                           @Value("${app.bot.admin.secret}") String adminSecretFromEnv,
-                           @Value("${app.bot.email.gmail.user}") String gmailAccName,
-                           @Value("${app.bot.host.url}") String hostName, @Value("${app.bot.admins}") String botAdminsList,
-                           @Autowired KeyboardHelper keyboardHelper,
-                           Bot bot,
-                           Catalog catalog,
-                           CatalogEnhancer catalogEnhancer,
-                           @Value("${azure.storage.container.name}") String containerName,
-                           @Value("${azure.storage.connection.string}") String connectionString,
-                           @Autowired ActivityTracker activityTracker) {
+    public AdminController(BotVisitorService botVisitorService, @Value("${app.bot.admin.secret}") String adminSecretFromEnv, @Value("${app.bot.email.gmail.user}") String gmailAccName, @Value("${app.bot.host.url}") String hostName, @Value("${app.bot.admins}") String botAdminsList, @Autowired KeyboardHelper keyboardHelper, Bot bot, Catalog catalog, CatalogEnhancer catalogEnhancer, @Value("${azure.storage.container.name}") String containerName, @Value("${azure.storage.connection.string}") String connectionString, @Autowired ActivityTracker activityTracker) {
         this.activityTracker = activityTracker;
         this.adminSecretFromEnv = adminSecretFromEnv;
         this.botVisitorService = botVisitorService;
@@ -86,34 +69,6 @@ public class AdminController {
         this.containerName = containerName;
         this.connectionString = connectionString;
         this.containerClient = getBlobContainerClient();
-    }
-
-
-
-    @GetMapping("/send-message")
-    public String sendMessage(@RequestHeader Map<String, String> headers, @RequestParam("userId") String userId, @RequestParam("text") String text) {
-
-        if (notAdmin(headers)) return pleaseLogin;
-
-        var botVisitor = botVisitorService.getBotVisitorByUserId(Long.parseLong(userId));
-
-        if (Objects.nonNull(botVisitor)) {
-            try {
-                var msg = this.scHelper.buildSimpleReplyMessage(Long.parseLong(userId), "\uD83D\uDCE9 Повідомлення від адміністратора:\n\n" + text, null);
-                bot.execute(msg);
-
-                final ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
-                var output = mapper.writeValueAsString(new BotVisitorDto(botVisitor.getUserId(), botVisitor.getName(), botVisitor.getBucket().stream().map(Item::name).collect(Collectors.toSet()), botVisitor.getPhoneNumber(), botVisitor.getUser().getFirstName(), botVisitor.getUser().getLastName()));
-
-                return "<h1>Повідомлення:<h3>msg</h3> <h1>надіслано користувачу:</h1><pre id=\"json\">user</pre>".replaceAll("msg", text).replaceAll("user", output);
-
-            } catch (TelegramApiException | JsonProcessingException e) {
-                logger.error("Failed to send message to user: " + botVisitor.getUserId());
-                return "<h1>Помилка. Повідомлення не надіслано.</h1>";
-            }
-        }
-
-        return "<h1>Користувача не знайдено</h1>";
     }
 
     @PostMapping("/send-admin-report")
@@ -176,9 +131,9 @@ public class AdminController {
     }
 
     private boolean notAdmin(Map<String, String> headers) {
-       // var googleAccessToken = headers.get("x-ms-token-google-access-token");
-       // logger.info("googleAccessToken: " + googleAccessToken);
-       // return !StringUtils.hasText(googleAccessToken) || !gmailAccName.equals(getEmailByToken(googleAccessToken));
+        // var googleAccessToken = headers.get("x-ms-token-google-access-token");
+        // logger.info("googleAccessToken: " + googleAccessToken);
+        // return !StringUtils.hasText(googleAccessToken) || !gmailAccName.equals(getEmailByToken(googleAccessToken));
         return false;
     }
 
