@@ -1,7 +1,5 @@
 package com.fowlart.main.controllers;
 
-import com.fowlart.main.Bot;
-import com.fowlart.main.KeyboardHelper;
 import com.fowlart.main.ScalaHelper;
 import com.fowlart.main.state.BotVisitorService;
 import com.fowlart.main.state.Catalog;
@@ -37,26 +35,20 @@ public class PdpController {
     private final String hostAndPort;
     private final String inputForHTMLPath;
     private final BotVisitorService botVisitorService;
-    private final Bot bot;
     private final ScalaHelper scHelper;
-    private final KeyboardHelper kbHelper;
 
 
     public PdpController(@Autowired Catalog catalog,
                          @Autowired BotVisitorService botVisitorService,
                          @Value("${app.bot.items.img.folder}") String inputForImgPath,
                          @Value("${app.bot.host.url}") String hostAndPort,
-                         @Value("${app.bot.html.templates}") String inputForHTMLPath,
-                         @Autowired Bot bot,
-                         @Autowired KeyboardHelper keyboardHelper) {
+                         @Value("${app.bot.html.templates}") String inputForHTMLPath) {
         this.botVisitorService = botVisitorService;
         this.catalog = catalog;
         this.inputForImgPath = inputForImgPath;
         this.hostAndPort = hostAndPort;
         this.inputForHTMLPath = inputForHTMLPath;
-        this.bot = bot;
         this.scHelper = new ScalaHelper();
-        this.kbHelper = keyboardHelper;
     }
 
     @GetMapping("/public_catalog")
@@ -86,19 +78,16 @@ public class PdpController {
                     .getItemList()
                     .stream()
                     .filter(i -> i.group().equals(finalGroup))
-                    // <button imglink="" class="w3-button w3-block w3-black" >Button</button>
-                    .map(i -> "<button class=\"w3-button w3-block w3-black\" onclick=\"changeImage("+"'/pdp/img/"+i.id()+"',`" +i.name().replaceAll("\"","'")+" "+i.price()+ " UAH`);\">" + i.name()+" "+i.price() + " UAH" + "</button>")
+                    .map(this.scHelper::getButtonHtml)
                     .collect(Collectors.joining("\n"));
 
             groupLinks = this.catalog
                     .getGroupList()
                     .stream()
-                    .map(gr -> "<a href=\"LINK\" class=\"w3-bar-item w3-button\">NAME</a>"
-                            .replaceAll("NAME", gr)
-                            .replaceAll("LINK", "/pdp/public_catalog?group=" + gr))
+                    .map(this.scHelper::getGroupLinkHtml)
                     .collect(Collectors.joining("\n"));
 
-            productImageUri = "/pdp/img/"+firstImageId;
+                productImageUri = "/pdp/img/"+firstImageId;
 
 
         } catch (IOException e) {
@@ -157,12 +146,6 @@ public class PdpController {
             user.setBucket(newBucket);
             botVisitorService.saveBotVisitor(user);
 
-            var resp = scHelper
-                    .buildSimpleReplyMessage(Long.parseLong(user.getUserId()),
-                            actualItem.name() + " було додано з веб сторінки!",
-                            kbHelper.buildBucketReply());
-
-            bot.sendAnswer(resp);
 
             response = new ResponseEntity<>(allItemsInGroup, HttpStatus.ACCEPTED);
         }

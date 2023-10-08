@@ -1,12 +1,19 @@
 package com.fowlart.main.state;
 
+import com.fowlart.main.catalog_fetching.ExcelFetcher;
 import com.fowlart.main.state.cosmos.Item;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Component
 public class Catalog {
+
+    public Catalog(@Autowired ExcelFetcher excelFetcher) {
+        this.itemList = excelFetcher.getCatalogItems();
+        this.groupList = excelFetcher.getProductGroupsFromPrice();
+    }
 
     private List<Item> itemList;
 

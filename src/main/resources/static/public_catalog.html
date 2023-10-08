@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-<title>W3.CSS</title>
+<title>Public catalog</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
 <style>
@@ -9,17 +9,28 @@
     margin: 2px;
     border: solid 1px green;
   }
-  img {
-    margin-top: 5px;
-    max-width: 100%;
-    max-height: 50vh;
-    object-fit: contain;
-    margin-bottom: 1em;
-    border-radius: 7px;
-    -webkit-transition: all 300ms ease-in 200ms;
-    -moz-transition: all 300ms ease-in 200ms;
-    -o-transition: all 300ms ease-in 200ms;
-    transition: all 300ms ease-in 200ms;
+  .card {
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+    max-width: 300px;
+    margin: auto;
+    text-align: center;
+    font-family: arial;
+  }
+
+  .card button {
+    border: none;
+    outline: 0;
+    padding: 12px;
+    color: white;
+    background-color: #000;
+    text-align: center;
+    cursor: pointer;
+    width: 100%;
+    font-size: 18px;
+  }
+
+  .card button:hover {
+    opacity: 0.7;
   }
 </style>
 <body>
@@ -39,9 +50,11 @@
   </div>
   <button class="w3-button w3-teal w3-xlarge" onclick="w3_open()"> ☰ </button>
 </div>
- <h2 id="nameAndPrice">{{nameAndPrice}}</h2>
-<img id="itemImage" src="{{productImageUri}}" alt="item image" style="width:100%">
-
+<div class="card">
+  <img src="{{productImageUri}}" id="itemImage" alt="image" style="width:100%">
+  <h1 id="nameAndPrice">{{nameAndPrice}}</h1>
+  <p><button>Додати в корзину</button></p>
+</div>
 <div class="w3-container">
   {{itemList}}
   <!--<button imglink="" class="w3-button w3-block w3-black" >Button</button> -->
@@ -53,7 +66,11 @@
     document.getElementById("nameAndPrice").innerHTML = nameAndPrice;
 
     var top = document.getElementById("mySidebar").offsetTop; //Getting Y of target element
-    window.scrollTo(0, top);
+    // scroll to that element slowly
+    window.scrollTo({
+      top: top,
+      behavior: 'smooth'
+    });
   }
   function w3_open() {
     document.getElementById("mySidebar").style.display = "block";
