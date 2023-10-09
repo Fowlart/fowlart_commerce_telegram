@@ -20,7 +20,7 @@ az containerapp env create \
 az containerapp env storage set --name $myAppContEnv --resource-group $myRG \
     --storage-name dzmilstore \
     --azure-file-account-name dzmilstore \
-    --azure-file-account-key DS2//cAi7sYWX5T+YIS8HXll1jUhw04EcvElwFgPXf8bhcbhV3osYjk6gB/hOA9SXb0UILgb5Pl8+AStdbErfw== \
+    --azure-file-account-key $AZ_FILE_ACC_KEY \
     --azure-file-share-name botstore \
     --access-mode ReadWrite
 
