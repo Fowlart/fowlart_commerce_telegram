@@ -32,6 +32,40 @@
   .card button:hover {
     opacity: 0.7;
   }
+  .col-25{
+    padding: 0 16px;
+  }
+
+  .container_sc {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background-color: #f2f2f2;
+    padding: 5px 20px 15px 20px;
+    border: 1px solid lightgrey;
+    border-radius: 3px;
+  }
+  .container_sc input[type=number] {
+    margin-left: 5px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+  }
+  .container_sc input:invalid {
+    border: 4px dashed red;
+  }
+  .container_sc p {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+  }
+  .submit_card{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+  }
+  .submit_card button{
+    width: 50%;
+  }
 </style>
 <body>
 
@@ -53,7 +87,17 @@
 <div class="card">
   <img src="{{productImageUri}}" id="itemImage" alt="image" style="width:100%">
   <h1 id="nameAndPrice">{{nameAndPrice}}</h1>
-  <p><button>Додати в корзину</button></p>
+  <p><button onclick="addToBusket();">Додати в корзину</button></p>
+</div>
+<div class="col-25" id="bucket">
+  <div class="container_sc">
+    <h4>🛒 Корзина 🛒</h4>
+    <div id="bucket-content">
+    </div>
+    <hr>
+    <p>Загальна сумма <span class="price" style="color:black"><b>$30</b></span></p>
+    <p class="submit_card" id="submit_card_id"><button>замовити</button></p>
+  </div>
 </div>
 <div class="w3-container">
   {{itemList}}
@@ -61,6 +105,18 @@
 </div>
 
 <script>
+  function addToBusket() {
+    let nameAndPrice = document.getElementById("nameAndPrice").innerHTML;
+    let bucketContent = document.getElementById("bucket-content").innerHTML;
+    document.getElementById("bucket-content").innerHTML = bucketContent + "<p><a href=\"#\">" + nameAndPrice + "<input placeholder=\"кількість від 1 шт\" type=\"number\" min=\"1\" id=\"in1\"/><button>x</button></p>";
+    let top = document.getElementById("bucket").offsetTop; //Getting Y of target element
+    // scroll to that element slowly
+    window.scrollTo({
+      top: top,
+      behavior: 'smooth'
+    });
+
+  }
   function changeImage(url,nameAndPrice) {
     document.getElementById("itemImage").src = url;
     document.getElementById("nameAndPrice").innerHTML = nameAndPrice;
