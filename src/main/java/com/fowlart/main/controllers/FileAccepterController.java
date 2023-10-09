@@ -27,8 +27,6 @@ public class FileAccepterController {
 
     private final Catalog catalog;
 
-    private final String botAdminsList;
-
     private final String containerName;
 
     private final String connectionString;
@@ -36,11 +34,9 @@ public class FileAccepterController {
     private final BlobContainerClient containerClient;
 
     public FileAccepterController(@Autowired Catalog catalog,
-                                  @Value("${app.bot.admins}") String botAdminsList,
                                   @Value("${azure.storage.container.name}") String containerName,
                                   @Value("${azure.storage.connection.string}") String connectionString) {
         this.catalog = catalog;
-        this.botAdminsList = botAdminsList;
         this.containerName = containerName;
         this.connectionString = connectionString;
         this.containerClient = getBlobContainerClient();
@@ -51,25 +47,8 @@ public class FileAccepterController {
         return blobServiceClient.createBlobContainerIfNotExists(containerName);
     }
 
-    @PostMapping("/accept-file")
-    public String handleFileUpload(@RequestParam("file") MultipartFile file) {
-        var filename = file.getOriginalFilename();
-
-        var fileInStore = new File("/botstore/received_files/" + filename);
-
-        logger.info("file received: {}", filename);
-
-        try {
-            file.transferTo(fileInStore);
-        } catch (IOException e) {
-            return e.getMessage();
-        }
-        return "file uploaded successfully";
-    }
-
     @PostMapping("/accept-img")
     public String handleImageUpload(@RequestParam("file") MultipartFile receivedFile,
-                                    @RequestParam String userID,
                                     @RequestParam String itemID) {
 
         var fileExtension = receivedFile.getOriginalFilename().substring(Math.max(receivedFile.getOriginalFilename().length() - 3, 0));
@@ -82,7 +61,8 @@ public class FileAccepterController {
             return "Rejected! Not an image.";
         }
 
-        if (!Arrays.stream(botAdminsList.split(",")).anyMatch(userID::equals)) {
+        // Todo: check if user is admin
+        if (true) {
             return "Rejected! Not a Administrator.";
         }
 

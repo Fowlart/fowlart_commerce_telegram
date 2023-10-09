@@ -26,13 +26,12 @@ import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/pdp")
+@RequestMapping("pdp")
 public class PdpController {
 
     private final static Logger logger = LoggerFactory.getLogger(PdpController.class);
     private final Catalog catalog;
     private final String inputForImgPath;
-    private final String hostAndPort;
     private final String inputForHTMLPath;
     private final BotVisitorService botVisitorService;
     private final ScalaHelper scHelper;
@@ -41,17 +40,15 @@ public class PdpController {
     public PdpController(@Autowired Catalog catalog,
                          @Autowired BotVisitorService botVisitorService,
                          @Value("${app.bot.items.img.folder}") String inputForImgPath,
-                         @Value("${app.bot.host.url}") String hostAndPort,
                          @Value("${app.bot.html.templates}") String inputForHTMLPath) {
         this.botVisitorService = botVisitorService;
         this.catalog = catalog;
         this.inputForImgPath = inputForImgPath;
-        this.hostAndPort = hostAndPort;
         this.inputForHTMLPath = inputForHTMLPath;
         this.scHelper = new ScalaHelper();
     }
 
-    @GetMapping("/public_catalog")
+    @GetMapping
     public String getItemList(@RequestParam(required = false) String group) {
 
         group = StringUtils.isAllBlank(group) ? catalog.getGroupList().get(0) : group;

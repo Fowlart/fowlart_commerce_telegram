@@ -17,6 +17,7 @@ public class ActivityTracker {
                            @Value("${servicebus.queue.name}") String queueName) {
 
         this.senderClient = new ServiceBusClientBuilder()
+                //todo
                 .connectionString(connectionString)
                 .sender()
                 .queueName(queueName)

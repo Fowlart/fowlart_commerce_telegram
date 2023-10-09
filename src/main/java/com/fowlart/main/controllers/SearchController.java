@@ -22,7 +22,6 @@ public class SearchController {
     private final static Logger logger = LoggerFactory.getLogger(SearchController.class);
     private final Catalog catalog;
     private final String inputForImgPath;
-    private final String hostAndPort;
     private final String inputForHTMLPath;
     private final BotVisitorService botVisitorService;
     private final ScalaHelper scHelper;
@@ -31,12 +30,10 @@ public class SearchController {
     public SearchController(@Autowired Catalog catalog,
                             @Autowired BotVisitorService botVisitorService,
                             @Value("${app.bot.items.img.folder}") String inputForImgPath,
-                            @Value("${app.bot.host.url}") String hostAndPort,
                             @Value("${app.bot.html.templates}") String inputForHTMLPath) {
         this.botVisitorService = botVisitorService;
         this.catalog = catalog;
         this.inputForImgPath = inputForImgPath;
-        this.hostAndPort = hostAndPort;
         this.inputForHTMLPath = inputForHTMLPath;
         this.scHelper = new ScalaHelper();
     }
@@ -46,9 +43,7 @@ public class SearchController {
                                               HttpServletResponse servletResponse) throws IOException {
 
         var searchHtml = Files.readString(Path.of(inputForHTMLPath + "/search.html"));
-
         servletResponse.addCookie(new Cookie("userId", userId));
-
         return searchHtml;
     }
 }
