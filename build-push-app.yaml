@@ -1,6 +1,6 @@
 version: v1.1.0
 steps:
-  - build: -t fowlartcontainerregistry/dzmil-commerce:v4 -f ../Dockerfile .
+  - build: -t fowlartcontainerregistry/dzmil-commerce:v4 -f Dockerfile .
   - push:
       - fowlartcontainerregistry/dzmil-commerce:v4
   - cmd: fowlartcontainerregistry/dzmil-commerce:v4
