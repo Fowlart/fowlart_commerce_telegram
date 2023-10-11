@@ -1,5 +1,6 @@
 version: v1.1.0
 steps:
+  - cmd: az acr login --name fowlartcontainerregistry
   - build: -t fowlartcontainerregistry/dzmil-commerce:v4 -f Dockerfile .
   - push:
       - fowlartcontainerregistry/dzmil-commerce:v4
