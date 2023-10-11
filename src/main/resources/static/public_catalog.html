@@ -108,7 +108,7 @@
   function addToBusket() {
     let nameAndPrice = document.getElementById("nameAndPrice").innerHTML;
     let bucketContent = document.getElementById("bucket-content").innerHTML;
-    document.getElementById("bucket-content").innerHTML = bucketContent + "<p><a href=\"#\">" + nameAndPrice + "<input placeholder=\"кількість від 1 шт\" type=\"number\" min=\"1\" id=\"in1\"/><button>x</button></p>";
+    document.getElementById("bucket-content").innerHTML = bucketContent + "<p>" + nameAndPrice + "<input placeholder=\"кількість від 1 шт\" type=\"number\" min=\"1\" id=\"in1\"/><button>x</button></p>";
     let top = document.getElementById("bucket").offsetTop; //Getting Y of target element
     // scroll to that element slowly
     window.scrollTo({
