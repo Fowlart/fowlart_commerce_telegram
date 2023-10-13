@@ -18,6 +18,7 @@
   }
 
   .card button {
+    visibility: visible;
     border: none;
     outline: 0;
     padding: 12px;
@@ -84,10 +85,10 @@
   </div>
   <button class="w3-button w3-teal w3-xlarge" onclick="w3_open()"> ☰ </button>
 </div>
-<div class="card">
-  <img src="{{productImageUri}}" id="itemImage" alt="image" style="width:100%">
+<div class="card" >
+  <img onchange="onProductNameChange()" src="{{productImageUri}}" id="itemImage" alt="image" style="width:100%">
   <h1 id="nameAndPrice">{{nameAndPrice}}</h1>
-  <p><button onclick="addToBusket();">Додати в корзину</button></p>
+  <p><button id="add-to-bucket-button" onclick="addToBusket();">Додати в корзину</button></p>
 </div>
 <div class="col-25" id="bucket">
   <div class="container_sc">
@@ -107,6 +108,7 @@
 <script>
   function addToBusket() {
     let nameAndPrice = document.getElementById("nameAndPrice").innerHTML;
+    if (nameAndPrice.includes("грн")) {
     let bucketContent = document.getElementById("bucket-content").innerHTML;
     document.getElementById("bucket-content").innerHTML = bucketContent + "<p>" + nameAndPrice + "<input placeholder=\"кількість від 1 шт\" type=\"number\" min=\"1\" id=\"in1\"/><button>x</button></p>";
     let top = document.getElementById("bucket").offsetTop; //Getting Y of target element
@@ -115,8 +117,10 @@
       top: top,
       behavior: 'smooth'
     });
+    } else {
+      alert("Виберіть товар у категорії!");
+  }}
 
-  }
   function changeImage(url,nameAndPrice) {
     document.getElementById("itemImage").src = url;
     document.getElementById("nameAndPrice").innerHTML = nameAndPrice;
