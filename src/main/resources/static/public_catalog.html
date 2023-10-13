@@ -1,144 +1,189 @@
 <!DOCTYPE html>
 <html>
 <title>Public catalog</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<meta content="width=device-width, initial-scale=1" name="viewport">
+<link href="https://www.w3schools.com/w3css/4/w3.css" rel="stylesheet">
 <style>
-  .w3-button{
-    white-space: normal;
-    margin: 2px;
-    border: solid 1px green;
-  }
-  .card {
-    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
-    max-width: 300px;
-    margin: auto;
-    text-align: center;
-    font-family: arial;
-  }
+    .w3-button {
+        white-space: normal;
+        margin: 2px;
+        border: solid 1px green;
+    }
 
-  .card button {
-    visibility: visible;
-    border: none;
-    outline: 0;
-    padding: 12px;
-    color: white;
-    background-color: #000;
-    text-align: center;
-    cursor: pointer;
-    width: 100%;
-    font-size: 18px;
-  }
+    .card {
+        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+        max-width: 300px;
+        margin: auto;
+        text-align: center;
+        font-family: arial;
+    }
 
-  .card button:hover {
-    opacity: 0.7;
-  }
-  .col-25{
-    padding: 0 16px;
-  }
+    .card button {
+        visibility: visible;
+        border: none;
+        outline: 0;
+        padding: 12px;
+        color: white;
+        background-color: #000;
+        text-align: center;
+        cursor: pointer;
+        width: 100%;
+        font-size: 18px;
+    }
 
-  .container_sc {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    background-color: #f2f2f2;
-    padding: 5px 20px 15px 20px;
-    border: 1px solid lightgrey;
-    border-radius: 3px;
-  }
-  .container_sc input[type=number] {
-    margin-left: 5px;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-  }
-  .container_sc input:invalid {
-    border: 4px dashed red;
-  }
-  .container_sc p {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-  }
-  .submit_card{
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-  }
-  .submit_card button{
-    width: 50%;
-  }
+    .card button:hover {
+        opacity: 0.7;
+    }
+
+    .col-25 {
+        padding: 0 16px;
+    }
+
+    .container_sc {
+        visibility: hidden;
+        height: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        background-color: #f2f2f2;
+        padding: 5px 20px 15px 20px;
+        border: 1px solid lightgrey;
+        border-radius: 3px;
+    }
+
+    .container_sc input[type=number] {
+        margin-left: 5px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+    }
+
+    .container_sc input:invalid {
+        border: 4px dashed red;
+    }
+
+    .container_sc p {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+    }
+
+    .submit_card {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+    }
+
+    .submit_card button {
+      width: 50%;
+      border-radius: 0;
+    }
+
+    .remove-item-button {
+        color: red;
+        border-radius: 60px;
+        border: none;
+        outline: 0;
+        text-align: center;
+        cursor: pointer;
+        width: 20px;
+        font-size: 18px;
+    }
 </style>
 <body>
 
 <!-- Sidebar -->
-<div class="w3-sidebar w3-bar-block w3-border-right" style="display:none" id="mySidebar">
-  <button onclick="w3_close()" class="w3-bar-item w3-large">закрити &times;</button>
-  <!--<a href="#" class="w3-bar-item w3-button">Link 1</a>-->
-  {{groupLinks}}
+<div class="w3-sidebar w3-bar-block w3-border-right" id="mySidebar" style="display:none">
+    <button class="w3-bar-item w3-large" onclick="w3_close()">закрити &times;</button>
+    <!--<a href="#" class="w3-bar-item w3-button">Link 1</a>-->
+    {{groupLinks}}
 </div>
 
 <!-- Page Content -->
 <div class="w3-teal">
-  <div class="w3-container">
-    <h1>Каталог товарів </h1>
-    <a href="https://t.me/FowlartCommerceBot">продовжуй у Telegram</a>
-  </div>
-  <button class="w3-button w3-teal w3-xlarge" onclick="w3_open()"> ☰ </button>
+    <div class="w3-container">
+        <h1>Каталог товарів </h1>
+        <a href="https://t.me/FowlartCommerceBot">продовжуй у Telegram</a>
+    </div>
+    <button class="w3-button w3-teal w3-xlarge" onclick="w3_open()"> ☰</button>
 </div>
-<div class="card" >
-  <img onchange="onProductNameChange()" src="{{productImageUri}}" id="itemImage" alt="image" style="width:100%">
-  <h1 id="nameAndPrice">{{nameAndPrice}}</h1>
-  <p><button id="add-to-bucket-button" onclick="addToBusket();">Додати в корзину</button></p>
+<div class="card">
+    <img alt="image" id="itemImage" onchange="onProductNameChange()" src="{{productImageUri}}" style="width:100%">
+    <h1 id="nameAndPrice">{{nameAndPrice}}</h1>
+    <p>
+        <button id="add-to-bucket-button" onclick="addToBucket();">Додати в корзину</button>
+    </p>
 </div>
 <div class="col-25" id="bucket">
-  <div class="container_sc">
-    <h4>🛒 Корзина 🛒</h4>
-    <div id="bucket-content">
+    <div class="container_sc">
+        <h4>🛒 Корзина 🛒</h4>
+        <div id="bucket-content">
+        </div>
+        <hr>
+        <p>Загальна сумма <span class="price" style="color:black"><b>$30</b></span></p>
+        <p class="submit_card" id="submit_card_id">
+            <button>замовити</button>
+        </p>
     </div>
-    <hr>
-    <p>Загальна сумма <span class="price" style="color:black"><b>$30</b></span></p>
-    <p class="submit_card" id="submit_card_id"><button>замовити</button></p>
-  </div>
 </div>
 <div class="w3-container">
-  {{itemList}}
-  <!--<button imglink="" class="w3-button w3-block w3-black" >Button</button> -->
+    {{itemList}}
+    <!--<button imglink="" class="w3-button w3-block w3-black" >Button</button> -->
 </div>
 
 <script>
-  function addToBusket() {
-    let nameAndPrice = document.getElementById("nameAndPrice").innerHTML;
-    if (nameAndPrice.includes("грн")) {
-    let bucketContent = document.getElementById("bucket-content").innerHTML;
-    document.getElementById("bucket-content").innerHTML = bucketContent + "<p>" + nameAndPrice + "<input placeholder=\"кількість від 1 шт\" type=\"number\" min=\"1\" id=\"in1\"/><button>x</button></p>";
-    let top = document.getElementById("bucket").offsetTop; //Getting Y of target element
-    // scroll to that element slowly
-    window.scrollTo({
-      top: top,
-      behavior: 'smooth'
-    });
-    } else {
-      alert("Виберіть товар у категорії!");
-  }}
+    function addToBucket() {
+        let bucket = document.getElementsByClassName("container_sc")[0];
+        // remove width and height
+        let nameAndPrice = document.getElementById("nameAndPrice").innerHTML;
 
-  function changeImage(url,nameAndPrice) {
-    document.getElementById("itemImage").src = url;
-    document.getElementById("nameAndPrice").innerHTML = nameAndPrice;
+        if (nameAndPrice.includes("грн")) {
+            bucket.style.visibility = "visible";
+            bucket.style.height = "auto";
+            let bucketContent = document.getElementById("bucket-content").innerHTML;
+            let item_qty = document.getElementsByClassName("qty-input").length;
+            item_qty++;
+            document.getElementById("bucket-content").innerHTML = bucketContent + "<p id='" + `item-${item_qty}'` + ">" + nameAndPrice + "<input class=\"qty-input\" placeholder=\"кількість від 1 шт\" type=\"number\" min=\"1\" id=\"in1\"/><button class='remove-item-button' onclick='"+`deleteElement(${item_qty})`+"'>x</button></p>";
+            let top = document.getElementById("bucket").offsetTop; //Getting Y of target element
+            // scroll to that element slowly
+            window.scrollTo({
+                top: top,
+                behavior: 'smooth'
+            });
+        } else {
+            alert("Виберіть товар у категорії!");
+        }
+    }
 
-    var top = document.getElementById("mySidebar").offsetTop; //Getting Y of target element
-    // scroll to that element slowly
-    window.scrollTo({
-      top: top,
-      behavior: 'smooth'
-    });
-  }
-  function w3_open() {
-    document.getElementById("mySidebar").style.display = "block";
-  }
+    function deleteElement(id) {
+        let element = document.getElementById(`item-${id}`);
+        element.parentNode.removeChild(element);
+        let bucket = document.getElementsByClassName("container_sc")[0];
+        let item_qty = document.getElementsByClassName("qty-input").length;
+        if (item_qty === 0) {
+            bucket.style.visibility = "hidden";
+            bucket.style.height = "0";
+        }
+    }
 
-  function w3_close() {
-    document.getElementById("mySidebar").style.display = "none";
-  }
+    function changeImage(url, nameAndPrice) {
+        document.getElementById("itemImage").src = url;
+        document.getElementById("nameAndPrice").innerHTML = nameAndPrice;
+
+        var top = document.getElementById("mySidebar").offsetTop; //Getting Y of target element
+        // scroll to that element slowly
+        window.scrollTo({
+            top: top,
+            behavior: 'smooth'
+        });
+    }
+
+    function w3_open() {
+        document.getElementById("mySidebar").style.display = "block";
+    }
+
+    function w3_close() {
+        document.getElementById("mySidebar").style.display = "none";
+    }
 </script>
 
 </body>
