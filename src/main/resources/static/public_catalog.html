@@ -74,19 +74,19 @@
     }
 
     .submit_card button {
-      width: 50%;
-      border-radius: 0;
+        width: 50%;
+        border-radius: 0;
     }
 
     .remove-item-button {
         color: red;
         border-radius: 60px;
         border: none;
-        outline: 0;
         text-align: center;
         cursor: pointer;
         width: 20px;
-        font-size: 18px;
+        font-size: 25px;
+        background-color: transparent;
     }
 </style>
 <body>
@@ -131,7 +131,28 @@
 </div>
 
 <script>
-    function addToBucket() {
+    async function sendItems(nameAndPrice) {
+        let myHeaders = new Headers();
+        myHeaders.append("Content-Type", "application/x-www-form-urlencoded");
+        let urlencoded = new URLSearchParams();
+        urlencoded.append("item", nameAndPrice);
+
+        let requestOptions = {
+            method: 'POST',
+            headers: myHeaders,
+            body: urlencoded,
+            redirect: 'follow'
+        };
+
+
+       return fetch("pdp/accept-item", requestOptions)
+            .then(response => response.text())
+            .then(result => result)
+            .catch(error => console.log('error', error));
+
+    }
+
+    async function addToBucket() {
         let bucket = document.getElementsByClassName("container_sc")[0];
         // remove width and height
         let nameAndPrice = document.getElementById("nameAndPrice").innerHTML;
@@ -139,10 +160,11 @@
         if (nameAndPrice.includes("грн")) {
             bucket.style.visibility = "visible";
             bucket.style.height = "auto";
-            let bucketContent = document.getElementById("bucket-content").innerHTML;
-            let item_qty = document.getElementsByClassName("qty-input").length;
-            item_qty++;
-            document.getElementById("bucket-content").innerHTML = bucketContent + "<p id='" + `item-${item_qty}'` + ">" + nameAndPrice + "<input class=\"qty-input\" placeholder=\"кількість від 1 шт\" type=\"number\" min=\"1\" id=\"in1\"/><button class='remove-item-button' onclick='"+`deleteElement(${item_qty})`+"'>x</button></p>";
+
+           let  result = await sendItems(nameAndPrice);
+            console.log(result);
+            document.getElementById("bucket-content").innerHTML = result;
+
             let top = document.getElementById("bucket").offsetTop; //Getting Y of target element
             // scroll to that element slowly
             window.scrollTo({
@@ -154,11 +176,32 @@
         }
     }
 
-    function deleteElement(id) {
-        let element = document.getElementById(`item-${id}`);
-        element.parentNode.removeChild(element);
-        let bucket = document.getElementsByClassName("container_sc")[0];
-        let item_qty = document.getElementsByClassName("qty-input").length;
+    function deleteElement(name) {
+
+        console.log("deleteElement " + name);
+        let myHeaders = new Headers();
+        myHeaders.append("Content-Type", "application/x-www-form-urlencoded");
+        let urlencoded = new URLSearchParams();
+        urlencoded.append("item", name);
+
+        let requestOptions = {
+            method: 'POST',
+            headers: myHeaders,
+            body: urlencoded,
+            redirect: 'follow'
+        };
+
+
+        fetch("pdp/remove-item", requestOptions)
+            .then(response => response.text())
+            .then(result => {
+                document.getElementById("bucket-content").innerHTML = result;
+                console.log(result);
+            })
+            .catch(error => console.log('error', error));
+
+        let item_qty = document.getElementById("bucket-content").childElementCount;
+
         if (item_qty === 0) {
             bucket.style.visibility = "hidden";
             bucket.style.height = "0";
