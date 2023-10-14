@@ -61,13 +61,14 @@ public class PdpController {
     public ResponseEntity<String> getItemList(@RequestParam(required = false) String group, HttpServletResponse servletResponse, HttpServletRequest request) throws IOException {
 
         var responseHeaders = new HttpHeaders();
+        String jsessionid = null;
 
         if (Objects.nonNull(request.getCookies())) {
-            String jsessionid = Arrays.stream(request.getCookies()).filter(c -> c.getName().equals("JSESSIONID")).findFirst().orElse(new Cookie("JSESSIONID", UUID.randomUUID().toString())).getValue();
+             jsessionid = Arrays.stream(request.getCookies()).filter(c -> c.getName().equals("JSESSIONID")).findFirst().orElse(new Cookie("JSESSIONID", UUID.randomUUID().toString())).getValue();
             responseHeaders.add("Set-Cookie", "JSESSIONID=" + jsessionid + "; HttpOnly");
             logger.info("JSESSIONID is " + jsessionid);
         } else {
-            String jsessionid = UUID.randomUUID().toString();
+            jsessionid = UUID.randomUUID().toString();
             responseHeaders.add("Set-Cookie", "JSESSIONID=" + jsessionid + "; HttpOnly");
             logger.info("JSESSIONID is " + jsessionid);
         }
@@ -98,7 +99,13 @@ public class PdpController {
             throw new RuntimeException(e);
         }
 
-        var res = pdpHtml.replace("{{productImageUri}}", productImageUri).replace("{{groupLinks}}", groupLinks).replace("{{nameAndPrice}}", group).replace("{{itemList}}", itemList);
+        String bucketContent = this.scHelper.getBucketContent(this.carts.getCart(jsessionid));
+
+        var res = pdpHtml.replace("{{productImageUri}}", productImageUri)
+                .replace("{{groupLinks}}", groupLinks)
+                .replace("{{bucketContent}}", bucketContent)
+                .replace("{{nameAndPrice}}", group)
+                .replace("{{itemList}}", itemList);
 
 
         return ResponseEntity.ok().headers(responseHeaders).body(res);

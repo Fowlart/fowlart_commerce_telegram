@@ -39,9 +39,18 @@
         padding: 0 16px;
     }
 
+    .container_sc_unavailable {
+        display: none;
+        flex-direction: column;
+        justify-content: center;
+        background-color: #f2f2f2;
+        padding: 5px 20px 15px 20px;
+        border: 1px solid lightgrey;
+        border-radius: 3px;
+    }
+
     .container_sc {
-        visibility: hidden;
-        height: 0;
+        height: auto;
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -114,9 +123,10 @@
     </p>
 </div>
 <div class="col-25" id="bucket">
-    <div class="container_sc">
+    <div class="container_sc" id="bucket-container">
         <h4>🛒 Корзина 🛒</h4>
         <div id="bucket-content">
+            {{bucketContent}}
         </div>
         <hr>
         <p>Загальна сумма <span class="price" style="color:black"><b>$30</b></span></p>
@@ -131,6 +141,7 @@
 </div>
 
 <script>
+
     async function sendItems(nameAndPrice) {
         let myHeaders = new Headers();
         myHeaders.append("Content-Type", "application/x-www-form-urlencoded");
@@ -153,16 +164,17 @@
     }
 
     async function addToBucket() {
-        let bucket = document.getElementsByClassName("container_sc")[0];
         // remove width and height
         let nameAndPrice = document.getElementById("nameAndPrice").innerHTML;
 
         if (nameAndPrice.includes("грн")) {
-            bucket.style.visibility = "visible";
-            bucket.style.height = "auto";
 
            let  result = await sendItems(nameAndPrice);
             console.log(result);
+            // add back bucket
+            let bucket = document.getElementById("bucket-container");
+            // toggle class
+            bucket.className = "container_sc";
             document.getElementById("bucket-content").innerHTML = result;
 
             let top = document.getElementById("bucket").offsetTop; //Getting Y of target element
@@ -191,21 +203,18 @@
             redirect: 'follow'
         };
 
-
         fetch("pdp/remove-item", requestOptions)
             .then(response => response.text())
             .then(result => {
+
                 document.getElementById("bucket-content").innerHTML = result;
-                console.log(result);
+                console.log("result after remove: "+result);
+                if (result === "") {
+                    let bucket = document.getElementById("bucket-container");
+                    bucket.className = "container_sc_unavailable";
+                }
             })
             .catch(error => console.log('error', error));
-
-        let item_qty = document.getElementById("bucket-content").childElementCount;
-
-        if (item_qty === 0) {
-            bucket.style.visibility = "hidden";
-            bucket.style.height = "0";
-        }
     }
 
     function changeImage(url, nameAndPrice) {

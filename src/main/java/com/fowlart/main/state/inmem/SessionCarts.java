@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Component
 public class SessionCarts {
@@ -17,7 +18,13 @@ public class SessionCarts {
     }
 
     public List<String> getCart(String userId) {
-        return carts.get(userId);
+        var cart =carts.get(userId);
+        if (Objects.nonNull(cart)) {
+            return cart;
+        }
+        else {
+            return new ArrayList<>();
+        }
     }
 
     public void removeItem(String item, String userId) {
