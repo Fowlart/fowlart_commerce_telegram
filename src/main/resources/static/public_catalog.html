@@ -129,7 +129,7 @@
             {{bucketContent}}
         </div>
         <hr>
-        <p>Загальна сумма <span class="price" style="color:black"><b>$30</b></span></p>
+        <p>Загальна сумма <span class="price" style="color:black"><b>30 ГРН</b></span></p>
         <p class="submit_card" id="submit_card_id">
             <button>замовити</button>
         </p>
@@ -142,11 +142,33 @@
 
 <script>
 
+    document.addEventListener('DOMContentLoaded', function() {
+        let bucketContent = document.getElementById("bucket-content");
+        let bucket = document.getElementById("bucket-container");
+        if (bucketContent.childElementCount === 0) {
+            console.log("bucketContent.innerHTML is empty")
+            bucket.className = "container_sc_unavailable";
+        } else {
+            bucket.className = "container_sc";
+        }
+    }, false);
+
+    function changeQty(itemId,element) {
+        let qty = element.value;
+        if (qty === undefined || qty === null || qty === "") {
+            element.value = 1;
+        }
+        console.log("itemId " + itemId);
+        console.log("qty " + element.value);
+
+        alert("itemId " + itemId + " qty " + element.value);
+    }
+
     async function sendItems(nameAndPrice) {
         let myHeaders = new Headers();
         myHeaders.append("Content-Type", "application/x-www-form-urlencoded");
         let urlencoded = new URLSearchParams();
-        urlencoded.append("item", nameAndPrice);
+        urlencoded.append("itemId", nameAndPrice);
 
         let requestOptions = {
             method: 'POST',
@@ -165,11 +187,13 @@
 
     async function addToBucket() {
         // remove width and height
-        let nameAndPrice = document.getElementById("nameAndPrice").innerHTML;
+        let nameAndPriceAndId = document.getElementById("nameAndPrice").innerHTML;
 
-        if (nameAndPrice.includes("грн")) {
+        if (nameAndPriceAndId.includes("грн")) {
 
-           let  result = await sendItems(nameAndPrice);
+            // extract id from []
+            let itemId = nameAndPriceAndId.substring(nameAndPriceAndId.indexOf("[") + 1, nameAndPriceAndId.indexOf("]"));
+           let  result = await sendItems(itemId);
             console.log(result);
             // add back bucket
             let bucket = document.getElementById("bucket-container");
@@ -188,13 +212,13 @@
         }
     }
 
-    function deleteElement(name) {
+    async function deleteElement(id) {
 
-        console.log("deleteElement " + name);
+        console.log("deleteElement " + id);
         let myHeaders = new Headers();
         myHeaders.append("Content-Type", "application/x-www-form-urlencoded");
         let urlencoded = new URLSearchParams();
-        urlencoded.append("item", name);
+        urlencoded.append("itemId", id);
 
         let requestOptions = {
             method: 'POST',

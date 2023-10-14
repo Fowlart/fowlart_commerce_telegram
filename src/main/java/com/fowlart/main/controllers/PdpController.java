@@ -100,6 +100,7 @@ public class PdpController {
         }
 
         String bucketContent = this.scHelper.getBucketContent(this.carts.getCart(jsessionid));
+        logger.info("bucketContent: " + bucketContent);
 
         var res = pdpHtml.replace("{{productImageUri}}", productImageUri)
                 .replace("{{groupLinks}}", groupLinks)
@@ -114,18 +115,21 @@ public class PdpController {
     @PostMapping(value = "/remove-item", produces = "text/html", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public @ResponseBody ResponseEntity<String> removeItem(@RequestBody MultiValueMap<String, String> formData, HttpServletRequest request) {
 
-        var item = formData.getFirst("item");
+        var itemId = formData.getFirst("itemId");
 
         var jsessionId = Arrays.stream(request.getCookies()).filter(c -> c.getName().equals("JSESSIONID")).findFirst().orElse(null);
 
         var html = "";
 
+        var item = catalog.getItemList().stream().filter(i -> i.id().equals(itemId)).findFirst().orElse(null);
+
         if (Objects.isNull(jsessionId)) {
             logger.info("JSESSIONID is null");
         } else {
             logger.info("JSESSIONID is " + jsessionId.getValue());
-            logger.info("item " + item);
+            logger.info("remove itemId" + itemId);
             carts.removeItem(item, jsessionId.getValue());
+
             html = scHelper.getBucketContent(carts.getCart(jsessionId.getValue()));
         }
         return new ResponseEntity<>(html, HttpStatus.OK);
@@ -134,7 +138,7 @@ public class PdpController {
     @PostMapping(value = "/accept-item", produces = "text/html", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public @ResponseBody ResponseEntity<String> acceptItem(@RequestBody MultiValueMap<String, String> formData, HttpServletRequest request) {
 
-        var item = formData.getFirst("item");
+        var itemId = formData.getFirst("itemId");
 
         var jsessionId = Arrays.stream(request.getCookies()).filter(c -> c.getName().equals("JSESSIONID")).findFirst().orElse(null);
 
@@ -144,7 +148,8 @@ public class PdpController {
             logger.info("JSESSIONID is null");
         } else {
             logger.info("JSESSIONID is " + jsessionId.getValue());
-            logger.info("item " + item);
+            logger.info("adding item " + itemId);
+            var item = catalog.getItemList().stream().filter(i -> i.id().equals(itemId)).findFirst().orElse(null);
             carts.addItem(item, jsessionId.getValue());
             html = scHelper.getBucketContent(carts.getCart(jsessionId.getValue()));
         }

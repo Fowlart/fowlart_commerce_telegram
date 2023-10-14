@@ -1,5 +1,6 @@
 package com.fowlart.main.state.inmem;
 
+import com.fowlart.main.state.cosmos.Item;
 import com.google.common.collect.Maps;
 import org.springframework.stereotype.Component;
 
@@ -11,13 +12,13 @@ import java.util.Objects;
 @Component
 public class SessionCarts {
 
-    private final Map<String, List<String>> carts;
+    private final Map<String, List<Item>> carts;
 
     public SessionCarts() {
         carts = Maps.newHashMap();
     }
 
-    public List<String> getCart(String userId) {
+    public List<Item> getCart(String userId) {
         var cart =carts.get(userId);
         if (Objects.nonNull(cart)) {
             return cart;
@@ -27,7 +28,7 @@ public class SessionCarts {
         }
     }
 
-    public void removeItem(String item, String userId) {
+    public void removeItem(Item item, String userId) {
         var cart = carts.get(userId);
         if (cart != null) {
             cart.remove(item);
@@ -35,7 +36,7 @@ public class SessionCarts {
         carts.put(userId, cart);
     }
 
-    public void addItem(String item, String userId) {
+    public void addItem(Item item, String userId) {
         var cart = carts.get(userId);
         if (cart == null) {
             cart = new ArrayList<>();
