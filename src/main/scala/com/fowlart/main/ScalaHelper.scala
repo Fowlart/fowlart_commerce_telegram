@@ -16,7 +16,7 @@ class ScalaHelper {
       .mkString("")
   }
   def getButtonHtml(i: Item): String =
-    s"""<button class="w3-button w3-block w3-black" onclick="changeImage('img/${i.id()}','[${i.id()}] <br/>${i.name().replace("\"","")} <br/>${i.price()} грн');">${i.name().replace("\"","")}</button>"""
+    s"""<button class="w3-button w3-block w3-black" onclick="changeImage('pdp/img/${i.id()}','[${i.id()}] <br/>${i.name().replace("\"","")} <br/>${i.price()} грн');">${i.name().replace("\"","")}</button>"""
 
    def getGroupLinkHtml(name: String): String =
         s"""<a href="?group=$name" class="w3-bar-item w3-button">${name.toLowerCase}</a>"""
