@@ -184,7 +184,7 @@
         };
 
 
-       return fetch("pdp/accept-item", requestOptions)
+       return fetch("accept-item", requestOptions)
             .then(response => response.text())
             .then(result => result)
             .catch(error => console.log('error', error));
