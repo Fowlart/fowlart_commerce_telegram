@@ -59,6 +59,13 @@ public class PdpController {
     @GetMapping(value = "/bucket-sum", produces = "text/html")
     public ResponseEntity<String> getBucketSum(HttpServletRequest request) {
 
+        // if remove this sleep, API call might return old qty. Interesting!
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
         String jsessionid = null;
         ResponseEntity<String> response = ResponseEntity.ok("0.0");
 

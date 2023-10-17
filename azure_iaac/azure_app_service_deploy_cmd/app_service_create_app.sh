@@ -32,6 +32,9 @@ az webapp config container set --name $APP_NAME --resource-group $RG_NAME \
 --docker-registry-server-user $ACR_NAME \
 --docker-registry-server-password $ACR_PASS
 
+#restart the app
+az webapp restart --name $APP_NAME --resource-group $RG_NAME
+
 
 #set up file share
 az webapp config storage-account add --name $APP_NAME --resource-group $RG_NAME \
@@ -42,5 +45,3 @@ az webapp config storage-account add --name $APP_NAME --resource-group $RG_NAME 
 --custom-id botstore \
 --access-key $AZ_FILE_ACC_KEY
 
-#restart the app
-az webapp restart --name $APP_NAME --resource-group $RG_NAME

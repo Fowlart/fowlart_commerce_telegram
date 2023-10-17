@@ -175,7 +175,7 @@
         return fetch("/pdp/bucket-sum", requestOptions)
             .then(response => response.text())
             .then(result => result + " грн")
-            .catch(error => "0.0 грн");
+            .catch(error => error);
     }
 
     async function changeQty(itemId,element) {
@@ -250,18 +250,16 @@
             redirect: 'follow'
         };
 
-        fetch("pdp/remove-item", requestOptions)
+        document.getElementById("bucket-content").innerHTML = await fetch("pdp/remove-item", requestOptions)
             .then(response => response.text())
             .then(result => {
-
-
-                document.getElementById("bucket-content").innerHTML = result;
                 if (result === "") {
                     let bucket = document.getElementById("bucket-container");
                     bucket.className = "container_sc_unavailable";
                 }
+               return  result;
             })
-            .catch(error => console.log('error', error));
+            .catch(error => error);
 
         document.getElementById("total").innerHTML = await getBucketSum();
     }
