@@ -10,7 +10,7 @@ public final class Item implements Serializable {
     @Id
     private  String id;
     private  String name;
-    private  Double price;
+    private Double price;
     private String group;
     private  Integer qty;
 
@@ -63,25 +63,6 @@ public final class Item implements Serializable {
         this.qty = qty;
     }
 
-    @Override
-    public String toString() {
-        var str = "⏺"+"  "+id + "\n" + "\uD83D\uDCCC"+name + "\n" + "\uD83D\uDCB3" + price + "грн.";
-        if (Objects.nonNull(qty)) str = str + "\n[" + qty + "шт]";
-        else str = str + "\n" + "[кільк. не вибрана]";
-        return str;
-    }
-
-    public String toString2() {
-        var str = "\uD83D\uDCCC"+name + "\n" + "\uD83D\uDCB3" + price + "грн.";
-        if (Objects.nonNull(qty)) str = str + "\n[" + qty + "шт]";
-        else str = str + "\n" + "[кільк. не вибрана]";
-        return str;
-    }
-
-    public String toString3() {
-        return "\uD83D\uDCCC"+name + "\n" + "\uD83D\uDCB3" + price + "грн.";
-    }
-
     public String id() {
         return id;
     }
@@ -89,8 +70,6 @@ public final class Item implements Serializable {
     public String name() {
         return name;
     }
-
-
     public Double price() {
         return price;
     }
@@ -108,7 +87,7 @@ public final class Item implements Serializable {
         if (obj == this) return true;
         if (obj == null || obj.getClass() != this.getClass()) return false;
         var that = (Item) obj;
-        return Objects.equals(this.id, that.id) &&
+        return  Objects.equals(this.id, that.id) &&
                 Objects.equals(this.name, that.name) &&
                 Objects.equals(this.price, that.price) &&
                 Objects.equals(this.group, that.group);
@@ -118,5 +97,4 @@ public final class Item implements Serializable {
     public int hashCode() {
         return Objects.hash(id, name, price, group);
     }
-
 }

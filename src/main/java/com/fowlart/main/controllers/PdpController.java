@@ -56,15 +56,50 @@ public class PdpController {
         this.carts = carts;
     }
 
+    @GetMapping(value = "/bucket-sum", produces = "text/html")
+    public ResponseEntity<String> getBucketSum(HttpServletRequest request) {
+
+        String jsessionid = null;
+        ResponseEntity<String> response = ResponseEntity.ok("0.0");
+
+        //get JSESSIONID cookie
+        if (Objects.nonNull(request.getCookies())) {
+            jsessionid = Arrays
+                    .stream(request.getCookies())
+                    .filter(c -> c.getName().equals("JSESSIONID"))
+                    .findFirst()
+                    .orElse(new Cookie("JSESSIONID", "NO_JSESSIONID"))
+                    .getValue();
+        } else {
+            jsessionid = "NO_JSESSIONID";
+        }
+
+        if (jsessionid.equals("NO_JSESSIONID")) {
+            return response;
+        } else {
+            var cart = carts.getCart(jsessionid);
+            var sum = cart.stream()
+                    .map(item -> item.qty()*item.price())
+                    .reduce(Double::sum)
+                    .orElse(0.0);
+            return ResponseEntity.ok(sum.toString());
+        }
+    }
 
     @GetMapping(produces = "text/html")
-    public ResponseEntity<String> getItemList(@RequestParam(required = false) String group, HttpServletResponse servletResponse, HttpServletRequest request) throws IOException {
+    public ResponseEntity<String> getItemList(@RequestParam(required = false) String group, HttpServletRequest request) throws IOException {
 
         var responseHeaders = new HttpHeaders();
+
         String jsessionid = null;
 
         if (Objects.nonNull(request.getCookies())) {
-             jsessionid = Arrays.stream(request.getCookies()).filter(c -> c.getName().equals("JSESSIONID")).findFirst().orElse(new Cookie("JSESSIONID", UUID.randomUUID().toString())).getValue();
+             jsessionid = Arrays
+                     .stream(request.getCookies())
+                     .filter(c -> c.getName().equals("JSESSIONID"))
+                     .findFirst()
+                     .orElse(new Cookie("JSESSIONID", UUID.randomUUID().toString())).getValue();
+
             responseHeaders.add("Set-Cookie", "JSESSIONID=" + jsessionid + "; HttpOnly");
             logger.info("JSESSIONID is " + jsessionid);
         } else {
@@ -99,7 +134,10 @@ public class PdpController {
             throw new RuntimeException(e);
         }
 
-        String bucketContent = this.scHelper.getBucketContent(this.carts.getCart(jsessionid));
+        String bucketContent = this
+                .scHelper
+                .getBucketContent(this.carts.getCart(jsessionid));
+
         logger.info("bucketContent: " + bucketContent);
 
         var res = pdpHtml.replace("{{productImageUri}}", productImageUri)
@@ -107,7 +145,6 @@ public class PdpController {
                 .replace("{{bucketContent}}", bucketContent)
                 .replace("{{nameAndPrice}}", group)
                 .replace("{{itemList}}", itemList);
-
 
         return ResponseEntity.ok().headers(responseHeaders).body(res);
     }
@@ -136,9 +173,14 @@ public class PdpController {
     }
 
     @PostMapping(value = "/accept-item", produces = "text/html", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-    public @ResponseBody ResponseEntity<String> acceptItem(@RequestBody MultiValueMap<String, String> formData, HttpServletRequest request) {
+    public @ResponseBody ResponseEntity<String> acceptItem(@RequestBody MultiValueMap<String, String> formData,
+                                                           HttpServletRequest request) {
 
         var itemId = formData.getFirst("itemId");
+        var itemQuantity = formData.getFirst("itemQuantity");
+        logger.info("itemId: " + itemId);
+        logger.info("itemQuantity: " + itemQuantity);
+        itemQuantity = (Objects.isNull(itemQuantity))? "1": itemQuantity;
 
         var jsessionId = Arrays.stream(request.getCookies()).filter(c -> c.getName().equals("JSESSIONID")).findFirst().orElse(null);
 
@@ -150,7 +192,11 @@ public class PdpController {
             logger.info("JSESSIONID is " + jsessionId.getValue());
             logger.info("adding item " + itemId);
             var item = catalog.getItemList().stream().filter(i -> i.id().equals(itemId)).findFirst().orElse(null);
-            carts.addItem(item, jsessionId.getValue());
+
+            var modifiedItem = new Item(item.id(), item.name(), item.price(), item.group(), Integer.parseInt(itemQuantity));
+
+            carts.addItem(modifiedItem, jsessionId.getValue());
+
             html = scHelper.getBucketContent(carts.getCart(jsessionId.getValue()));
         }
 

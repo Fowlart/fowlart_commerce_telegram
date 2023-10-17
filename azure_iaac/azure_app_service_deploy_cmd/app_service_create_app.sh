@@ -15,6 +15,7 @@ az webapp config appsettings set --name $APP_NAME --resource-group $RG_NAME --se
 az webapp config appsettings set --name $APP_NAME --resource-group $RG_NAME --settings SERVICE_BUS_SECRET=$SERVICE_BUS_SECRET
 az webapp config appsettings set --name $APP_NAME --resource-group $RG_NAME --settings EMAIL_PASSWORD=$EMAIL_PASSWORD
 az webapp config appsettings set --name $APP_NAME --resource-group $RG_NAME --settings AZ_FILE_ACC_KEY=$AZ_FILE_ACC_KEY
+az webapp config appsettings set --name $APP_NAME --resource-group $RG_NAME --settings WEBSITES_PORT=443
 
 # create an image
 cd /Users/artur/IdeaProjects/fowlart_commerce_telegram
@@ -41,10 +42,5 @@ az webapp config storage-account add --name $APP_NAME --resource-group $RG_NAME 
 --custom-id botstore \
 --access-key $AZ_FILE_ACC_KEY
 
-#set port binding
-az webapp config appsettings set --name $APP_NAME --resource-group $RG_NAME \
---settings WEBSITES_PORT=443
-
 #restart the app
 az webapp restart --name $APP_NAME --resource-group $RG_NAME
-

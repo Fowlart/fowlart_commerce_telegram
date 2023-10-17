@@ -103,6 +103,11 @@
         font-size: 25px;
         background-color: transparent;
     }
+
+    .price {
+        color: grey;
+        margin-left: 5px;
+    }
 </style>
 <body>
 
@@ -135,7 +140,7 @@
             {{bucketContent}}
         </div>
         <hr>
-        <p>Загальна сумма <span class="price" style="color:black"><b> 30 ГРН</b></span></p>
+        <p>Загальна сумма <span class="price"><b id="total"></b></span></p>
         <p class="submit_card" id="submit_card_id">
             <button>замовити</button>
         </p>
@@ -148,7 +153,7 @@
 
 <script>
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', async function() {
         let bucketContent = document.getElementById("bucket-content");
         let bucket = document.getElementById("bucket-container");
         if (bucketContent.childElementCount === 0) {
@@ -156,25 +161,34 @@
             bucket.className = "container_sc_unavailable";
         } else {
             bucket.className = "container_sc";
+            document.getElementById("total").innerHTML = await getBucketSum();
         }
     }, false);
 
-    function changeQty(itemId,element) {
-        let qty = element.value;
-        if (qty === undefined || qty === null || qty === "") {
-            element.value = 1;
-        }
-        console.log("itemId " + itemId);
-        console.log("qty " + element.value);
+    async function getBucketSum(){
 
-        alert("itemId " + itemId + " qty " + element.value);
+        let requestOptions = {
+            method: 'GET',
+            redirect: 'follow'
+        };
+
+        return fetch("/pdp/bucket-sum", requestOptions)
+            .then(response => response.text())
+            .then(result => result + " грн")
+            .catch(error => "0.0 грн");
     }
 
-    async function sendItems(nameAndPrice) {
+    async function changeQty(itemId,element) {
+        document.getElementById("bucket-content").innerHTML = await sendItems(itemId, element.value);
+        document.getElementById("total").innerHTML = await getBucketSum();
+    }
+
+    async function sendItems(id,qty) {
         let myHeaders = new Headers();
         myHeaders.append("Content-Type", "application/x-www-form-urlencoded");
         let urlencoded = new URLSearchParams();
-        urlencoded.append("itemId", nameAndPrice);
+        urlencoded.append("itemId", id);
+        urlencoded.append("itemQuantity", qty);
 
         let requestOptions = {
             method: 'POST',
@@ -187,7 +201,7 @@
        return fetch("pdp/accept-item", requestOptions)
             .then(response => response.text())
             .then(result => result)
-            .catch(error => console.log('error', error));
+            .catch(error => error);
 
     }
 
@@ -199,7 +213,8 @@
 
             // extract id from []
             let itemId = nameAndPriceAndId.substring(nameAndPriceAndId.indexOf("[") + 1, nameAndPriceAndId.indexOf("]"));
-           let  result = await sendItems(itemId);
+            let qty = 1;
+            let  result = await sendItems(itemId,qty);
             console.log(result);
             // add back bucket
             let bucket = document.getElementById("bucket-container");
@@ -213,6 +228,8 @@
                 top: top,
                 behavior: 'smooth'
             });
+
+            document.getElementById("total").innerHTML = await getBucketSum();
         } else {
             alert("Виберіть товар у категорії!");
         }
@@ -237,14 +254,16 @@
             .then(response => response.text())
             .then(result => {
 
+
                 document.getElementById("bucket-content").innerHTML = result;
-                console.log("result after remove: "+result);
                 if (result === "") {
                     let bucket = document.getElementById("bucket-container");
                     bucket.className = "container_sc_unavailable";
                 }
             })
             .catch(error => console.log('error', error));
+
+        document.getElementById("total").innerHTML = await getBucketSum();
     }
 
     function changeImage(url, nameAndPrice) {

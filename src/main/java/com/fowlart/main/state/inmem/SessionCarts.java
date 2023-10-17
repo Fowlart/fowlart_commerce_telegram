@@ -4,27 +4,24 @@ import com.fowlart.main.state.cosmos.Item;
 import com.google.common.collect.Maps;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 @Component
 public class SessionCarts {
 
-    private final Map<String, List<Item>> carts;
+    private final Map<String, Set<Item>> carts;
 
     public SessionCarts() {
         carts = Maps.newHashMap();
     }
 
-    public List<Item> getCart(String userId) {
+    public Set<Item> getCart(String userId) {
         var cart =carts.get(userId);
         if (Objects.nonNull(cart)) {
             return cart;
         }
         else {
-            return new ArrayList<>();
+            return new HashSet<>();
         }
     }
 
@@ -39,12 +36,12 @@ public class SessionCarts {
     public void addItem(Item item, String userId) {
         var cart = carts.get(userId);
         if (cart == null) {
-            cart = new ArrayList<>();
+            cart = new HashSet<>();
             cart.add(item);
         } else {
+            cart.remove(item);
             cart.add(item);
         }
         carts.put(userId, cart);
     }
-
 }
