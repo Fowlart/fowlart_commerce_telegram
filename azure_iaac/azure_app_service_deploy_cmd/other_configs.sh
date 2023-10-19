@@ -6,6 +6,4 @@ export STORAGE_ACCOUNT_NAME=fowlartstorageaccount
 
 az webapp show \
     --resource-group $RG_NAME \
-    --name $APP_NAME \
-    --query outboundIpAddresses \
-    --output tsv
+    --name $APP_NAME

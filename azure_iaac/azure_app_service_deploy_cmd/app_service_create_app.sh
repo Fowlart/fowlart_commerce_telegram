@@ -31,8 +31,7 @@ az webapp config container set --name $APP_NAME --resource-group $RG_NAME \
 --docker-registry-server-url https://$ACR_NAME.azurecr.io \
 --docker-registry-server-user $ACR_NAME \
 --docker-registry-server-password $ACR_PASS
-
-#restart the app
+echo "restart app..."
 az webapp restart --name $APP_NAME --resource-group $RG_NAME
 
 
