@@ -10,4 +10,5 @@ RUN mvn clean scala:compile package spring-boot:repackage
 # USING PREVIOUS STAGE
 FROM mcr.microsoft.com/openjdk/jdk:17-ubuntu
 COPY --from=BUILD /build/target/*.jar /app/app.jar
+EXPOSE 443:443
 ENTRYPOINT ["java", "-jar", "-Dspring.profiles.active=prod", "/app/app.jar"]

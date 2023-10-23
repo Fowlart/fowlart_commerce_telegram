@@ -15,15 +15,14 @@ az webapp config appsettings set --name $APP_NAME --resource-group $RG_NAME --se
 az webapp config appsettings set --name $APP_NAME --resource-group $RG_NAME --settings SERVICE_BUS_SECRET=$SERVICE_BUS_SECRET
 az webapp config appsettings set --name $APP_NAME --resource-group $RG_NAME --settings EMAIL_PASSWORD=$EMAIL_PASSWORD
 az webapp config appsettings set --name $APP_NAME --resource-group $RG_NAME --settings AZ_FILE_ACC_KEY=$AZ_FILE_ACC_KEY
-az webapp config appsettings set --name $APP_NAME --resource-group $RG_NAME --settings WEBSITES_PORT=443
+az webapp config appsettings set --name $APP_NAME --resource-group $RG_NAME --settings WEBSITES_PORT=443 --slot stage
 
 # create an image
 cd /Users/artur/IdeaProjects/fowlart_commerce_telegram
-az acr build --image dzmil-catalog:v3  \
+az acr build --image dc:v1  \
     --registry $ACR_NAME \
     --resource-group $RG_NAME \
     --file Dockerfile .
-
 
 az webapp config container set --name $APP_NAME --resource-group $RG_NAME \
 --resource-group $RG_NAME \
@@ -31,9 +30,9 @@ az webapp config container set --name $APP_NAME --resource-group $RG_NAME \
 --docker-registry-server-url https://$ACR_NAME.azurecr.io \
 --docker-registry-server-user $ACR_NAME \
 --docker-registry-server-password $ACR_PASS
-echo "restart app..."
-az webapp restart --name $APP_NAME --resource-group $RG_NAME
 
+
+az webapp restart --name $APP_NAME --resource-group $RG_NAME
 
 #set up file share
 az webapp config storage-account add --name $APP_NAME --resource-group $RG_NAME \

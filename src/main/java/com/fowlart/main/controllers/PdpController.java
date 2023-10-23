@@ -46,7 +46,6 @@ public class PdpController {
 
     private final SessionCarts carts;
 
-
     public PdpController(@Autowired Catalog catalog, @Autowired BotVisitorService botVisitorService, @Value("${app.bot.items.img.folder}") String inputForImgPath, @Value("${app.bot.html.templates}") String inputForHTMLPath, @Autowired SessionCarts carts) {
         this.botVisitorService = botVisitorService;
         this.catalog = catalog;
@@ -61,7 +60,7 @@ public class PdpController {
 
         // if remove this sleep, API call might return old qty. Interesting!
         try {
-            Thread.sleep(100);
+            Thread.sleep(50);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
