@@ -251,7 +251,7 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>2.6.11</version>
                 <configuration>
-                    <mainClass>com.fowlart.main.BotCommerceApplication</mainClass>
+                    <mainClass>com.fowlart.main.CommerceApplication</mainClass>
                 </configuration>
             </plugin>
             <plugin>

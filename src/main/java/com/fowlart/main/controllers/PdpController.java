@@ -21,15 +21,13 @@ import javax.activation.MimetypesFileTypeMap;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.QueryParam;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 
@@ -53,6 +51,51 @@ public class PdpController {
         this.inputForHTMLPath = inputForHTMLPath;
         this.scHelper = new ScalaHelper();
         this.carts = carts;
+    }
+
+    private Optional<Path> getImageFromStore(Item item) throws IOException {
+
+        BiPredicate<Path, BasicFileAttributes> biPredicate = (path, x) -> {
+            var theFile = path.toFile();
+            var mimetype = new MimetypesFileTypeMap().getContentType(theFile);
+            var theType = mimetype.split("/")[0];
+
+            return path
+                    .getFileName()
+                    .toString()
+                    .toLowerCase()
+                    .trim()
+                    .contains(item.name().toLowerCase().trim().replaceAll("/", "_")) && theType.equals("image");
+        };
+
+        return  Files.find(Path.of(inputForImgPath + "/"), 1, biPredicate).findFirst();
+    }
+
+    @GetMapping(value = "/get-item-list", produces = "application/json")
+    public ResponseEntity<List> getItemList(@QueryParam("withImage") Boolean withImage){
+
+        var items = this.catalog
+                .getItemList()
+                .stream()
+                .collect(Collectors.groupingBy(item->{
+                    try {
+                        return getImageFromStore(item).isPresent();
+                    } catch (IOException e) {
+                        return false;
+                    }
+                }));
+
+        var response =  ResponseEntity.ok(Collections.EMPTY_LIST);
+
+        if (Objects.nonNull(items.get(withImage))) {
+            response = ResponseEntity.ok(items.get(withImage)
+                    .stream()
+                    .filter(Objects::nonNull)
+                    .map(Item::name)
+                    .toList());
+        }
+
+        return response;
     }
 
     @GetMapping(value = "/bucket-sum", produces = "text/html")
@@ -238,17 +281,7 @@ public class PdpController {
 
         var item = catalog.getItemList().stream().filter(i -> i.id().equals(id)).findFirst().orElse(new Item("mock_id", "no_image_available", 0.0, "mock_group", 0));
 
-        BiPredicate<Path, BasicFileAttributes> biPredicate = (path, x) -> {
-            var theFile = path.toFile();
-            var mimetype = new MimetypesFileTypeMap().getContentType(theFile);
-            var theType = mimetype.split("/")[0];
-
-            var res = path.getFileName().toString().toLowerCase().trim().contains(item.name().toLowerCase().trim().replaceAll("/", "_")) && theType.equals("image");
-
-            return res;
-        };
-
-        var itemImgOp = Files.find(Path.of(inputForImgPath + "/"), 1, biPredicate).findFirst();
+        var itemImgOp = getImageFromStore(item);
 
         // if no image found, return no_image_available.png
         if (itemImgOp.isEmpty()) {

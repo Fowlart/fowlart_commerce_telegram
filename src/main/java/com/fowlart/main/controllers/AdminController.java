@@ -10,20 +10,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
+import javax.activation.MimetypesFileTypeMap;
 import java.io.IOException;
-import java.util.Arrays;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Objects;
+import java.util.function.BiPredicate;
 
 @RestController
-public class FileAccepterController {
+public class AdminController {
 
-    private final static Logger logger = LoggerFactory.getLogger(FileAccepterController.class);
+    private final static Logger logger = LoggerFactory.getLogger(AdminController.class);
 
     private final Catalog catalog;
 
@@ -33,9 +37,9 @@ public class FileAccepterController {
 
     private final BlobContainerClient containerClient;
 
-    public FileAccepterController(@Autowired Catalog catalog,
-                                  @Value("${azure.storage.container.name}") String containerName,
-                                  @Value("${azure.storage.connection.string}") String connectionString) {
+    public AdminController(@Autowired Catalog catalog,
+                           @Value("${azure.storage.container.name}") String containerName,
+                           @Value("${azure.storage.connection.string}") String connectionString) {
         this.catalog = catalog;
         this.containerName = containerName;
         this.connectionString = connectionString;

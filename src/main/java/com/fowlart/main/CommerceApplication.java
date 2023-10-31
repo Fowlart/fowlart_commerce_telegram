@@ -2,20 +2,17 @@ package com.fowlart.main;
 
 
 import com.microsoft.applicationinsights.attach.ApplicationInsights;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Configuration;
 
-import java.io.File;
 import java.util.Objects;
 import java.util.Properties;
 
 
 @SpringBootApplication
 @Configuration
-public class BotCommerceApplication {
+public class CommerceApplication {
 
     public static void main(String[] args) {
         // add this line to your code, it will start app insights
@@ -53,7 +50,7 @@ public class BotCommerceApplication {
         } else {
            System.out.println("Development mode");
         }
-        SpringApplication application = new SpringApplication(BotCommerceApplication.class);
+        SpringApplication application = new SpringApplication(CommerceApplication.class);
         application.setDefaultProperties(properties);
         application.run(args);
 
