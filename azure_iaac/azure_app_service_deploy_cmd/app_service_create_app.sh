@@ -19,7 +19,7 @@ az webapp config appsettings set --name $APP_NAME --resource-group $RG_NAME --se
 
 # create an image
 cd /Users/artur/IdeaProjects/fowlart_commerce_telegram
-az acr build --image dc:v1  \
+az acr build --image dzmil-catalog:v3  \
     --registry $ACR_NAME \
     --resource-group $RG_NAME \
     --file Dockerfile .
@@ -30,7 +30,6 @@ az webapp config container set --name $APP_NAME --resource-group $RG_NAME \
 --docker-registry-server-url https://$ACR_NAME.azurecr.io \
 --docker-registry-server-user $ACR_NAME \
 --docker-registry-server-password $ACR_PASS
-
 
 az webapp restart --name $APP_NAME --resource-group $RG_NAME
 

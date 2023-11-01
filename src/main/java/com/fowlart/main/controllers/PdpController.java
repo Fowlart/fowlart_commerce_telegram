@@ -44,7 +44,11 @@ public class PdpController {
 
     private final SessionCarts carts;
 
-    public PdpController(@Autowired Catalog catalog, @Autowired BotVisitorService botVisitorService, @Value("${app.bot.items.img.folder}") String inputForImgPath, @Value("${app.bot.html.templates}") String inputForHTMLPath, @Autowired SessionCarts carts) {
+    public PdpController(@Autowired Catalog catalog,
+                         @Autowired BotVisitorService botVisitorService,
+                         @Value("${app.bot.items.img.folder}") String inputForImgPath,
+                         @Value("${app.bot.html.templates}") String inputForHTMLPath,
+                         @Autowired SessionCarts carts) {
         this.botVisitorService = botVisitorService;
         this.catalog = catalog;
         this.inputForImgPath = inputForImgPath;
@@ -72,20 +76,20 @@ public class PdpController {
     }
 
     @GetMapping(value = "/get-item-list", produces = "application/json")
-    public ResponseEntity<List> getItemList(@QueryParam("withImage") Boolean withImage){
+    public ResponseEntity<List<String>> getItemList(@QueryParam("withImage") Boolean withImage) throws IOException {
+
+        List<String> files = Files.list(Path.of(inputForImgPath + "/"))
+                .toList().stream().map(p->p.getFileName().toString()).toList();
 
         var items = this.catalog
                 .getItemList()
                 .stream()
-                .collect(Collectors.groupingBy(item->{
-                    try {
-                        return getImageFromStore(item).isPresent();
-                    } catch (IOException e) {
-                        return false;
-                    }
-                }));
+                .collect(Collectors.groupingBy(item-> files
+                        .stream()
+                        .anyMatch(f-> f.toLowerCase().contains(item.name().toLowerCase().trim().replaceAll("/", "_")))));
 
-        var response =  ResponseEntity.ok(Collections.EMPTY_LIST);
+        List<String> mock = Collections.emptyList();
+        var response =  ResponseEntity.ok(mock);
 
         if (Objects.nonNull(items.get(withImage))) {
             response = ResponseEntity.ok(items.get(withImage)
