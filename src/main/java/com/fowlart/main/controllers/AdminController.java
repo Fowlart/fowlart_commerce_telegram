@@ -66,7 +66,7 @@ public class AdminController {
         }
 
         // Todo: check if user is admin
-        if (true) {
+        if (false) {
             return "Rejected! Not a Administrator.";
         }
 

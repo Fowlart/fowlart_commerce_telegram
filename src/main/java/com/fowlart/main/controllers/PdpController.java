@@ -1,6 +1,7 @@
 package com.fowlart.main.controllers;
 
 import com.fowlart.main.ScalaHelper;
+import com.fowlart.main.dto.ImgDownloadLinkDTO;
 import com.fowlart.main.state.BotVisitorService;
 import com.fowlart.main.state.Catalog;
 import com.fowlart.main.state.cosmos.Item;
@@ -44,10 +45,13 @@ public class PdpController {
 
     private final SessionCarts carts;
 
+    private final String appHost;
+
     public PdpController(@Autowired Catalog catalog,
                          @Autowired BotVisitorService botVisitorService,
                          @Value("${app.bot.items.img.folder}") String inputForImgPath,
                          @Value("${app.bot.html.templates}") String inputForHTMLPath,
+                         @Value("${app.host}") String appHost,
                          @Autowired SessionCarts carts) {
         this.botVisitorService = botVisitorService;
         this.catalog = catalog;
@@ -55,6 +59,7 @@ public class PdpController {
         this.inputForHTMLPath = inputForHTMLPath;
         this.scHelper = new ScalaHelper();
         this.carts = carts;
+        this.appHost = appHost;
     }
 
     private Optional<Path> getImageFromStore(Item item) throws IOException {
@@ -76,7 +81,7 @@ public class PdpController {
     }
 
     @GetMapping(value = "/get-item-list", produces = "application/json")
-    public ResponseEntity<List<String>> getItemList(@QueryParam("withImage") Boolean withImage) throws IOException {
+    public ResponseEntity<List<ImgDownloadLinkDTO>> getItemList(@QueryParam("withImage") Boolean withImage) throws IOException {
 
         List<String> files = Files.list(Path.of(inputForImgPath + "/"))
                 .toList().stream().map(p->p.getFileName().toString()).toList();
@@ -88,14 +93,22 @@ public class PdpController {
                         .stream()
                         .anyMatch(f-> f.toLowerCase().contains(item.name().toLowerCase().trim().replaceAll("/", "_")))));
 
-        List<String> mock = Collections.emptyList();
+        List<ImgDownloadLinkDTO> mock = Collections.emptyList();
+
         var response =  ResponseEntity.ok(mock);
 
         if (Objects.nonNull(items.get(withImage))) {
+
             response = ResponseEntity.ok(items.get(withImage)
                     .stream()
                     .filter(Objects::nonNull)
-                    .map(Item::name)
+                    .map(item -> {
+                        var dto = new ImgDownloadLinkDTO();
+                        dto.setItemId(item.id());
+                        dto.setItemName(item.name());
+                        dto.setImageDownloadLink(appHost+"pdp/" + item.id());
+                        return dto;
+                    })
                     .toList());
         }
 
@@ -260,22 +273,18 @@ public class PdpController {
     }
 
     @GetMapping(value = "/{id}", produces = "text/html")
-    public @ResponseBody String getProductInfo(@PathVariable String id, @RequestParam String userId, HttpServletResponse servletResponse) throws IOException {
+    public @ResponseBody String getProductInfo(@PathVariable String id, HttpServletResponse servletResponse) throws IOException {
 
         var item = catalog.getItemList().stream().filter(i -> i.id().equals(id)).findFirst().orElse(null);
 
         if (Objects.isNull(item)) return "No such item";
-
-        var allItemsInGroup = catalog.getItemList().stream().filter(i -> i.group().equals(item.group())).map(i -> "<p><a href='/pdp/" + i.id() + "?userId=" + userId + "'>" + i.name() + "</a></p>").reduce((s1, s2) -> s1 + s2).orElse("<p>!от я ніколи не побачу цей аутпут!</p>");
 
         // read pdp.html as a string
         var pdpHtml = Files.readString(Path.of(inputForHTMLPath + "/pdp.html"));
         var productId = item.id();
         var productImageUri = "/pdp/img/" + productId;
 
-        servletResponse.addCookie(new Cookie("userId", userId));
-
-        return pdpHtml.replace("{{productImageUri}}", productImageUri).replace("{{productPrice}}", item.price().toString()).replace("{{productName}}", item.name()).replace("{{groupName}}", item.group()).replace("{{dialogItems}}", allItemsInGroup);
+        return pdpHtml.replace("{{productImageUri}}", productImageUri).replace("{{productPrice}}", item.price().toString()).replace("{{productName}}", item.name());
     }
 
     @GetMapping(value = "/img/{id}", produces = "image/png")

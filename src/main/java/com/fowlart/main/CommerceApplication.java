@@ -39,7 +39,7 @@ public class CommerceApplication {
             properties.put("app.bot.email.gmail.password", emailPassword);
             properties.put("spring.cloud.azure.cosmos.key", cosmosKey);
             properties.put("servicebus.connection-string", serviceBusCS);
-            properties.put("app.bot.admin.secret", System.getenv("SERVICE_BUS_SECRET"));
+            properties.put("app.bot.admin.secret", serviceBusSecret);
 
             System.out.println("ACTIVE PROFILE: " + activeProfile);
             System.out.println("AZURE_STORAGE_CONNECTION_STRING: " + azureStorageConnectionString);
