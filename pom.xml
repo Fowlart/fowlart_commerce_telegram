@@ -228,6 +228,19 @@
             <version>7.13.3</version>
         </dependency>
 
+        <!-- for Key-Vault read using manage identities -->
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-security-keyvault-secrets</artifactId>
+            <version>4.5.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-identity</artifactId>
+            <version>1.10.4</version>
+        </dependency>
+
     </dependencies>
     <repositories>
         <repository>

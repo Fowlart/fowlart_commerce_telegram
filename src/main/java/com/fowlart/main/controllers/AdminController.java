@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.activation.MimetypesFileTypeMap;
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -37,9 +38,13 @@ public class AdminController {
 
     private final BlobContainerClient containerClient;
 
+    private final String appHost;
+
     public AdminController(@Autowired Catalog catalog,
+                           @Value("${app.host}") String appHost,
                            @Value("${azure.storage.container.name}") String containerName,
                            @Value("${azure.storage.connection.string}") String connectionString) {
+        this.appHost = appHost;
         this.catalog = catalog;
         this.containerName = containerName;
         this.connectionString = connectionString;
@@ -53,7 +58,10 @@ public class AdminController {
 
     @PostMapping("/accept-img")
     public String handleImageUpload(@RequestParam("file") MultipartFile receivedFile,
-                                    @RequestParam String itemID) {
+                                    @RequestParam String itemID,
+                                    HttpServletRequest request) {
+
+        //todo: security check here
 
         var fileExtension = receivedFile.getOriginalFilename().substring(Math.max(receivedFile.getOriginalFilename().length() - 3, 0));
 
@@ -63,11 +71,6 @@ public class AdminController {
 
         if (!Objects.requireNonNull(receivedFile.getContentType()).contains("image")) {
             return "Rejected! Not an image.";
-        }
-
-        // Todo: check if user is admin
-        if (false) {
-            return "Rejected! Not a Administrator.";
         }
 
         try {

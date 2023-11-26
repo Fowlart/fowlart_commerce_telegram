@@ -1,5 +1,10 @@
 package com.fowlart.main.controllers;
 
+import com.azure.identity.DefaultAzureCredential;
+import com.azure.identity.DefaultAzureCredentialBuilder;
+import com.azure.security.keyvault.secrets.SecretClient;
+import com.azure.security.keyvault.secrets.SecretClientBuilder;
+import com.azure.security.keyvault.secrets.models.KeyVaultSecret;
 import com.fowlart.main.ScalaHelper;
 import com.fowlart.main.dto.ImgDownloadLinkDTO;
 import com.fowlart.main.state.BotVisitorService;
@@ -272,8 +277,27 @@ public class PdpController {
         return new ResponseEntity<>(html, HttpStatus.OK);
     }
 
+    private String getKeyVaultAccessSecret() {
+
+        String keyVaultUri = "https://fowlart-keyvault.vault.azure.net/";
+        SecretClient secretClient = new SecretClientBuilder()
+                .vaultUrl(keyVaultUri)
+                .credential(new DefaultAzureCredentialBuilder().build())
+                .buildClient();
+        KeyVaultSecret retrievedSecret = secretClient.getSecret("html-secret");
+        return retrievedSecret.getValue();
+    }
+
     @GetMapping(value = "/{id}", produces = "text/html")
-    public @ResponseBody String getProductInfo(@PathVariable String id, HttpServletResponse servletResponse) throws IOException {
+    public @ResponseBody String getProductInfo(@PathVariable String id, @QueryParam("sec")String sec) throws IOException {
+
+        logger.info("Received secret: " + sec);
+
+        if (!sec.equals(getKeyVaultAccessSecret())) {
+            return "Unauthorized! Failed secret check!";
+        }
+
+        //todo: rotate secret
 
         var item = catalog.getItemList().stream().filter(i -> i.id().equals(id)).findFirst().orElse(null);
 
