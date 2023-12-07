@@ -103,13 +103,9 @@ public class PdpController {
             e.printStackTrace();
         }
 
-        String jsessionid = Arrays
-                .stream(request.getCookies())
-                .filter(c -> c.getName()
-                        .equals("JSESSIONID"))
-                .findFirst()
-                .orElse(new Cookie("JSESSIONID", "NO-JSESSIONID"))
-                .getValue();
+        String jsessionid = Objects.requireNonNull(Arrays.stream(request.getCookies())
+                .filter(c -> c.getName().equals("JSESSIONID"))
+                .findFirst().orElse(null)).getValue();
 
         var cart = carts.getCart(jsessionid);
         var sum = cart.stream().map(item -> item.qty() * item.price()).reduce(Double::sum).orElse(0.0);
@@ -133,9 +129,9 @@ public class PdpController {
 
         var responseHeaders = new HttpHeaders();
 
-        String jsessionid = Arrays
+        String jsessionid = Objects.requireNonNull(Arrays
                 .stream(request.getCookies())
-                .filter(c -> c.getName().equals("JSESSIONID")).findFirst().orElse(null).getValue();
+                .filter(c -> c.getName().equals("JSESSIONID")).findFirst().orElse(null)).getValue();
 
         group = StringUtils.isAllBlank(group) ? catalog.getGroupList().get(0) : group;
         String firstImageId = null;
@@ -175,12 +171,12 @@ public class PdpController {
     @PostMapping(value = "/remove-item", produces = "text/html", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public @ResponseBody ResponseEntity<String> removeItem(@RequestBody MultiValueMap<String, String> formData, HttpServletRequest request) {
         var itemId = formData.getFirst("itemId");
-        String jsessionid = Arrays
+        String jsessionid = Objects.requireNonNull(Arrays
                 .stream(request.getCookies())
-                .filter(c -> c.getName().equals("JSESSIONID")).findFirst().orElse(null).getValue();
+                .filter(c -> c.getName().equals("JSESSIONID")).findFirst().orElse(null)).getValue();
         var html = "";
         var item = catalog.getItemList().stream().filter(i -> i.id().equals(itemId)).findFirst().orElse(null);
-        logger.info("MY_JSESSIONID is " + jsessionid);
+        logger.info("JSESSIONID is " + jsessionid);
         logger.info("remove itemId" + itemId);
         carts.removeItem(item, jsessionid);
         html = scHelper.getBucketContent(carts.getCart(jsessionid));
@@ -195,9 +191,9 @@ public class PdpController {
         logger.info("itemId: " + itemId);
         logger.info("itemQuantity: " + itemQuantity);
         itemQuantity = (Objects.isNull(itemQuantity)) ? "1" : itemQuantity;
-        var jsessionid = Arrays.stream(request.getCookies())
+        var jsessionid = Objects.requireNonNull(Arrays.stream(request.getCookies())
                 .filter(c -> c.getName().equals("JSESSIONID"))
-                .findFirst().orElse(null).getValue();
+                .findFirst().orElse(null)).getValue();
         var html = "";
         logger.info("JSESSIONID is " + jsessionid);
         logger.info("adding item " + itemId);
