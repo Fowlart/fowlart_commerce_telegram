@@ -165,8 +165,9 @@
     }, false);
 
     async function getBucketSum(){
-
+        let myHeaders = new Headers();
         let requestOptions = {
+            headers: myHeaders,
             method: 'GET',
             redirect: 'follow'
         };

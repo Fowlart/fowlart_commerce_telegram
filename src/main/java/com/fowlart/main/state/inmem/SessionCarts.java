@@ -1,7 +1,5 @@
 package com.fowlart.main.state.inmem;
 
-import com.fowlart.main.state.cosmos.Item;
-import com.google.common.collect.Maps;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -12,7 +10,7 @@ public class SessionCarts {
     private final Map<String, Set<Item>> carts;
 
     public SessionCarts() {
-        carts = Maps.newHashMap();
+        carts = new HashMap<>();
     }
 
     public Set<Item> getCart(String userId) {

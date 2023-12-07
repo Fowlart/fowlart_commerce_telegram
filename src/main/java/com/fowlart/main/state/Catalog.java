@@ -1,7 +1,7 @@
 package com.fowlart.main.state;
 
 import com.fowlart.main.catalog_fetching.ExcelFetcher;
-import com.fowlart.main.state.cosmos.Item;
+import com.fowlart.main.state.inmem.Item;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

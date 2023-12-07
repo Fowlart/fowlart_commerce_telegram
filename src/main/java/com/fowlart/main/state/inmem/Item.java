@@ -1,4 +1,4 @@
-package com.fowlart.main.state.cosmos;
+package com.fowlart.main.state.inmem;
 
 import org.springframework.data.annotation.Id;
 

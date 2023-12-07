@@ -1,6 +1,6 @@
 package com.fowlart.main
 
-import com.fowlart.main.state.cosmos.Item
+import com.fowlart.main.state.inmem.Item
 
 
 class ScalaHelper {

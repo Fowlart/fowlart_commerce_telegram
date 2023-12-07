@@ -5,25 +5,20 @@ import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
 import com.fowlart.main.state.Catalog;
-import com.fowlart.main.state.cosmos.Item;
+import com.fowlart.main.state.inmem.Item;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.activation.MimetypesFileTypeMap;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Objects;
-import java.util.function.BiPredicate;
 
 @RestController
 public class AdminController {
@@ -40,10 +35,7 @@ public class AdminController {
 
     private final String appHost;
 
-    public AdminController(@Autowired Catalog catalog,
-                           @Value("${app.host}") String appHost,
-                           @Value("${azure.storage.container.name}") String containerName,
-                           @Value("${azure.storage.connection.string}") String connectionString) {
+    public AdminController(@Autowired Catalog catalog, @Value("${app.host}") String appHost, @Value("${azure.storage.container.name}") String containerName, @Value("${azure.storage.connection.string}") String connectionString) {
         this.appHost = appHost;
         this.catalog = catalog;
         this.containerName = containerName;
@@ -57,9 +49,7 @@ public class AdminController {
     }
 
     @PostMapping("/accept-img")
-    public String handleImageUpload(@RequestParam("file") MultipartFile receivedFile,
-                                    @RequestParam String itemID,
-                                    HttpServletRequest request) {
+    public String handleImageUpload(@RequestParam("file") MultipartFile receivedFile, @RequestParam String itemID, HttpServletRequest request) {
 
         //todo: security check here
 
@@ -67,18 +57,18 @@ public class AdminController {
 
         var itemName = catalog.getItemList().stream().filter(it -> itemID.equals(it.id())).map(Item::name).findFirst().orElse("_none_");
 
-        var fileInContainer = itemName.replaceAll("/","_") + "." + fileExtension;
+        var fileInContainer = itemName.replaceAll("/", "_") + "." + fileExtension;
 
         if (!Objects.requireNonNull(receivedFile.getContentType()).contains("image")) {
             return "Rejected! Not an image.";
         }
 
         try {
-            logger.info("Attempt to store file in container {}: {}", this.containerClient.getBlobContainerName(),fileInContainer);
+            logger.info("Attempt to store file in container {}: {}", this.containerClient.getBlobContainerName(), fileInContainer);
 
             BlobClient blobClient = this.containerClient.getBlobClient(fileInContainer);
 
-            blobClient.upload(receivedFile.getInputStream(),true);
+            blobClient.upload(receivedFile.getInputStream(), true);
 
             logger.info("Success!");
         } catch (IOException e) {

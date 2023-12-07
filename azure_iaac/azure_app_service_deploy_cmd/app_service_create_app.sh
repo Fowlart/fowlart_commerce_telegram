@@ -16,6 +16,9 @@ az webapp config appsettings set --name $APP_NAME --resource-group $RG_NAME --se
 az webapp config appsettings set --name $APP_NAME --resource-group $RG_NAME --settings EMAIL_PASSWORD=$EMAIL_PASSWORD
 az webapp config appsettings set --name $APP_NAME --resource-group $RG_NAME --settings AZ_FILE_ACC_KEY=$AZ_FILE_ACC_KEY
 az webapp config appsettings set --name $APP_NAME --resource-group $RG_NAME --settings WEBSITES_PORT=443 --slot stage
+az webapp config appsettings set --name $APP_NAME --resource-group $RG_NAME --settings AZURE_ACTIVEDIRECTORY_TENANT_ID=$AZURE_ACTIVEDIRECTORY_TENANT_ID
+az webapp config appsettings set --name $APP_NAME --resource-group $RG_NAME --settings AZURE_ACTIVEDIRECTORY_CLIENT_ID=$AZURE_ACTIVEDIRECTORY_CLIENT_ID
+az webapp config appsettings set --name $APP_NAME --resource-group $RG_NAME --settings AZURE_ACTIVEDIRECTORY_CLIENT_SECRET=$AZURE_ACTIVEDIRECTORY_CLIENT_SECRET
 
 # create an image
 cd /Users/artur/IdeaProjects/fowlart_commerce_telegram
